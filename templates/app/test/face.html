@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>腾讯云人脸核身H5示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        #verify-btn {
+            padding: 12px 24px;
+            background-color: #006EFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 80%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>人脸核身验证</h1>
+        <p>请点击下方按钮开始人脸核身验证</p>
+
+        <button id="verify-btn" onclick="startFaceVerification()">开始验证</button>
+
+        <div id="result"></div>
+    </div>
+
+    <!-- 引入腾讯云人脸核身SDK -->
+    <!-- <script src="https://faceid.qqcloud.js/faceid-1.0.0.js"></script> -->
+
+    <script>
+        // 检测是否在Android WebView中运行
+        const isAndroidWebView = /Android/i.test(navigator.userAgent) &&
+            /wv|webview/i.test(navigator.userAgent.toLowerCase());
+
+        // 配置参数
+        const config = {
+            secretId: 'TIDAV1pB',
+            secretKey: 'HC1Onr49J3rQ27tFEvr6ciTYJBUOG28BjN0PsKJ34T8amPZGwSsOQeNSE9wNU0WI',
+            ruleId: 'YOUR_RULE_ID_dd123',
+            bizToken: '',
+            redirectUrl: 'https://yourdomain.com/verify-success'
+        };
+
+        // 初始化SDK
+        //const faceId = new FaceId(config);
+        // 开始人脸核身
+        async function startFaceVerification() {
+            try {
+                result = await getBizTokenFromBackend();                
+                console.log(result)
+                const response = await fetch('http://localhost:3000/api/verify-faceid', {
+                    method: 'POST', // 或者 'POST'，根据你的接口需求
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        faceIdToken: result,
+                        ticket: 'r8aDGtdFgXXaBZ9RH6quNBFZxo4LaDaTJ8gY2acMZ1CpIgdqFEjpyL1amgJmzzbD',
+                        userIp: ''
+                    }),
+
+                });
+
+                if (!response.ok) {
+                    throw new Error('网络响应失败');
+                }
+
+                const data = await response.json();
+                console.log(data)
+                return data.bizToken; // 假设返回的数据中包含 bizToken 字段
+            } catch (error) {
+                throw new Error('获取 bizToken 失败: ' + error.message);
+            }
+
+            let url = 'http://localhost:3000/api/verify-faceid'
+            //location.href = url
+            return
+
+            const btn = document.getElementById('verify-btn');
+            btn.disabled = true;
+            btn.textContent = '验证中...';
+
+            try {
+                // 1. 获取bizToken
+                const bizToken = await getBizTokenFromBackend();
+                config.bizToken = bizToken;
+
+                // 2. 调用SDK启动核身流程
+                const result = await faceId.start();
+
+                // 3. 处理核身结果
+                handleVerificationResult(result);
+
+            } catch (error) {
+                console.error('核身失败:', error);
+                showResult(false, error.message || '核身过程中发生错误');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '开始验证';
+            }
+        }
+
+        // 处理核身结果
+        function handleVerificationResult(result) {
+            if (result.success) {
+                showResult(true, '核身验证成功');
+
+                // 如果在Android WebView中，调用原生方法
+                if (isAndroidWebView && typeof AndroidInterface !== 'undefined') {
+                    AndroidInterface.onFaceIdSuccess(JSON.stringify(result));
+                } else {
+                    console.log('核身成功:', result);
+                    // 非WebView环境下的处理
+                    // window.location.href = config.redirectUrl;
+                }
+            } else {
+                showResult(false, result.message || '核身验证失败');
+
+                if (isAndroidWebView && typeof AndroidInterface !== 'undefined') {
+                    AndroidInterface.onFaceIdError(result.message || '核身验证失败');
+                }
+            }
+        }
+
+        // 模拟从后端获取bizToken
+        async function getBizTokenFromBackend() {
+            // 实际项目中这里应该调用你的后端API
+            try {
+                const response = await fetch('http://localhost:3000/api/get-faceid-token', {
+                    method: 'POST', // 或者 'POST'，根据你的接口需求
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('网络响应失败');
+                }
+
+                const data = await response.json();
+                console.log(data.data)
+                return data.data.faceIdToken; // 假设返回的数据中包含 bizToken 字段
+            } catch (error) {
+                throw new Error('获取 bizToken 失败: ' + error.message);
+            }
+            /*
+            // 示例中使用模拟数据
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve('SIMULATED_BIZ_TOKEN_' + Math.random().toString(36).substr(2));
+                }, 500);
+            });*/
+        }
+
+        // 显示结果
+        function showResult(success, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = success ? 'success' : 'error';
+            resultDiv.textContent = message;
+        }
+
+        // Android WebView可能需要这个方法来通知页面已加载完成
+        function pageLoaded() {
+            if (isAndroidWebView && typeof AndroidInterface !== 'undefined') {
+                AndroidInterface.onPageLoaded();
+            }
+        }
+
+        // 页面加载完成后调用
+        window.onload = function () {
+            pageLoaded();
+        };
+    </script>
+</body>
+
+</html>

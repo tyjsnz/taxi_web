@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LS出行 - 司机端</title>
+    <!-- 引入Element UI CSS -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/css/ls-icon.css">
+
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background-color: #ff6b00;
+            color: white;
+            padding: 20px 15px;
+            padding-top: 32px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .logo p {
+            font-size: 10px;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        /* 数据统计区域 - 修改后的样式 */
+        .stats {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .sp_unit {
+            font-size: 14px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .priority-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 2px 10px;
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 12px;
+            padding-left: 15px;
+        }
+
+        .priority-img {
+            top: 2px;
+            width: 15px;
+            height: 15px;
+            background-color: #fff;
+            border-radius: 50%;
+            padding: 5px;
+            position: relative;
+            left: 10px;
+        }
+
+        .priority-img img {
+            width: 15px;
+            height: 15px;
+        }
+
+        /* 选项卡区域 */
+        .tabs {
+            background: #fff;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            position: relative;
+            width: 100%;
+            top: -10px;
+        }
+
+        .tab {
+            padding: 12px 0;
+            margin-right: 20px;
+            font-size: 15px;
+            position: relative;
+            color: #666;
+        }
+
+        .tab.active {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #e74c3c;
+        }
+
+        .tab.hot {
+            color: #e74c3c;
+        }
+
+        /* 宣传图区域 */
+        .promo-banner {
+            margin: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .promo-banner img {
+            width: 100%;
+            display: block;
+        }
+
+        /* 底部导航栏 */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            width: 100%;
+        }
+
+        .footer-btn {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .footer-btn.active {
+            color: #e74c3c;
+        }
+
+        .footer-btn i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+
+        .main-btn {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -20px;
+            box-shadow: 0 2px 10px rgba(231, 76, 60, 0.5);
+        }
+
+        .legal-links {
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        .sp_phone {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .pop-item {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .pop-item img {
+            width: 25px;
+            padding-top: 5px;
+        }
+
+        .pop-item span {
+            padding-left: 10px;
+        }
+
+        .el-carousel__item {
+            background-color: transparent !important;
+        }
+
+        .el-carousel__container {
+            width: 100%;
+        }
+
+        .el-carousel__item div {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tip {
+            background-color: rgb(236, 248, 255);
+            padding: 5px 16px;
+            border-radius: 4px;
+            border-left: 5px solid rgb(80, 191, 255);
+            margin: 20px 20px;
+        }
+
+        .tip h3 {
+            margin: 5px 0;
+        }
+
+        .el-button--danger {
+            background-color: #ff6b00;
+        }
+
+        .navbar {
+            position: fixed;
+            width: 100%;
+            color: #f5f5f5;
+            padding: 10px;
+            background: #ff6b00;
+            padding-bottom: 0px;
+            padding-top: 40px;
+            z-index: 197;
+        }
+
+        .tab-list {
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            /* iOS 滚动优化 */
+            padding: 10px 0;
+            gap: 20px;
+            /* 图标之间间距 */
+        }
+
+        .tab-item {
+            /* flex: 0 0 auto; */
+            width: 30%;
+            /* 控制每个图标项宽度 */
+            text-align: center;
+        }
+
+        .el-button--danger {
+            background: #ff3366;
+            border-color: #f78989;
+            color: #FFF;
+        }
+
+        .el-button--danger:focus,
+        .el-button--danger:hover {
+            background: #ff3366;
+            border-color: #f78989;
+            color: #FFF;
+        }
+
+        /*.el-button--primary {
+            background-color: #ff6b00;
+            border-color: #ff6b00;
+        }*/
+    </style>
+</head>
+
+<body>
+    <div class="container" id="app">
+        <!--抽屉-->
+        <el-drawer :visible.sync="drawer" :direction="direction" :before-close="handleClose" :size="sizes"
+            :with-header="false">
+            <el-row style="margin-top: 40px;">
+                <el-col :offset="3" :span="17" style="text-align: left;">
+                    <div class="sp_phone" v-text="maskPhoneNumber(driver_info.phone)"></div>
+                    <span v-text="driver_info.truename">---</span>
+                </el-col>
+                <el-col :span="4">
+                    <img src="/static/images/app/edit.png" style="width: 20px;" @click="edit_myprofile()">
+                </el-col>
+            </el-row>
+
+            <div style="margin-top: 20%; height: 10px;"></div>
+
+            <el-row class="pop-item" v-for="(item, index) in func_items" :key="index">
+                <el-col :offset="3" :span="3" style="text-align: left;">
+                    <img :src="item.icon">
+                </el-col>
+                <el-col :span="10">
+                    <span @click="item_click(item)">${item.label}</span>
+                </el-col>
+            </el-row>
+
+        </el-drawer>
+
+        <!-- 顶部导航栏 -->
+        <el-row class="navbar">
+            <el-col :span="6">
+                <img src="/static/images/app/menu.png" style="width: 30px;" @click="drawer = true">
+            </el-col>
+            <el-col :span="12">
+                <div class="logo">
+                    <h1>LS出行</h1>
+                    <p>TRAVELING IN LS</p>
+                </div>
+            </el-col>
+            <el-col :span="3" style="text-align: center;">
+                <img src="/static/images/app/scan.png" style="width: 30px;" @click="scan">
+            </el-col>
+            <el-col :span="3" style="text-align: right;">
+                <img src="/static/images/app/notice.png" style="width: 30px;" @click="notice">
+            </el-col>
+        </el-row>
+
+        <div class="header">
+            <!-- 统计信息 -->
+            <el-row style="margin-top: 60px;">
+                <el-col :span="12">
+                    <div class="stat-item" @click="money_record">
+                        <div class="stat-value"><span v-text="total_info.total_earn">0</span><span
+                                class="sp_unit">元</span></div>
+                        <div class="stat-label">今日赚了</div>
+                    </div>
+                </el-col>
+                <el-col :span="10" :offset="2" style="text-align: right;padding-top: 10px;">
+                    <!-- <div style="display: flex; align-items: center;" @click="topTip">
+                        <div class="priority-img">
+                            <img src="/static/images/app/speed.png">
+                        </div>
+                        <div class="priority-badge">优先派单生效中></div>
+                    </div> -->
+                </el-col>
+            </el-row>
+
+            <el-row style="margin-top: 20px;">
+                <el-col :span="8">
+                    <div class="stat-item" @click="today_order">
+                        <div class="stat-value"><span v-text="total_info.total_order">0</span><span
+                                class="sp_unit">单</span></div>
+                        <div class="stat-label">今日完单 ></div>
+                    </div>
+                </el-col>
+                <el-col :span="8" style="text-align: center;">
+                    <div class="stat-item">
+                        <div class="stat-value"><span v-text="total_info.today_online_time">0</span><span class="sp_unit"
+                                v-text="total_info.today_online_time_unit"></span></div>
+                        <div class="stat-label">在线时长</div>
+                    </div>
+                </el-col>
+                <el-col :span="8" style="text-align: right;">
+                    <div class="stat-item" @click="score_view">
+                        <div class="stat-value" v-text="total_info.total_score">300.0</div>
+                        <div class="stat-label">服务分 ></div>
+                    </div>
+                </el-col>
+            </el-row>
+        </div>
+
+        <!-- 轮播功能区域 -->
+        <!-- <div class="tabs" style="margin-top: 30px;">
+            <el-carousel :interval="5000" arrow="never" type="card" height="80px" style="width: 100%;">
+                <el-carousel-item v-for="(item, index) in tabs" :key="index">
+                    <div @click="goto_core(item.url)" style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                        <img :src="item.icon" style="width: 48px; height: 48px;" />
+                        <div>${ item.label }</div>
+                    </div>
+                </el-carousel-item>
+            </el-carousel>
+        </div> -->
+
+        <div class="tabs" style="margin-top: 30px;">
+            <div class="tab-list">
+                <div v-for="(item, index) in tabs" :key="index" class="tab-item" @click="goto_core(item.url)">
+                    <img :src="item.icon" style="width: 48px; height: 48px;" />
+                    <div>${ item.label }</div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- 宣传图区域 -->
+        <div class="promo-banner" v-for="(item,index) in ad_list" :key="index">
+            <img :src="item.img" @click="go_ad(item.url)">
+        </div>
+
+
+        <div class="tip" v-for="(item,index) in tip_list" ::key="index">
+            <div @click="go_tip(item.url)">
+                <h3>${item.title}</h3>
+                <p>${item.content}</p>
+            </div>
+        </div>
+
+
+        <!-- 底部导航栏 -->
+        <div class="footer">
+            <el-row style="width: 100%;">
+                <el-col :span="6">
+                    <div class="footer-btn" @click="filter_order">
+                        <i class="el-icon-s-operation"></i>
+                        <span>筛订单</span>
+                    </div>
+                </el-col>
+                <el-col :span="12">
+                    <el-button v-if="work_status" @click="start_work(0)" type="danger" round
+                        style="width: 100%;">收车</el-button>
+                    <el-button v-else @click="start_work(1)" type="primary" round style="width: 100%;">出车</el-button>
+
+                </el-col>
+                <el-col :span="6">
+                    <div class="footer-btn" @click="order_hall">
+                        <i class="el-icon-s-order"></i>
+                        <span>抢单大厅</span>
+                    </div>
+                </el-col>
+            </el-row>
+        </div>
+
+        <!-- 法律链接 -->
+        <div class="legal-links">
+            协议、证照及平台规则 >
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element UI JS -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data: {
+                token: "{{ session.token}}",
+                driver_id: "{{ session.driver_id}}",
+                // 滑动功能区
+                tabs: [
+                    { label: '热力图', icon: '/static/images/app/rlt.png', url: 'hot_map.html' },
+                    // { label: '司机福利社', icon: '/static/images/app/qddt.png', url: '' },
+                    { label: '爆单时段', icon: '/static/images/app/bao.png', url: 'hot_order_time.html' },
+                    { label: '听单检测', icon: '/static/images/app/hzhb.png', url: '' },
+
+                ],
+                direction: 'ltr',
+                drawer: false,
+                sizes: '60%',
+                // 抽屉功能区别的菜单
+                func_items: [
+                    { label: '订单', icon: '/static/images/app/dd.png', flag: 1 },
+                    { label: '钱包', icon: '/static/images/app/qb.png', flag: 2 },
+                    { label: '奖励', icon: '/static/images/app/jl.png', flag: 3 },
+                    { label: '服务中心', icon: '/static/images/app/fwzx.png', flag: 4 },
+                    { label: '个人中心', icon: '/static/images/app/sz.png', flag: 5 }
+                ],
+                // 统计部分
+                total_info: {
+                    total_earn: 127.8, // 今天赚了
+                    total_order: 42, // 今日完成订单
+                    total_time: 120, // 在线时长
+                    total_time_unit: '小时',
+                    total_score: 300, // 履约分
+                    today_online_time: 0, // 今天在线时长
+                    today_online_time_unit: '分钟',
+                },
+                currentStatus: '',
+                // 司机信息
+                driver_info: {
+                    truename: 'xxx',
+                    phone: '13800138000'
+                },
+                // 广告信息
+                ad_list: [
+                    { 'img': '/static/images/app/ad.png', 'url': '/app/driver/grab_order_ad.html' },
+                ],
+                tip_list: [
+                    //{ 'title': '公告', 'content': '欢迎使用', 'url': '' },
+                ],
+                work_status: 0, // 0=休息，1=工作
+                is_first_load: true,  // 是否第一次加载， 如是则调用android的接口设置用户状态
+
+            },
+            mounted() {
+                this.get_profile()
+                // 初始化
+                this.fetchOrders()
+
+                // 20秒刷新一次，以获取订单统计等数据
+                setInterval(() => {
+                    this.fetchOrders()
+                }, 20000)
+            },
+            methods: {
+                maskPhoneNumber(phone) {
+                    const phoneStr = String(phone);
+                    if (!/^1\d{10}$/.test(phoneStr)) {
+                        return phoneStr;
+                    }
+                    return phoneStr.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+                },
+                handleClose(done) {
+                    // 关闭抽屉
+                    done()
+                },
+                edit_myprofile() {
+                    // 编辑我的信息
+                    console.log("编辑我的信息")
+                    location.href = '/app/driver/my_info.html'
+                },
+                item_click(item) {
+                    if (item.flag == 1) {
+                        // 订单
+                        location.href = "/app/driver/order_list.html"
+                    }
+                    else if (item.flag == 2) {
+                        // 钱包
+                        location.href = "/app/driver/pay_checkout.html"
+                    }
+                    else if (item.flag == 3) {
+                        // 奖励
+                        location.href = "/app/driver/reward_list.html"
+                    }
+                    else if (item.flag == 4) {
+                        // 服务中心
+                        location.href = "/app/driver/service_center.html"
+                    }
+                    else if (item.flag == 5) {
+                        // 设置
+                        location.href = "/app/driver/setup.html"
+                    }
+
+                    // this.$message({
+                    //     message: item.label,
+                    //     type: 'success'
+                    // });
+                },
+                scan() {
+                    // this.$message({
+                    //     message: '扫码',
+                    //     type: 'success'
+                    // });
+                    /*layer.open({
+                        type: 2,
+                        title: false,
+                        shadeClose: false,
+                        shade: 0.8,
+                        area: ['90%', '90%'],
+                        content: '/qrscan.html?v=11'
+                    });*/
+                    //location.href = '/app/driver/qrscan.html?v=121'
+
+                    if (window.AndroidBridge)
+                        AndroidBridge.scanQrcode()
+                },
+                notice() {
+                    location.href = '/app/driver/notice_list.html'
+                },
+                score_view() {
+                    location.href = '/app/driver/score_list.html?score=' + this.total_info.total_score
+                },
+                money_record() {
+                    location.href = '/app/driver/money_record.html'
+                },
+                today_order() {
+                    location.href = '/app/driver/today_complete_order.html'
+                },
+                filter_order() {
+                    layer.open({
+                        type: 2,
+                        title: false,
+                        closeBtn: 0,
+                        area: ['100%', '100%'],
+                        content: '/app/driver/filter_order.html?type=2d121221',
+                    });
+                },
+                order_hall() {
+                    // 抢单大订
+                    if (this.work_status != 1) {
+                        this.$message({
+                            message: '请先出车',
+                            type: 'error',
+                            offset: 100
+                        });
+                        return
+                    }
+
+                    location.href = '/app/driver/grab_order.html'
+                },
+                start_work(state) {
+                    if (state == 1) {
+                        // 出车
+                        if (window.AndroidBridge)
+                            AndroidBridge.onStatusChanged("working");
+                    }
+                    else {
+                        if (window.AndroidBridge)
+                            AndroidBridge.onStatusChanged("offline")
+                    }
+                    this.work_status = state
+
+                    // 改变工作状态
+                    postRequest('/app/api/driver/v1/work_status', {
+                        'driver_id': this.driver_id,
+                        'token': this.token,
+                        'work_status': state,
+                    }, (res, status) => {
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            console.log('is work...', res)
+                        }
+                    });
+
+                },
+                go_ad(url) {
+                    window.location.href = url;
+                },
+                go_tip(url) {
+                    if (url == '')
+                        return
+                    window.location.href = url;
+                },
+                topTip() {
+                    location.href = '/app/driver/yxpd.html'
+                },
+                goto_core(url) {
+                    if (url == '') {
+                        //this.$toast('功能暂不可用')
+                        AndroidBridge.speekText("听单功能正常");
+                        return
+                    }
+                    window.location.href = url;
+                },
+
+                fetchOrders() {
+                    var that = this
+                    //this.driver_id = 3
+                    getRequest('/app/driver/order/total_data', { 'driver_id': this.driver_id, 'token': this.token,'work_status':this.work_status }, (res, status) => {
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            that.total_info.total_order = res.data.order_num
+                            that.total_info.total_earn = res.data.in_pay
+                            // 总在线时长
+                            let t = this.formatOrderDuration(res.data.total_online_time)
+                            that.total_info.total_time = t[0]
+                            that.total_info.total_time_unit = t[1]
+                            // 当天在线时长
+                            let t1 = this.formatOrderDuration(res.data.today_online_total_time)
+                            that.total_info.today_online_time = t1[0]
+                            that.total_info.today_online_time_unit = t1[1]
+
+                            that.total_info.total_score = parseFloat(300 - Math.abs(parseFloat(res.data.score))).toFixed(2)
+
+                            // 当前工作状态
+                            let wk_state = parseInt(res.data.work_status)
+                            // 按钮状态
+                            that.work_status = wk_state
+
+                            // dealy 1sec to show the work status
+                            setTimeout(() => {
+                                if (!that.is_first_load)
+                                    return
+
+                                // 已经加载过了，间隔刷新时不用再刷新
+                                that.is_first_load = false
+                                if (that.work_status == 1) {
+                                    // 出车状态
+                                    if (window.AndroidBridge)
+                                        AndroidBridge.onStatusChanged("working");
+                                }
+                                else {
+                                    // 休息状态收车
+                                    if (window.AndroidBridge)
+                                        AndroidBridge.onStatusChanged("offline")
+                                }
+                            }, 1000)
+                        }
+                    })
+                    // 这里在点击上班后再拉取
+                    //this.pullOrder()
+                },
+                // 拒绝接单，app端调用，系统派单才生效
+                rejectOrder(order_id, accept_id) {
+                    // 当app拒绝订单时，检查是否大于当天最大，如是则真正拒绝
+                    postRequest('/app/api/driver/v1/order_reject', {
+                        'driver_id': this.driver_id,
+                        'order_id': order_id,
+                        'accept_id': accept_id,
+                        'token': this.token,
+                    }, (res, status) => {
+                        if ('success' == status) {
+                            if (res.status == 0) {
+                                this.pullOrder()
+                            }
+                            else {
+                                // 已经超过拒绝次数，不能再拒绝，必须要接订单
+                                /*var item = this.currentOrder
+
+                                item["max_reject"] = res.data.max_reject
+
+                                if (window.AndroidBridge) {
+                                    const latlng = AndroidBridge.acceptOrder(JSON.stringify(item), true)
+                                }*/
+                            }
+                        }
+                        else {
+                            console.log("error", res)
+                        }
+                    })
+                },
+                formatOrderTime(orderTime) {
+                    return formatTime(orderTime)
+                },
+                formatOrderDistance(orderDistance) {
+                    return formatDistance(orderDistance)
+                },
+                formatOrderDuration(orderDuration) {
+                    let duration = orderDuration
+                    if (duration < 60)
+                        return [`1`, '分钟']
+                    else if (duration < 3600)
+                        return [`${Math.floor(duration / 60)}`, '分钟']
+                    else
+                        return [`${Math.floor(duration / 3600)}`, "小时"]
+                },
+                get_profile() {
+                    var that = this
+                    fetch(`/app/driver/profile/json?driver_id=${this.driver_id}`)
+                        .then(res => res.json())
+                        .then(res => {
+                            console.log(res)
+                            if (res.status == 0) {
+                                that.driver_info = res.data
+                            }
+                        })
+                }
+
+            }
+        });
+
+        window.app = app
+        // 原生刷新订单数据，app端收到有新订单消息后调用，目前不使用
+        window.refOrderData = function (order_id) {
+
+        }
+        // 原生系统订单时，拒绝接单
+        window.rejectOrder = function (order_id, accept_id) {
+            // 测试后要打开
+            window.app.rejectOrder(order_id, accept_id)
+        }
+        window.billOrder = function (order_id) {            
+            //显示帐单
+            location.href = '/app/driver/trip_over.html?order_id=' + order_id
+        }
+        // 扫码结果
+        window.scan_result = function (result) {
+             // 正常
+            window.app.$message({
+                message: "扫码结果：" + result,
+                type: 'error',
+                offset: 100
+            });
+            
+        }
+
+    </script>
+</body>
+
+</html>

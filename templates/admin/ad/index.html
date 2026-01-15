@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广告管理</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <!-- 引入Vue和Element UI JS -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <!-- 引入axios用于HTTP请求 -->
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .app-container {
+            padding: 20px;
+        }
+
+        .setting-card {
+            margin-bottom: 20px;
+        }
+
+        .setting-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #303133;
+        }
+
+        .form-item-label {
+            margin-bottom: 8px;
+            display: block;
+            color: #999;
+        }
+
+        .footer-buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 120px;
+            height: 120px;
+            line-height: 120px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            display: block;
+        }
+
+        .el-divider--horizontal {
+            margin: 15px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app-container">
+        <el-card class="card-body" style="padding-top: 0px !important; padding-left: 0px !important">
+            <el-form ref="sys_info" :model="sys_info" label-width="150px" label-position="left">
+                <el-form-item label="首页弹窗" prop="index_popup_flag">
+                    <el-radio-group v-model="sys_info.index_popup_flag">
+                        <el-radio :label="0">关闭</el-radio>
+                        <el-radio :label="1">打开</el-radio>
+                    </el-radio-group>
+                    <span class="form-item-label">乘客端小程序首页优惠券弹窗提示</span>
+                </el-form-item>
+
+                <el-form-item label="弹窗图片" prop="ad_img">
+                    <el-upload :auto-upload="true" action="/admin/upload_file" list-type="picture-card"
+                        :file-list="fileList" :on-success="handleLicenseSuccess" :on-preview="handlePictureCardPreview"
+                        :limit="1" :on-change="handleChange" :on-remove="handleLicenseRemove">
+                        <i class="el-icon-plus"></i>
+                    </el-upload>
+                    <el-dialog :visible.sync="dialogVisible">
+                        <img width="100%" :src="dialogImageUrl" alt="">
+                    </el-dialog>
+                    <span class="form-item-label">弹窗图片大小为：300*400</span>
+                </el-form-item>
+
+
+                <el-form-item label="弹窗跳转地址" prop="ad_url">
+                    <el-select v-model="sys_info.ad_url" placeholder="请选择弹窗点击跳转地址" style="width: 400px;">
+                        <el-option label="不跳转" value=""></el-option>
+                        <el-option label="我的卡券" value="coupon"></el-option>
+                        <el-option label="优惠券中心" value="coupon_center"></el-option>
+                    </el-select>
+                    <span class="form-item-label">弹窗点击的跳转地址，不设置则只显示，不作跳转处理</span>
+                    <!-- <span class="form-item-label">点击后跳转的地址，不设置则不跳转，要跳转至web地址可为：领券中心(coupon_center)，卡券中心(coupon)，我的行程(order)，紧急联系人(emergency),联系我们(contact),用户协议(agreement), 自定页(参数即为可以访问的路由页面,/wechat/api/v1/web/xx),
+                                !!!注意：如果传入自定页面是，则要在 /wechat/api/v1/ 下自定自己的路由以适应web端传入的路由名称!!! ，如web端传入activity，则相应的wechat/api/v1/下要有activity的路由，且路由名称要和传入的一致</span>
+                            </span> -->
+                </el-form-item>
+            </el-form>
+
+            <div class="footer-buttons">
+                <el-button type="primary" @click="submitSystemForm" :loading="loading">保存系统参数设置</el-button>
+                <!-- <el-button @click="resetForm">重置</el-button> -->
+            </div>
+        </el-card>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    sys_info: {
+                        index_popup_flag: parseInt("{{row['site_config']['index_popup_flag']}}"),
+                        ad_url: "{{row['site_config']['ad_url']}}",
+                        ad_img: "{{row['site_config']['ad_img']}}",
+                    },
+
+                    loading: false,
+
+                    dialogImageUrl: '',
+                    dialogVisible: false,
+                    fileList: [],
+                }
+            },
+            created() {
+
+                //      this.fileList = this.sys_info.ad_img ? [{'url': this.sys_info.ad_img}] : []; // Initialize fileList with ad_img if available             
+            },
+
+            methods: {
+
+                // 提交系统设置表单
+                submitSystemForm() {
+                    this.$refs.sys_info.validate((valid) => {
+                        if (valid) {
+                            this.loading = true;
+                            this.sys_info = {
+                                ...this.sys_info,
+                                'type': 'system' // Change 'driver' to 'system'
+                            }
+                            // 这里替换为实际的API请求
+                            axios.post('/admin/sys/system_setup', this.sys_info) // Change 'this.driver_info' to 'this.sys_info'
+                                .then(response => {
+                                    this.$message.success('设置保存成功');
+                                    this.loading = false;
+                                })
+                                .catch(error => {
+                                    this.$message.error('保存失败：' + error.message);
+                                    this.loading = false;
+                                });
+                        } else {
+                            this.$message.warning('请填写完整的表单信息');
+                            return false;
+                        }
+                    });
+                },
+
+                // 营业执照上传成功
+                handleLicenseSuccess(res, file) {
+                    console.log(res, file);
+                    this.fileList = [res.data]; // Assuming the response contains the image URL
+                    this.sys_info.ad_img = res.data;
+                },
+
+                // 营业执照移除
+                handleLicenseRemove(file, fileList) {
+                    console.log(file);
+                    img = file.url
+                    if (file.response && file.response.data)
+                        img = file.response.data
+
+                    alert(img)
+
+
+                    this.fileList = fileList;
+                    this.sys_info.ad_img = '';
+                    $.ajax({
+                        url: '/admin/remove_file',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            file_path: img,
+                            type: 'ad_img'
+                        },
+                        success: function (data) {
+                            console.log(data)
+                            if (data.status == 0) {
+                                this.$message.success('删除成功');
+                                this.sys_info.ad_img = ''
+                                this.fileList = []
+
+                            } else {
+                                this.$message.error('error');
+                            }
+                        }
+                    });
+                },
+
+                handlePictureCardPreview(file) {
+                    this.dialogImageUrl = file.url;
+                    this.dialogVisible = true;
+                },
+                handleChange(file, fileList) {
+                    this.fileList.push(file)
+                },
+
+            }
+        });
+    </script>
+</body>
+
+</html>

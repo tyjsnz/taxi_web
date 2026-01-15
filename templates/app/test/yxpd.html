@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>优先派单</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="https://wxapp.flacn.net/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #fff;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #409EFF; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .body-nav{
+            position: relative; top: -20px; width: 100%; border-top-left-radius: 15px; border-top-right-radius: 15px; background: #fff;             
+            font-size: 14px;
+        }
+        .body-nav .sp_tip{
+            margin: 10px 0; 
+        }
+        .body-content{
+            padding: 20px;
+        }
+        .nav-content{
+            position: relative;
+            top: -80px;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+        }
+        .nav-content h3{
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <i class="el-icon-arrow-left back-icon" @click="goBack"></i>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">优先派单</div>
+                    </el-col>
+                </el-row>
+            </div>
+            <img src="/static/images/app/yxpd.jpg" style="width: 100%; height: 100%;">
+
+            <div class="nav-content">
+                <el-row>
+                    <el-col :span="12">
+                       <h3><span style="font-size: 28px; font-weight: bold;">${online_day}</span><span>天</span></h3>
+                       <p>优先派单天数</p>
+                    </el-col>
+                    <el-col :span="12">
+                        <h3><span style="font-size: 28px; font-weight: bold;"></span><span>${online_time}</span></h3>
+                        <p>暂无收入排名</p>
+                     </el-col>
+                   </el-col>
+                </el-row>
+            </div>
+
+            <!-- 主体部分 -->
+            <div class="body-nav">
+                <div class="body-content">
+                    <h3>活动时间</h3>
+                    <div class="sp_tip">首单后可享受28天优先派单</div>
+                    <h3 style="margin-top: 20px;">规则须知</h3>
+                    <div class="sp_tip">
+                        新司机注册后，未完成首单时，或完成首单后28天内，可享受优先派单权益。
+                        当新司机履约分低于280分，将收回倾斜权益，直至履约分达标后，再次下发倾斜权益，再次下发时天数不重置。
+                        (同一用户在LS出行多商家多次注册/首单，只可享受一次优先派单)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="http://wxapp.flacn.net/static/libs/layui/layui.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    online_day: 3,
+                    online_time: '近7日在线<1h',
+                }
+            },
+            methods: {
+                goBack() {
+                    history.back();
+
+                    /*
+                    // 返回上一页的逻辑                    
+                    window.parent.postMessage({ address: this.city }, '*');
+                    var index = parent.layer.getFrameIndex(window.name); // 获取当前 layer 窗口的索引
+                    parent.layer.close(index); // 关闭当前弹窗
+                    */
+                },
+            }
+        });
+        window.app = app;
+    </script>
+</body>
+
+</html>

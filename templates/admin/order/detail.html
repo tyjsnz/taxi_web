@@ -1,0 +1,238 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+<style>
+    input[type=file] {
+        display: none !important;
+    }
+    .sp{
+        width: 100%;
+        padding: 10px;
+        border-bottom: 1px solid #ebeef5;
+        color: #4377f0;
+        font-weight: 100;
+    }
+</style>
+<div class="container-fluid p-t-15" id="app">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="订单号">
+                                    <span class="sp">{{row['sn']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="乘客电话">
+                                    <span class="sp">{{row['customer_phone']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="订单时间">
+                                    <span class="sp">{{row['order_time']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="起始点">
+                                    <span class="sp">{{row['start_location']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="目的地">
+                                    <span class="sp">{{row['end_location']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="行程(km)">
+                                    <span class="sp">{{row['distance'] / 1000}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="行程用时(分钟)">
+                                    <span class="sp">{{row['duration'] / 60}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="预估费用">
+                                    <span class="sp">{{row['cost']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="实际费用">
+                                    <span class="sp">{{row['total_fee']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="订单折扣">
+                                    <span class="sp">{{row['discount']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="用户加价金额">
+                                    <span class="sp">{{row['user_add_fee']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="接单时间">
+                                    <span class="sp">{{row['accept_time']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="司机姓名">
+                                    <span class="sp">{{row['driver_name']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="司机电话">
+                                    <span class="sp">{{row['driver_phone']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="车牌号">
+                                    <span class="sp">{{row['car_no']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            
+                            <el-col :span="8">
+                                <el-form-item label="上车时间">
+                                    <span class="sp">{{row['up_time']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="下车时间">
+                                    <span class="sp">{{row['down_time']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <hr>
+                    
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="分段起步价费">
+                                    <span class="sp">{{row['start_fee']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="分段起步里程">
+                                    <span class="sp">{{row['start_mileage']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="分段里程费单价">
+                                    <span class="sp">{{row['mileage_fee_per_km']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="分段时长费单价">
+                                    <span class="sp">{{row['duration_fee_per_minute']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="超出特定时长的时长数">
+                                    <span class="sp">{{row['extra_duration_minutes']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="远途费">
+                                    <span class="sp">{{row['long_distance_fee']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+                    <el-row>
+                        <el-form label-position="top" label-width="80px" size="mini">
+                            <el-col :span="8">
+                                <el-form-item label="触发远途费的里程数">
+                                    <span class="sp">{{row['long_distance_trigger_mileage']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="临时加价费">
+                                    <span class="sp">{{row['temporary_surcharge']}}</span>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-form-item label="临时加价系数">
+                                    <span class="sp">{{row['temporary_coefficent']}}</span>
+                                </el-form-item>
+                            </el-col>
+                        </el-form>
+                    </el-row>
+
+
+                    <!-- <el-row>
+                        <button type="button" class="btn btn-primary multitabs" target-form="add-form"
+                            @click="add_data">确 定</button>
+                    </el-row> -->
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="/static/libs/element-ui/js/vue.min.js"></script>
+<script src="/static/libs/element-ui/js/element-ui.js"></script>
+
+<!-- 实例化编辑器 -->
+<script type="text/javascript">
+    new Vue({
+        el: "#app",
+        delimiters: ['${', '}'],
+        data() {
+            return {
+            };
+        },
+        mounted() {
+
+        },
+        methods: {
+            add_data() {
+                var that = this
+            },
+        }
+    })
+</script>
+{% endblock %}

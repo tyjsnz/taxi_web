@@ -1,0 +1,29 @@
+@charset "UTF-8";
+.header {
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 10;
+}
+
+.back-icon {
+    font-size: 20px;
+    color: #333;
+    margin-right: 10px;
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+.el-tag.el-tag--danger {
+    background-color: #ff3366;
+    border-color: #fde2e2;
+    color: #fff;
+}

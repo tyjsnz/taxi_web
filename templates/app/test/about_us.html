@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>关于</title>
+    <!-- 引入Element UI CSS -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            position: relative;
+            height: 57px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fff;
+        }
+        .back-arrow {
+            position: absolute;
+            left: 15px;
+            font-size: 20px;
+        }
+        .title {
+            font-size: 17px;
+            font-weight: 500;
+        }
+        .menu-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            background: #fff;
+        }
+        .menu-item {
+            position: relative;
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .menu-item:active {
+            background-color: #f9f9f9;
+        }
+        .menu-text {
+            font-size: 15px;
+        }
+        .arrow-icon {
+            color: #999;
+            font-size: 14px;
+        }
+        .line{
+            line-height: 10px; height: 10px; background: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <div class="back-arrow" @click="goBack"><i class="el-icon-arrow-left back-icon" @click="goBack"></i></div>
+            <div class="title">关于</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20%; margin-bottom: 20px;">
+            <img src="/static/images/app/logo.png">
+            <p>当前版本 1.0.0</p>
+        </div>
+        <!-- 功能菜单列表 -->
+        <ul class="menu-list">            
+            <li class="menu-item" @click="navigateTo()">
+                <span class="menu-text">版本升级</span>
+                <i class="el-icon-arrow-right arrow-icon"></i>
+            </li>
+                       
+        </ul>
+    </div>
+
+    <!-- 引入Vue和Element UI JS -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>    
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">    
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            mounted() {
+                this.fetchOrders()
+            },
+            
+            methods: {
+                goBack() {
+                    // 实际项目中替换为路由返回或关闭页面
+                    window.history.back();
+                },
+                navigateTo() {
+                    this.$indicator.open();
+                    setTimeout(() => {
+                        this.$indicator.close();
+                        this.$toast('当前版本为1.0.0，暂无更新');
+                    }, 1000);
+                },
+                fetchOrders() {
+                    var that = this
+                    //this.driver_id = 3
+                    getRequest('https://wxapp.flacn.net/app/driver/order/total_data', { 'driver_id': this.driver_id, 'token': this.token }, (res, status) => {
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            that.today_data.order_count = res.data.order_num
+                            that.today_data.in_pay = res.data.in_pay
+                            that.today_data.online_time = this.formatOrderDuration(res.data.online_total_time)
+                            that.today_data.score = res.data.score
+                            that.work_status = parseInt(res.data.work_status)
+                            if (that.work_status == 1)
+                                that.currentStatus = 'working'
+                            else if (that.work_status == 2)
+                                that.currentStatus = 'resting'
+                            else if (that.work_status == 3)
+                                that.currentStatus = 'offline'
+
+                            that.changeStatus(that.currentStatus)
+                        }
+                    })
+                    // 这里在点击上班后再拉取
+                    //this.pullOrder()
+                },
+            }
+        });
+    </script>
+</body>
+</html>

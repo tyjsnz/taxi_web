@@ -1,0 +1,212 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <button class="layui-btn btn-add">添加</button>
+                </div>
+               
+                <div class="card-body">
+                    <table id="test" lay-filter="test"></table>
+                    <script type="text/html" id="barDemo">
+                        <a lay-event="del" class="btn btn-xs btn-default btn-delete" data-id="" href="javascript:void(0)" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i>删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="div-add" style="display: none;">
+    <form class="layui-form layui-form-pane" action="" style="padding: 20px;">
+          <div class="layui-form-item">
+            <label class="layui-form-label">服务时间</label>
+            <div class="layui-input-inline">
+              <input type="text" id="sname" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+        
+          <div class="layui-form-item">
+            <div >
+            <button class="layui-btn btn-submit">确认</button>
+            </div>
+          </div>
+          
+    </form>
+</div>
+
+<script>
+    function formatDateTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.getFullYear() + '-' +
+           String(date.getMonth() + 1).padStart(2, '0') + '-' +
+           String(date.getDate()).padStart(2, '0') + ' ' +
+           String(date.getHours()).padStart(2, '0') + ':' +
+           String(date.getMinutes()).padStart(2, '0') + ':' +
+           String(date.getSeconds()).padStart(2, '0');
+    }
+    layui.use(['table'], function () {
+        var table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+        var option = {
+            elem: '#test'
+            , height: 600
+            , title: '服务时间列表'
+            , url: '/admin/user/service_time/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , page: true
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                { field: 'id', title: '编号', sort: true, width: 100, hide: false }
+                , { field: 'name', title: '服务时间',edit: 'text'}
+                , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 120 }
+
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function () {
+                //当数据渲染完后，执行的回调
+                //$('.layui-table-cell').css('height','42px');
+            }
+            , parseData: function (res) {
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.data.length
+                    , "data": res.data
+                };
+            }
+
+        }
+
+        table.render(option);
+  
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event == 'del')
+            {
+                $.confirm({
+                    title: '提示',
+                    content: '确定删除当前记录？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/user/service_time/delete',
+                                    data: {'id': data.id},
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            msg(res.msg);
+                                            return;
+                                        }
+                                        msg(res.msg);
+                                        //$("#tr_" + id).remove();
+                                        obj.del()
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+        });
+
+        var loading
+        $(".btn-add").click(function(){
+            loading = layer.open({
+                    type: 1,
+                    title: '添加服务时间',
+                    area: ['400px', '300px'],
+                    content: $("#div-add"),
+                    end: function(){
+                        //layer.msg('关闭后的回调', {icon:6});
+                        $("#sname").val('')
+                    }
+                })
+        });
+
+        $(".btn-submit").click(function(){
+            var sname = $("#sname").val();
+            layer.close(loading)
+            
+            $.ajax({
+                url: '/admin/user/service_time',
+                type: 'post',
+                dataType: 'json',
+                data:{'name':sname},
+                success: function (res) {
+                    layer.alert(res.msg)
+                    table.reload('test');
+                }
+            })
+            return false;
+        })
+
+        table.on('edit(test)', function (obj) {
+            var field = obj.field; // 得到字段
+            var value = obj.value; // 得到修改后的值
+            var data = obj.data; // 得到所在行所有键值
+            // // 值的校验
+             if (field != 'name') {
+                 return
+            }
+            // 编辑后续操作，如提交更新请求，以完成真实的数据更新
+            // …
+            $.ajax({
+                url: '/admin/user/service_time/edit',
+                data:{'name': value,'id': obj.data.id},
+                type: 'post',
+                dataType: 'json',
+                success: function(res){
+                    if(res.status != 0){
+                        layer.msg(res.msg)
+                        return
+                    }
+                }
+            })
+
+            // 其他更新操作
+            var update = {};
+            update[field] = value;
+            obj.update(update);
+        });
+
+    });
+
+
+</script>
+
+{% endblock %}

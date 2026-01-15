@@ -1,0 +1,240 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+
+                <div class="card-toolbar clearfix">
+
+                   
+                </div>
+
+                <div class="card-body">
+                    <table id="test" lay-filter="test"></table>
+                    <script type="text/html" id="toolbarDemo">
+                        <div class="layui-btn-container">
+                            <button class="layui-btn layui-btn-sm" lay-event="getCheckData">新增时段</button>
+                            <button class="layui-btn layui-btn-sm layui-btn-primary" lay-event="ref">刷新</button>
+                        </div>
+                    </script>
+                    <script type="text/html" id="barDemo">
+                        <!-- <a lay-event='edit' class="btn btn-xs btn-default" href="javascript:void(0)" title="编辑" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a> -->
+                        <a lay-event="del" class="layui-btn layui-btn-xs layui-btn-danger btn-delete" data-id="" href="javascript:void(0)">删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatDateTime(dateStr) {
+        const date = new Date(dateStr);
+        return date.getUTCFullYear() + '-' +
+               String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+               String(date.getUTCDate()).padStart(2, '0') + ' ' +
+               String(date.getUTCHours()).padStart(2, '0') + ':' +
+               String(date.getUTCMinutes()).padStart(2, '0') + ':' +
+               String(date.getUTCSeconds()).padStart(2, '0');
+    }
+    layui.use(['table'], function () {
+        var table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+            , laydate = layui.laydate;
+        laydate.render({
+            elem: '#btime'
+        });
+        laydate.render({
+            elem: '#etime'
+        });
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+        var option = {
+            elem: '#test'
+            , toolbar: '#toolbarDemo'
+            , height: 500
+            , title: '行程计费管理'
+            , url: '/admin/price/list/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , page: true
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                {field: 'id', title: '编号', sort: true, width: 100}
+                , {field: 'is_default', title: 'default',hide: true}
+                , {field: 'short_name', title: '加盟商', width: 120}
+                , {field: 'title', title: '时段说明', width: 120}
+                , {field: 'start_time', title: '开始时间', width: 160}
+                , {field: 'end_time', title: '结束时间', width: 160}
+                , {field: 'start_fee', title: '分段起步费', width: 120}
+                , {field: 'start_mileage', title: '分段起步里程', width: 120}
+                , {field: 'mileage_fee_per_km', title: '分段里程费单价', width: 150}
+                , {field: 'long_distance_trigger_mileage', title: '触发远途费的里程数', width: 190}
+                , {field: 'long_distance_fee_per_km', title: '远途费单价', width: 120}
+                , {field: 'duration_fee_per_minute', title: '分段时长费单价', width: 180}
+                , {fixed: 'right', title: '操作', toolbar: '#barDemo', width: 120}
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function (res, curr, count) {
+                //当数据渲染完后，执行的回调
+            }
+            , parseData: function (res) {
+              
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.data.length
+                    , "data": res.data
+                };
+            }
+        }
+
+        table.render(option);
+
+
+        table.on('toolbar(test)', function (obj) {
+        
+        var othis = lay(this);
+        switch (obj.event) {
+            case 'getCheckData':
+                layer.open({
+                    type: 2,
+                    title: '运营时段',
+                    shadeClose: false,
+                    shade: 0.8,
+                    area: ['55%', '85%'],
+                    content: '/admin/price/add'
+                })
+                break;
+            case 'ref':
+                table.render(option)
+        };
+    });
+
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                if(data.is_default == 1){
+                    layer.alert('默认价格不能删除', {icon: 2});
+                    return false;
+                }
+                $.confirm({
+                    title: '提示',
+                    content: '确定删除当前记录？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/price/delete',
+                                    data: {'id': data.id},
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            msg(res.msg);
+                                            return;
+                                        }
+                                        msg(res.msg);
+                                        obj.del()
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+            else if (obj.event == 'edit') {
+                parent.layer.open({
+                    type: 2,
+                    title: '编辑车辆信息',
+                    shadeClose: false,
+                    shade: 0.8,
+                    area: ['600px', '95%'],
+                    content: '/admin/driver_car/edit?id=' + data.id
+                })
+            }
+        });
+
+        $(".search-btn").click(function () {
+            let k = $("#car_id").val();
+            let b = $("#btime").val()
+            if (b != "")
+                b += ' 00:00:00'
+            let e =  $("#etime").val()
+            if(e != '')
+                e += ' 23:59:59'
+            option.where = { 'car_id': k,'btime': b,'etime':e }
+            table.render(option)
+            return false;
+        })
+
+        $(".ref-btn").click(function () {
+            $("#car_id").val('')
+            $("#btime").val('')
+            $("#etime").val('')
+            option.where = {}
+            table.render(option)
+            return false;
+        })
+
+        table.on('edit(test)', function (obj) {
+            var field = obj.field; // 得到字段
+            var value = obj.value; // 得到修改后的值
+            var data = obj.data; // 得到所在行所有键值
+            // // 值的校验
+            if (field === 'age' || field === 'mileage') {
+                if (!/^([0-9_\.\-])+$/.test(obj.value)) {
+                    layer.tips('只可输入数值，请重新编辑', this, { tips: 1 });
+                    return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+                }
+            }
+            // 编辑后续操作，如提交更新请求，以完成真实的数据更新
+            // …
+            $.ajax({
+                url: '/admin/driver_car/edit_field',
+                data:{'value': value,'id': obj.data.id, 'field': field},
+                type: 'post',
+                dataType: 'json',
+                success: function(res){
+
+                }
+            })
+            //layer.msg('编辑成功' + field + "," + value, { icon: 1 });
+
+            // 其他更新操作
+            var update = {};
+            update[field] = value;
+            obj.update(update);
+        });
+    });
+</script>
+
+{% endblock %}

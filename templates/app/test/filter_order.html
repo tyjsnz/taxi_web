@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>筛订单</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #fff;
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        .fix-header {
+            z-index: 11;
+            height: 45px;
+            background-color: #ff6b00;
+            line-height: 30px;
+            position: fixed;
+            width: 100%;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 40px;
+            display: flex;
+            font-size: 16px;
+        }
+
+        .header i {
+            font-size: 25px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .close-btn {
+            font-size: 20px;
+            color: #999;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .preference-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .preference-label {
+            font-size: 15px;
+            color: #333;
+        }
+
+        .hint-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .option-item {
+            margin-bottom: 15px;
+        }
+
+        .option-hint {
+            font-size: 12px;
+            color: #F56C6C;
+            margin-top: 5px;
+        }
+
+        .save-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 15px;
+            right: 15px;
+            width: calc(100% - 30px);
+        }
+
+        .el-button--danger {
+            background-color: #ff6b00;
+        }
+
+        .el-radio-button__orig-radio:checked+.el-radio-button__inner {
+            background-color: #ff6b00 !important;
+            border-color: #ff6b00 !important;
+            box-shadow: none !important;
+        }
+
+        .el-button--danger:focus,
+        .el-button--danger:hover {
+            background: #ff6b00;
+            border-color: #ff6b00;
+            color: #FFF;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="fix-header"></div>"
+        <!-- 头部标题 -->
+        <div class="header" @click="close_wnd">
+            <i class="el-icon-arrow-left back-icon"></i>
+            <div class="header-title">筛订单</div>
+            <!-- <i class="el-icon-close close-btn" @click="close_wnd"></i> -->
+        </div>
+        <div class="container">
+
+
+            <!-- 接单偏好 -->
+            <div class="section">
+                <div class="section-title">接单偏好</div>
+                <div class="preference-item">
+                    <div class="preference-label">不接机场订单</div>
+                    <el-switch v-model="air" active-color="#ff6b00"></el-switch>
+                </div>
+                <div class="preference-item">
+                    <div class="preference-label">不接火车站订单</div>
+                    <el-switch v-model="train" active-color="#ff6b00"></el-switch>
+                </div>
+            </div>
+
+            <!-- 顺路单 -->
+            <div class="section">
+                <div class="section-title">顺路单</div>
+                <el-col :span="20">
+                    <el-input @focus="sel_address" v-model="destination" placeholder="设置顺路目的地" class="option-item" clearable>
+                </el-col>
+                <el-col :span="4">
+                    <el-button @click="clear_address" type="danger" class="option-item" style="width: 100%; height: 40px;">取消</el-button>
+                </el-col>
+            </div>
+
+            <!-- 顺路程度 -->
+            <div class="section" v-if="destination != ''">
+                <div class="section-title" style="margin-bottom: 5px;">顺路程度</div>
+                <div class="hint-text" style="margin-bottom: 20px;">顺路程度越低，订单越多</div>
+
+                <el-row>
+                    <el-col :span="12">
+                        <el-button @click="btnType = 1" :type="btnType==1 ? 'danger' : ''"
+                            style="width: 90%; height: 70px;">
+                            <p style="font-size: 16px; margin: 0 0 5px 0;">60%一般顺路</p>
+                            <span style="margin-top: 15px; font-size: 12px;">将减少部分听单量</span>
+                        </el-button>
+
+                    </el-col>
+                    <el-col :span="12">
+                        <el-button @click="btnType = 2" :type="btnType==2 ? 'danger' : ''"
+                            style="width: 90%; height: 70px;">
+                            <p style="font-size: 16px; margin: 0 0 5px 0;">90%超级顺路</p>
+                            <span style="margin-top: 15px; font-size: 12px;">将减少较多听单率</span>
+                        </el-button>
+                    </el-col>
+
+                </el-row>
+            </div>
+
+            <!-- 接单模式 -->
+            <div class="section">
+                <div class="section-title" style="margin-bottom: 5px;">接单模式</div>
+                <div class="hint-text" style="margin-bottom: 20px;">设置系统自动派单后，抢单功能将不可用</div>
+
+                <el-row>
+                    <el-col :span="12">
+                        <el-button @click="btnModel = 0" :type="btnModel==0 ? 'danger' : ''"
+                            style="width: 90%; height: 70px;">
+                            <p style="font-size: 16px; margin: 0 0 5px 0;">系统派单</p>
+                            <span style="margin-top: 15px; font-size: 12px;">按最近距离自动派单</span>
+                        </el-button>
+
+                    </el-col>
+                    <el-col :span="12">
+                        <el-button @click="btnModel = 1" :type="btnModel==1 ? 'danger' : ''"
+                            style="width: 90%; height: 70px;">
+                            <p style="font-size: 16px; margin: 0 0 5px 0;">抢单模式</p>
+                            <span style="margin-top: 15px; font-size: 12px;">需在抢单大厅接订单</span>
+                        </el-button>
+                    </el-col>
+
+                </el-row>
+            </div>
+
+            <!-- 保存按钮 -->
+            <el-button type="danger" class="save-btn" @click="saveSettings">
+                保存设置
+            </el-button>
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>    
+    <script src="/static/utils/helper.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    air: false,
+                    train: false,
+                    destination: '',
+                    latlng: '',
+                    matchLevel: '60',
+                    btnType: '1',
+                    btnModel: 0, // 系统派单，1抢单模式
+                }
+            },
+            mounted() {
+                this.get_profile()
+            },
+            methods: {
+                get_profile() {
+                    var that = this
+                    fetch(`/app/driver/profile/json?driver_id=${this.driver_id}`)
+                        .then(res => res.json())
+                        .then(res => {
+                            console.log(res)
+                            if (res.status == 0) {
+                                that.air = res.data.no_air == 1 ? true : false
+                                that.train = res.data.no_train == 1 ? true : false
+                                let destination = res.data.on_way_address
+                                
+                                if(destination != '' && destination != null) {
+                                    let _arr = destination.split("#")
+                                    if(_arr.length == 3){
+                                        that.destination = _arr[0]
+                                        that.latlng = _arr[1]
+                                        if(_arr[2] == 0.6)
+                                            that.btnType = 1
+                                        else
+                                            that.btnType = 2
+                                    }
+                                }
+
+                                that.btnModel = res.data.accept_order_model == 0 ? 0 : 1
+                            }
+                        })
+                },
+                saveSettings() {                                      
+                    var data = {
+                        driver_id: this.driver_id,
+                        air: this.air,
+                        train: this.train,
+                        destination: this.destination,
+                        latlng: this.latlng,
+                        match_ratio: this.btnType == 1 ? 0.6 : 0.9,
+                        accept_order_model: this.btnModel
+                    }
+
+                    postRequest('/app/api/driver/v1/set_driver_accept_order_model', data, (data, status) => {
+                        if (status != 'success') {
+                            this.$message({
+                                message: '设置失败',
+                                type: 'error'
+                            });
+                            return
+                        }
+
+                        this.$message({
+                            message: '设置已保存',
+                            type: 'success'
+                        });
+                        
+                        // 更新手机端接单模式
+                        if (window.AndroidBridge){
+                            AndroidBridge.SetDriverAcceptOrderModel(this.btnModel)
+                        }
+
+                    });
+
+
+
+                    //parent.layer.closeAll()
+                    setTimeout(() => {
+                        this.close_wnd()
+                    }, 1000);
+                },
+                clear_address(){
+                    this.destination = ''
+                    this.latlng = ''
+                    this.match_ratio = ''
+                },
+                close_wnd() {
+                    var index = parent.layer.getFrameIndex(window.name); // 获取当前 layer 窗口的索引
+                    parent.layer.close(index);
+                },
+                sel_address() {
+                    layer.open({
+                        type: 2,
+                        title: false,
+                        closeBtn: 0,
+                        area: ['100%', '100%'],
+                        content: '/app/driver/sel_address.html?type=vs1sw2123v32211122111212221',
+                    });
+                }
+            }
+        });
+        window.app = app;
+        window.addEventListener('message', function (e) {
+            if (e.data) {
+                console.log(e.data)
+                app.destination = e.data.city + e.data.address
+                app.latlng = e.data.lng + "," + e.data.lat
+            }
+        })
+    </script>
+</body>
+
+</html>

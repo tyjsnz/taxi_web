@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>打车热力图</title>
+    <!-- 引入ElementUI的CSS CDN -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入Vue和ElementUI的JS CDN -->
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <!-- 引入AMap地图API -->
+    <script
+        src="https://webapi.amap.com/maps?v=1.4.15&key=2a8e617b4bc73d3b7c35366f566c4266&plugin=AMap.Scale,AMap.ToolBa,AMap.MarkerCluster"></script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            /* line-height: 1.5; */
+        }
+
+        .container {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #ff6b00;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            padding-top: 32px;
+            font-size: 16px;
+        }
+
+        .header i {
+            font-size: 25px;
+        }
+
+
+        .map-container {
+            flex: 1;
+            background-color: #eaeaea;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .order-panel {
+            position: fixed;
+            bottom: 130px;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 19790;
+        }
+
+        .order-panel.show {
+            transform: translateY(0);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .order-time {
+            color: #FF7E3E;
+            font-size: 14px;
+        }
+
+        .order-info {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .location-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #FF7E3E;
+        }
+
+        .line {
+            width: 2px;
+            height: 30px;
+            background-color: #ccc;
+            margin: 5px 0;
+        }
+
+        .square {
+            width: 10px;
+            height: 10px;
+            background-color: #1989fa;
+        }
+
+        .location-text {
+            flex: 1;
+        }
+
+        .location-start {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .location-end {
+            color: #666;
+        }
+
+
+
+        .footer {
+            background-color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-btn {
+            flex: 1;
+            margin: 0 5px;
+            border-radius: 5px;
+            padding: 12px 0;
+            font-size: 16px;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #FF7E3E;
+            color: white;
+        }
+
+        .btn-default {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+
+        .income-card {
+            position: absolute;
+            top: 80px;
+            left: 15px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .heatmap-toggle {
+            position: absolute;
+            top: 100px;
+            right: 15px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+        }
+
+        .heatmap-toggle span {
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .income-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .income-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FF7E3E;
+        }
+
+        /* 信息窗口自定义样式 */
+        .amap-info-content {
+            border-radius: 8px !important;
+            box-shadow: 0 2px 6px rgba(255, 107, 0, 0.3) !important;
+        }
+
+        .amap-info-close {
+            right: 5px !important;
+            top: 5px !important;
+        }
+
+        /*公共部分顶部导航栏*/
+        .navbar {
+            position: fixed;
+            width: 100%;
+            color: #f5f5f5;
+            padding: 10px;
+            background: #ff6b00;
+            padding-bottom: 0px;
+            padding-top: 40px;
+            font-size: 16px;
+            z-index: 197;
+        }
+
+        .navbar i {
+            font-size: 25px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .logo p {
+            font-size: 10px;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .el-button--danger {
+            background-color: #ff6b00;
+        }
+
+        /*公共部分结束*/
+
+        .order-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .drag-handle {
+            height: 4px;
+            width: 40px;
+            background-color: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 10px;
+            touch-action: none;
+        }
+
+        .region-list {
+            padding: 5px 0;
+
+        }
+
+        .region-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8f8f8;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .region-item:active {
+            background: #eee;
+        }
+
+        .region-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .order-count {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .item-right .el-button {
+            padding: 7px 12px;
+        }
+
+        .order-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-height: 70vh;
+            overflow: hidden;
+            transform: translateY(calc(100% - 60px));
+            /* 默认只显示标题部分 */
+        }
+
+        .order-panel.expanded {
+            transform: translateY(0);
+            /* 完全展开 */
+        }
+
+        .drag-indicator {
+            height: 4px;
+            width: 40px;
+            background-color: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 10px;
+            cursor: pointer;
+        }
+
+        .order-header {
+            cursor: pointer;
+        }
+
+        .region-list {
+            /* max-height: calc(70vh - 100px); */
+            overflow-y: auto;
+            max-height: 250px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container" v-cloak>
+        <!-- 公共部分顶部导航栏 -->
+        <el-row class="navbar">
+            <el-col :span="6">
+                <div @click="goback">
+                    <i class="el-icon-arrow-left"></i>
+                </div>
+            </el-col>
+            <el-col :span="12">
+                <div class="logo">
+                    <h1>LS出行</h1>
+                    <p>TRAVELING IN LS</p>
+                </div>
+            </el-col>
+            <!-- <el-col :span="3" style="text-align: center;">
+                <img src="/static/images/app/scan.png" style="width: 30px;" @click="scan">
+            </el-col>
+            <el-col :span="3" style="text-align: right;">
+                <img src="/static/images/app/notice.png" style="width: 30px;" @click="notice">
+            </el-col> -->
+        </el-row>
+
+
+        <!-- 地图区域 -->
+        <div class="map-container">
+            <div id="map"></div>
+
+            <!-- 热力图开关 -->
+            <div class="heatmap-toggle" style="display: none;">
+                <el-switch v-model="showHeatmap" @change="toggleHeatmap"></el-switch>
+                <span>热力图</span>
+            </div>
+        </div>
+
+     
+        <div class="order-panel" :class="{show: hasOrder, expanded: isPanelExpanded}" @click="togglePanel">
+            <!-- 拖动条改为指示器 -->
+            <div class="drag-indicator"></div>
+
+            <div class="order-header">
+                <div class="order-title">当前有 ${hotList.length} 个爆单区域</div>
+                <div class="order-time"></div>
+            </div>
+
+            <div class="region-list" v-show="isPanelExpanded">
+                <div class="region-item" v-for="(item, index) in hotList" :key="index" @click.stop="selectRegion(item)">
+                    <div class="item-left">
+                        <div class="region-name">${item.name}商圈</div>
+                        <div class="order-count">最近订单量：${item.count}</div>
+                    </div>
+                    <div class="item-right">
+                        <el-button type="danger" size="mini" @click.stop="navigateToRegion(item)">
+                            <i class="el-icon-position"></i>
+                            导航去此区域
+                        </el-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        const app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    currentStatus: 'offline',
+                    hasOrder: false,
+                    orderTime: 15,
+                    timer: null,
+                    todayIncome: '256.80',
+                    passengerRating: 4.8,
+                    map: null,
+                    heatmap: null,
+                    showHeatmap: true,
+                    locationCircle: null,
+                    centerLocation: null,
+                    // 模拟的热力图数据 - 北京主要商圈坐标
+                    heatmapData: [
+                        { lng: 101.544877, lat: 25.031292, count: 82 },
+                        { lng: 101.544877, lat: 25.031292, count: 89 },
+                        { lng: 101.544877, lat: 25.030055, count: 86 },
+                        { lng: 101.543268, lat: 25.031248, count: 113 },
+                        { lng: 101.543658, lat: 25.032529, count: 26 },
+                        { lng: 101.545755, lat: 25.032750, count: 61 },
+                        { lng: 101.543219, lat: 25.038848, count: 63 },
+                        { lng: 101.543024, lat: 25.042029, count: 63 },
+                        { lng: 101.540195, lat: 25.043354, count: 25 },
+                        { lng: 101.546438, lat: 25.039378, count: 93 },
+                        { lng: 101.551656, lat: 25.037213, count: 25 },
+                        { lng: 101.550193, lat: 25.031645, count: 87 },
+                        { lng: 101.548144, lat: 25.023868, count: 54 },
+                        { lng: 101.541073, lat: 25.021305, count: 50 },
+                        { lng: 101.536928, lat: 25.031557, count: 59 },
+                        { lng: 101.540293, lat: 25.038804, count: 81 }
+                    ],
+                    current_info: {
+                        hot_num: 4,
+                        'name': '昆明市北京路附近',
+                        'order_num': '123',
+                        lng: 116.648834,
+                        lat: 39.902901
+                    },
+                    // 新增数据项
+                    panelHeight: 200,     // 面板默认高度
+                    startY: 0,           // 触摸起始Y坐标
+                    isDragging: false,   // 是否正在拖动
+                    hotList: [           // 区域列表数据
+                         { name: '同德商圈', order_num: 158, lng: 101.544877, lat: 25.031292 },
+                         { name: '开发区商业中心', order_num: 234, lng: 101.548144, lat: 25.023868 },
+                         { name: '高铁站周边', order_num: 189, lng: 101.536928, lat: 25.031557 },
+                         { name: '官渡古镇景区', order_num: 302, lng: 101.540293, lat: 25.038804 }
+                    ],
+                    isPanelExpanded: false, // 控制面板是否展开
+                    android_lat: 0,
+                    android_lng: 0,
+                }
+            },
+            mounted() {
+                this.current_info.hot_num = this.heatmapData.length;
+                // 初始化地图
+                this.initMap();
+
+                this.showMyLocationMarker(101.544877, 25.031292)
+
+                // app 端实时调用，并设置定位的位置
+                setTimeout(() => {
+                    if (window.AndroidBridge) {
+                        const latlng = AndroidBridge.getAndroidLatlng()
+                        if (latlng && latlng != "") {
+                            let mylatlng = latlng.split(",")
+                            let lat = parseFloat(mylatlng[0]).toFixed(6)
+                            let lng = parseFloat(mylatlng[1]).toFixed(6)
+                            this.showMyLocationMarker(lng, lat)
+                        }
+                    }
+
+                    // 2秒后获取热力图数据
+                    this.get_heatmap_data()
+
+                }, 2000)
+
+            },
+            beforeDestroy() {
+                if (this.map) {
+                    this.map.off('moveend');
+                    this.map.destroy();
+                }
+            },
+            computed: {
+                panelTransform() {
+                    return `translateY(${this.panelHeight}px)`;
+                }
+            },
+            methods: {
+                get_heatmap_data() {
+                    // Fetch heatmap data from the server
+                    fetch('/app/api/driver/v1/heatmap')
+                        .then(response => response.json())
+                        .then(res => {
+                            if (res.status != 0)
+                                return
+                            if (res.data.length == 0)
+                                return
+
+                                // { name: '鹿城北路商圈', order_num: 158, lng: 101.544877, lat: 25.031292 },
+                            var data = []
+                            var max_lng = 0
+                            var max_lat = 0
+                            var _max = 0
+
+                            for (let i in res.data) {
+                                let item = res.data[i]
+                                lng = item.latlng.split(",")[1]
+                                lat = item.latlng.split(",")[0]
+                                data.push({
+                                    lng: parseFloat(lng).toFixed(6),
+                                    lat: parseFloat(lat).toFixed(6),
+                                    count: item.order_count,
+                                    name: item.city + item.district + item.township
+                                })
+                                if (item.order_count > _max) {
+                                    _max = item.order_count
+                                    max_lng = lng
+                                    max_lat = lat
+                                }
+                            }
+
+                            // 排序降序
+                            data.sort((a, b) => b.count - a.count);
+                            // 过滤小于5单的记录
+                            data = data.filter(item => item.count >= 5);
+                            // 取前5条数据
+                            this.hotList = data.slice(0,5)
+
+                            // 转到热力图中心
+                            this.moveToLocationWithMarker(max_lng, max_lat);
+
+                            console.log("热力图数据：", data)
+                            this.heatmapData = data;
+                            this.heatmap.setDataSet({
+                                data: this.heatmapData,
+                                max: 500
+                            });
+
+                            this.addMarkersFromHeatmapData();
+                        })
+                        .catch(error => console.error('Error fetching heatmap data:', error));
+
+                },
+                getRandomInt(min, max) {
+                    min = Math.ceil(min);
+                    max = Math.floor(max);
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                },
+                // 获取中心点坐标
+                getCenterLocation() {
+                    if (this.map) {
+                        const center = this.map.getCenter();
+                        this.centerLocation = {
+                            lng: center.getLng().toFixed(6),
+                            lat: center.getLat().toFixed(6)
+                        };
+                        console.log('lng:', this.centerLocation.lng + ", lat:" + this.centerLocation.lat + ",count:" + this.getRandomInt(10, 100))
+                        return this.centerLocation;
+                    }
+                    return null;
+                },
+                // 初始化地图拖动监听
+                initDragListener() {
+                    this.map.on('moveend', () => {
+                        this.getCenterLocation();
+                    });
+                },
+                initMap() {
+                    // 初始化高德地图
+                    this.map = new AMap.Map('map', {
+                        zoom: 14,
+                        center: [116.397428, 39.90923] // 默认北京中心点
+                    });
+
+                    // 添加定位控件
+                    /*AMap.plugin('AMap.Geolocation', () => {
+                        const geolocation = new AMap.Geolocation({
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            buttonPosition: 'RB',
+                            buttonOffset: new AMap.Pixel(10, 20),
+                            zoomToAccuracy: true
+                        });
+                        this.map.addControl(geolocation);
+                        geolocation.getCurrentPosition();
+                    });
+                    */
+
+                    this.moveToLocationWithMarker(101.546242, 25.032945)
+                    // 初始化热力图
+                    this.initHeatmap();
+                    this.initDragListener()
+                },
+                initHeatmap() {
+                    // 加载热力图插件
+                    AMap.plugin('AMap.Heatmap', () => {
+                        // 创建热力图实例
+                        this.heatmap = new AMap.Heatmap(this.map, {
+                            radius: 25, // 热力图的半径
+                            opacity: [0, 0.8] // 热力图透明度
+                        });
+
+                        // 设置数据集
+                        this.heatmap.setDataSet({
+                            data: this.heatmapData,
+                            max: 100
+                        });
+
+                        // 默认隐藏热力图
+                        //this.heatmap.hide();
+                    });
+                },
+                toggleHeatmap(val) {
+                    if (this.heatmap) {
+                        val ? this.heatmap.show() : this.heatmap.hide();
+                    }
+                },
+                moveToLocationWithZoom(lng, lat, zoom = 15) {
+                    this.map.setZoomAndCenter(zoom, [lng, lat]);
+                },
+                moveToLocation(lng, lat) {
+                    if (this.map) {
+                        // 创建新的中心点坐标
+                        const newCenter = new AMap.LngLat(lng, lat);
+                        // 平滑过渡到新位置
+                        this.map.setCenter(newCenter);
+                        // 如果需要同时设置缩放级别可以添加：
+                        // this.map.setZoomAndCenter(15, newCenter); 
+                    }
+                },
+                // 带标记点的定位
+                moveToLocationWithMarker(lng, lat) {
+                    this.moveToLocationWithZoom(lng, lat, 16);
+
+                    // setTimeout(() => {
+
+                    //     let ps = [
+                    //         [lng, lat],
+                    //         [101.544877, 25.031292],
+                    //         [101.543944, 25.031438],
+                    //     ]
+                    //     this.addMarkers(ps)
+                    // }, 1000);
+
+                },
+                // 添加多个标记
+                addMarkers(positions) {
+                    // 先清除旧标记
+                    this.clearMarkers();
+
+                    // 创建信息窗口实例
+                    const infoWindow = new AMap.InfoWindow({
+                        autoMove: true,  // 自动调整位置避免被遮挡
+                        closeWhenClickMap: true // 点击地图自动关闭
+                    });
+
+                    // 批量添加新标记，自定义content代替markers显示
+                    this.markers = positions.map(pos => {
+                        const marker = new AMap.Marker({
+                            position: pos,
+                            title: '坐标位置',
+                            map: this.map,
+                            //content: `<div style="background:#FF6B00;color:white;padding:2px 8px;border-radius:4px;">${pos[0].toFixed(6)},${pos[1].toFixed(6)}</div>`,
+                            offset: new AMap.Pixel(-15, -30)
+                        });
+
+                        // 添加文字标签作为独立覆盖物
+                        const text = new AMap.Text({
+                            position: pos,
+                            text: `${pos[0].toFixed(6)},${pos[1].toFixed(6)}`,
+                            style: {
+                                'background-color': '#FF6B00',
+                                'color': 'white',
+                                'padding': '2px 8px',
+                                'border-radius': '4px',
+                                'border': '1px solid #FFF'
+                            },
+                            offset: new AMap.Pixel(0, -50)
+                        });
+                        text.setMap(this.map);
+
+                        // 添加点击事件
+                       /* marker.on('click', (e) => {
+                            // 设置信息窗口内容
+                            infoWindow.setContent(`
+                                <div style="min-width:200px;padding:10px;">
+                                    <h3 style="margin:0 0 10px;color:#FF6B00;">坐标详情</h3>
+                                    <p>经度：${pos[0].toFixed(6)}</p>
+                                    <p>纬度：${pos[1].toFixed(6)}</p>
+                                    <p style="margin-top:10px;">
+                                        <button onclick="app.zoomToLocation(${pos[0]},${pos[1]})" 
+                                            style="background:#FF6B00;color:white;border:none;padding:5px 10px;border-radius:3px;">
+                                            放大查看
+                                        </button>
+                                    </p>
+                                </div>
+                            `);
+
+                            // 在标记位置打开信息窗口
+                            infoWindow.open(this.map, pos);
+                        });
+                        */
+
+                        return marker;
+                    });
+
+                    this.showMapCircle(101.544877, 25.031292)
+                },
+
+                // 清除所有标记
+                clearMarkers() {
+                    if (this.markers) {
+                        this.markers.forEach(marker => marker.setMap(null));
+                        this.markers = [];
+                    }
+                },
+                // 在地图上移动到指定位置并添加区域半径框
+                showMapCircle(lng, lat, radius = 500) {
+                    if (this.map) {
+                        console.log('moveToLocation');
+                        // 创建新的中心点坐标
+                        const newCenter = new AMap.LngLat(lng, lat);
+
+                        // 平滑过渡到新位置
+                        this.map.setCenter(newCenter);
+
+                        // 如果需要同时设置缩放级别可以添加：
+                        // this.map.setZoomAndCenter(15, newCenter);
+
+                        // 创建并添加圆形区域
+                        if (!this.locationCircle) {
+                            // 首次创建圆形区域
+                            this.locationCircle = new AMap.Circle({
+                                center: newCenter,         // 圆心位置
+                                radius: radius,            // 半径，单位：米
+                                strokeColor: "#0066B3",    // 线颜色
+                                strokeOpacity: 0.5,        // 线透明度
+                                strokeWeight: 2,           // 线粗细度
+                                fillColor: "#4DA1FF",      // 填充颜色
+                                fillOpacity: 0.3,          // 填充透明度
+                                zIndex: 50,                // 图层叠加顺序
+                                strokeStyle: "solid",      // 线样式
+                                lineJoin: "round",         // 线连接样式
+                                lineCap: "round",          // 线末端样式
+                                bubble: true               // 是否将覆盖物的鼠标或touch等事件冒泡到地图上
+                            });
+
+                            // 添加圆形区域到地图
+                            this.map.add(this.locationCircle);
+                        } else {
+                            // 更新已存在的圆形区域位置和半径
+                            this.locationCircle.setCenter(newCenter);
+                            this.locationCircle.setRadius(radius);
+                        }
+                    }
+                },
+                scan() {
+
+                },
+                notice() {
+
+                },
+                goback() {
+                    history.go(-1);
+                },
+                togglePanel() {
+                    this.isPanelExpanded = !this.isPanelExpanded;
+                },
+
+
+                selectRegion(item) {
+                    this.current_info = item;
+                    this.moveToLocationWithMarker(item.lng, item.lat);
+                },
+                navigateToRegion(item) {
+                    // 这里实现导航逻辑
+                    this.$message(`开始导航到：${item.name}`);
+                    window.navigateToRegion(item.lng, item.lat, item.name)
+                },
+                // 新增方法：在指定位置显示"我的位置"标记
+                showMyLocationMarker(lng, lat) {
+                    // 先清除旧标记（如果有）
+                    if (this.myLocationMarker) {
+                        this.myLocationMarker.setMap(null);
+                        if (this.myLocationText) {
+                            this.myLocationText.setMap(null);
+                        }
+                    }
+
+                    // 创建标记点
+                    this.myLocationMarker = new AMap.Marker({
+                        position: [lng, lat],
+                        map: this.map,
+                        icon: new AMap.Icon({
+                            size: new AMap.Size(40, 40),  // 图标大小
+                            image: '/static/images/app/car.png', // 蓝色图标
+                            imageSize: new AMap.Size(40, 40)  // 图标实际大小
+                        }),
+                        offset: new AMap.Pixel(-10, -30)
+                    });
+
+                    // 创建文字标签
+                    this.myLocationText = new AMap.Text({
+                        position: [lng, lat],
+                        text: '我的位置',
+                        style: {
+                            'background-color': 'rgba(255,107,0,0.8)',
+                            'color': 'white',
+                            'padding': '5px 10px',
+                            'border-radius': '15px',
+                            'border': '1px solid white',
+                            'font-size': '14px',
+                            'white-space': 'nowrap'
+                        },
+                        offset: new AMap.Pixel(0, -50)  // 文字在标记上方
+                    });
+                    this.myLocationText.setMap(this.map);
+
+                    // 将地图中心移动到该位置
+                    this.moveToLocationWithMarker(lng, lat);
+                },
+                addMarkersFromHeatmapData() {
+                    // 热力图标记
+                    // 清除已有的标记
+                    this.clearMarkers();
+
+                    if (!this.heatmapData || this.heatmapData.length === 0) return;
+
+                    // 创建信息窗口实例
+                    const infoWindow = new AMap.InfoWindow({
+                        autoMove: true,
+                        closeWhenClickMap: true
+                    });
+
+                    // 遍历热力图数据，为每个点添加 marker + text
+                    this.markers = this.heatmapData.map(point => {
+                        const position = [point.lng, point.lat];
+
+                        // 创建 marker 图标（可以自定义图标）
+                        const marker = new AMap.Marker({
+                            position: position,
+                            map: this.map,
+                            icon: new AMap.Icon({
+                                size: new AMap.Size(40, 40),
+                                image: '/static/images/app/flag-red.png',
+                                imageSize: new AMap.Size(40, 40)
+                            }),
+                            offset: new AMap.Pixel(-10, -30)
+                        });
+
+                        // 创建文本标签
+                        const text = new AMap.Text({
+                            text: `${point.count} 单`,
+                            position: position,
+                            style: {
+                                'background-color': '#FF6B00',
+                                'color': 'white',
+                                'padding': '4px 8px',
+                                'border-radius': '15px',
+                                'border': '1px solid white',
+                                'font-size': '12px',
+                                'white-space': 'nowrap'
+                            },
+                            offset: new AMap.Pixel(0, -40)
+                        });
+                        text.setMap(this.map);
+
+                        // 绑定点击事件显示详细信息
+                        marker.on('click', () => {
+                            infoWindow.setContent(`
+                                <div style="min-width:180px;padding:10px;">
+                                    <h3 style="margin:0 0 8px;color:#FF6B00;">订单热点</h3>
+                                    <p>${point.name}附近</p>                    
+                                    <p>今日订单数：${point.count}</p>
+                                    <p style="margin-top:10px;">
+                                        <button onclick="navigateToRegion(${point.lng}, ${point.lat},'${point.name}')" 
+                                            style="background:#FF6B00;color:white;border:none;padding:5px 10px;border-radius:3px;">
+                                            导航去此区域
+                                        </button>
+                                    </p>
+                                </div>
+                            `);
+                            infoWindow.open(this.map, position);
+                        });
+
+                        return marker;
+                    });
+                },
+            }
+        });
+
+        window.app = app
+        window.showMyLocation = function (lng, lat) {
+            //app.showMyLocationMarker(lng, lat)
+        }
+
+        window.navigateToRegion = function(lng,lat,name){
+            if (window.AndroidBridge) {
+                AndroidBridge.navToHeatMap(lng + "," + lat, name)
+            }
+       //     alert("导航去此区域" + name + "，经度：" + lng + ", 纬度：" + lat) 
+        }
+    </script>
+</body>
+
+</html>

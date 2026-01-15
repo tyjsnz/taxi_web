@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网约车平台 - 通知公告管理</title>
+    <!-- 引入Element-UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4790197_oudfd3w0r9.css">
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .app-container {
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .notice-content {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .notice-type-driver {
+            color: #67C23A;
+        }
+        .notice-type-passenger {
+            color: #409EFF;
+        }
+        .notice-type-system {
+            color: #E6A23C;
+        }
+        .editor-container {
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            padding: 10px;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- 头部区域 -->
+            <div class="header">
+                <h2>通知公告管理</h2>
+                <div>
+                    <el-button type="primary" @click="handleAdd" icon="el-icon-plus">发布通知</el-button>
+                    <el-button @click="refreshList" icon="el-icon-refresh">刷新</el-button>
+                </div>
+            </div>
+
+            <!-- 搜索区域 -->
+            <el-card shadow="never" class="search-card" style="display: none;">
+                <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+                    <el-form-item label="通知标题">
+                        <el-input v-model="searchForm.title" placeholder="请输入标题" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="通知类型"  style="display: none;">
+                        <el-select v-model="searchForm.type" placeholder="请选择类型" clearable>
+                            <el-option label="全部" value=""></el-option>
+                            <el-option label="司机通知" value="driver"></el-option>
+                            <el-option label="乘客通知" value="passenger"></el-option>
+                            <el-option label="系统通知" value="system"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="发布状态" style="display: none;">
+                        <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+                            <el-option label="全部" value=""></el-option>
+                            <el-option label="已发布" value="1"></el-option>
+                            <el-option label="未发布" value="0"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="发布时间">
+                        <el-date-picker
+                            v-model="searchForm.dateRange"
+                            type="daterange"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            value-format="yyyy-MM-dd">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="handleSearch">查询</el-button>
+                    </el-form-item>
+                </el-form>
+            </el-card>
+
+            <!-- 表格区域 -->
+            <div class="table-container">
+                <el-table
+                    :data="tableData"
+                    border
+                    style="width: 100%"
+                    v-loading="loading">
+                    <el-table-column
+                        prop="id"
+                        label="ID"
+                        width="80">
+                    </el-table-column>
+                    <el-table-column
+                        prop="title"
+                        label="通知标题"
+                        width="200">
+                    </el-table-column>
+                    <!--<el-table-column-->
+                    <!--    prop="type"-->
+                    <!--    label="通知类型"-->
+                    <!--    width="120">-->
+                    <!--    <template slot-scope="scope">-->
+                    <!--        <el-tag :class="'notice-type-' + scope.row.type" size="small">-->
+                    <!--            ${ formatType(scope.row.type) }-->
+                    <!--        </el-tag>-->
+                    <!--    </template>-->
+                    <!--</el-table-column>-->
+                    <el-table-column
+                        prop="content"
+                        label="通知内容"
+                        class-name="notice-content">
+                        <template slot-scope="scope">
+                            <div class="notice-content">${ scope.row.content }</div>
+                        </template>
+                    </el-table-column>
+                    <!--<el-table-column-->
+                    <!--    prop="publisher"-->
+                    <!--    label="发布人"-->
+                    <!--    width="120">-->
+                    <!--</el-table-column>-->
+                    <el-table-column
+                        prop="created_at"
+                        label="发布时间"
+                        width="180">
+                    </el-table-column>
+                    <el-table-column
+                        prop="status"
+                        label="状态"
+                        width="100">
+                        <template slot-scope="scope">
+                            <el-tag :type="scope.row.status === 1 ? 'success' : 'success'" size="small">
+                                已发布
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="操作"
+                        width="180">
+                        <template slot-scope="scope">
+                            <el-button
+                                size="mini"
+                                @click="handleEdit(scope.$index, scope.row)">查看</el-button>
+                            <el-button
+                                size="mini"
+                                type="danger"
+                                @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <!-- 分页 -->
+                <div class="pagination" style=" display:none;">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="[10, 20, 50, 100]"
+                        :page-size="pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加/编辑对话框 -->
+        <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="60%">
+            <el-form :model="form" :rules="rules" ref="form" label-width="120px">
+                <el-form-item label="通知标题" prop="title">
+                    <el-input v-model="form.title" placeholder="请输入通知标题"></el-input>
+                </el-form-item>
+                
+                <el-form-item label="通知类型" prop="type"  style="display: none;">
+                    <el-radio-group v-model="form.type">
+                        <el-radio-button label="driver">司机通知</el-radio-button>
+                        <el-radio-button label="passenger">乘客通知</el-radio-button>
+                        <el-radio-button label="system">系统通知</el-radio-button>
+                    </el-radio-group>
+                </el-form-item>
+                
+                <el-form-item label="通知内容" prop="content">
+                    <div class="editor-container">
+                        <!-- 这里可以集成富文本编辑器，如Quill或WangEditor -->
+                        <el-input
+                            type="textarea"
+                            :rows="8"
+                            v-model="form.content"
+                            placeholder="请输入通知内容"></el-input>
+                    </div>
+                </el-form-item>
+                
+                <el-form-item label="发布状态" prop="status"  style="display: none;">
+                    <el-switch
+                        v-model="form.status"
+                        :active-value="1"
+                        :inactive-value="0"
+                        active-text="发布"
+                        inactive-text="草稿">
+                    </el-switch>
+                </el-form-item>
+                
+                <el-form-item label="发布时间" prop="publish_time" v-if="form.status === 1">
+                    <el-date-picker
+                        v-model="form.publish_time"
+                        type="datetime"
+                        placeholder="选择发布时间"
+                        value-format="yyyy-MM-dd HH:mm:ss">
+                    </el-date-picker>
+                </el-form-item>
+                
+                <el-form-item label="附件" prop="attachments" style="display: none;">
+                    <el-upload
+                        action="/api/upload"
+                        :file-list="fileList"
+                        multiple
+                        :limit="5"
+                        :on-success="handleUploadSuccess"
+                        :on-remove="handleRemove">
+                        <el-button size="small" type="primary">点击上传</el-button>
+                        <div slot="tip" class="el-upload__tip">最多上传5个附件，每个不超过10MB</div>
+                    </el-upload>
+                </el-form-item>
+            </el-form>
+            
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitForm">确 定</el-button>
+            </span>
+        </el-dialog>
+    </div>
+
+    <!-- 引入Vue和Element-UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    <script src="/static/utils/helper.js"></script>
+    
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    // 搜索表单
+                    searchForm: {
+                        title: '',
+                        type: '',
+                        status: '',
+                        dateRange: []
+                    },
+                    
+                    // 表格数据
+                    tableData: [],
+                    loading: false,
+                    currentPage: 1,
+                    pageSize: 10,
+                    total: 0,
+                    
+                    // 对话框
+                    dialogVisible: false,
+                    dialogTitle: '发布通知',
+                    isEdit: false,
+                    currentIndex: -1,
+                    
+                    // 表单数据
+                    form: {
+                        id: '',
+                        title: '',
+                        type: 'driver',
+                        content: '',
+                        status: 0,
+                        publish_time: '',
+                        attachments: []
+                    },
+                    
+                    // 文件列表
+                    fileList: [],
+                    
+                    // 表单验证规则
+                    rules: {
+                        title: [
+                            { required: true, message: '请输入通知标题', trigger: 'blur' },
+                            { min: 5, max: 100, message: '长度在 5 到 100 个字符', trigger: 'blur' }
+                        ],
+                        type: [
+                            { required: true, message: '请选择通知类型', trigger: 'change' }
+                        ],
+                        content: [
+                            { required: true, message: '请输入通知内容', trigger: 'blur' },
+                            { min: 10, message: '通知内容至少10个字符', trigger: 'blur' }
+                        ],
+                        publish_time: [
+                            { required: true, message: '请选择发布时间', trigger: 'change' }
+                        ]
+                    }
+                }
+            },
+            created() {
+                this.getList();
+            },
+            methods: {
+                // 格式化通知类型
+                formatType(type) {
+                    const types = {
+                        'driver': '司机通知',
+                        'passenger': '乘客通知',
+                        'system': '系统通知'
+                    };
+                    return types[type] || type;
+                },
+                
+                // 获取通知列表
+                getList() {
+                    var that = this
+                    this.loading = true;
+                    $.ajax({
+                        url: '/admin/notice/json',
+                        type: 'get',
+                        dataType: 'json',
+                        success: function(res){
+                            that.tableData = res.data
+                            that.loading = false;
+                        }
+                    })
+                   
+                },
+                
+                // 刷新列表
+                refreshList() {
+                    this.currentPage = 1;
+                    this.getList();
+                },
+                
+                // 搜索
+                handleSearch() {
+                    this.currentPage = 1;
+                    this.getList();
+                },
+                
+                // 分页大小改变
+                handleSizeChange(val) {
+                    this.pageSize = val;
+                    this.getList();
+                },
+                
+                // 当前页改变
+                handleCurrentChange(val) {
+                    this.currentPage = val;
+                    this.getList();
+                },
+                
+                // 添加通知
+                handleAdd() {
+                    this.dialogTitle = '发布通知';
+                    this.isEdit = false;
+                    this.resetForm();
+                    this.dialogVisible = true;
+                },
+                
+                // 编辑通知
+                handleEdit(index, row) {
+                    var that = this
+                    this.dialogTitle = '查看通知';
+                    this.isEdit = true;
+                    this.currentIndex = index;
+                    
+                    // 模拟获取详情
+                    // axios.get('/api/notice/detail', { params: { id: row.id } })
+                    //     .then(response => {
+                    //         this.form = response.data;
+                    //         this.dialogVisible = true;
+                    //     });
+                    
+                    // 模拟数据
+                    this.form = {
+                        id: row.id,
+                        title: row.title,
+                        type: row.type,
+                        content: row.content,
+                        status: row.status,
+                        publish_time: row.publish_time,
+                        attachments: []
+                    };
+                    this.fileList = [];
+                    this.dialogVisible = true;
+                },
+                
+                // 删除通知
+                handleDelete(index, row) {
+                    this.$confirm('确定要删除这条通知吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        // 模拟API请求
+                        // axios.post('/api/notice/delete', { id: row.id })
+                        //     .then(response => {
+                        //         this.$message.success('删除成功');
+                        //         this.getList();
+                        //     });
+                        
+                        // 模拟成功
+                        this.$message.success('删除成功');
+                        this.tableData.splice(index, 1);
+                        this.total -= 1;
+                    }).catch(() => {
+                        this.$message.info('已取消删除');
+                    });
+                },
+                
+                // 提交表单
+                submitForm() {
+                    var that = this
+                    this.$refs.form.validate((valid) => {
+                        if (valid) {
+                            // 如果是发布状态且未设置发布时间，自动设置为当前时间
+                            if (this.form.status === 1 && !this.form.publish_time) {
+                                const now = new Date();
+                                this.form.publish_time = now.getFullYear() + '-' + 
+                                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                                    String(now.getDate()).padStart(2, '0') + ' ' + 
+                                    String(now.getHours()).padStart(2, '0') + ':' + 
+                                    String(now.getMinutes()).padStart(2, '0') + ':' + 
+                                    String(now.getSeconds()).padStart(2, '0');
+                            }
+                            
+                            if(this.isEdit){
+                                this.dialogVisible = false;
+                                return
+                            }
+                        
+                            $.ajax({
+                                url: '/admin/notice',
+                                type: 'POST',
+                                data: that.form,
+                                success: (response) => {
+                                    that.$message.success('发布成功');
+                                    that.dialogVisible = false;
+                                    // 添加新数据
+                                    const newData = { 
+                                        ...that.form,
+                                        id: that.tableData.length + 1,
+                                        publisher: '管理员',
+                                        publish_time: '已发布'
+                                    };
+                                    that.tableData.unshift(newData);
+                                    that.total += 1;
+                                }
+                            });
+                            
+                        } else {
+                            this.$message.error('请填写完整信息');
+                            return false;
+                        }
+                    });
+                },
+                
+                // 重置表单
+                resetForm() {
+                    this.form = {
+                        id: '',
+                        title: '',
+                        type: 'driver',
+                        content: '',
+                        status: 0,
+                        publish_time: '',
+                        attachments: []
+                    };
+                    this.fileList = [];
+                    if (this.$refs.form) {
+                        this.$refs.form.resetFields();
+                    }
+                },
+                
+                // 文件上传成功
+                handleUploadSuccess(response, file, fileList) {
+                    this.form.attachments.push({
+                        name: file.name,
+                        url: response.url
+                    });
+                },
+                
+                // 文件移除
+                handleRemove(file, fileList) {
+                    this.form.attachments = this.form.attachments.filter(
+                        item => item.name !== file.name
+                    );
+                }
+            }
+        });
+    </script>
+</body>
+</html>

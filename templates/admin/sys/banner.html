@@ -1,0 +1,326 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/element-ui/css/element-ui.css">
+<style>
+    input[type=file]{
+                    display: none !important;
+                  }
+  </style>
+<div class="container-fluid p-t-15" id="app">
+    
+    <el-row>
+        <el-col :span="24">
+            <el-card>
+                <el-form :label-position="labelPosition" label-width="80px" >
+                    <el-form-item label="显示频道">
+                        <el-select  placeholder="请选择" style="width: 40%;" v-model="menu" >
+                            <el-option :label="item" :value="index" v-for="(item,index) in menu_list" :key="index" ></el-option>
+                          </el-select>
+                    </el-form-item>
+                    <el-form-item label="图片名称">
+                        <el-input  style="width: 40%;" v-model="name"></el-input>
+                    </el-form-item>
+                 
+                    <el-form-item label="跳转链接">
+                        <el-input  style="width: 40%;" v-model="url"></el-input>
+                    </el-form-item>
+
+                    <el-form-item label="图片">
+                        <el-upload
+                          ref="upload"
+                          :auto-upload="false"
+                          action="/admin/slider"
+                          list-type="picture-card"
+                          name="upfile"
+                          :file-list="fileList"
+                          :on-change="handleChange"
+                          :on-preview="handlePictureCardPreview"
+                          :limit="1"
+                          :on-exceed="handleExceed">
+                          <i class="el-icon-plus"></i>
+                        </el-upload>
+                        <el-dialog :visible.sync="dialogVisible">
+                          <img width="100%" :src="dialogImageUrl" alt="">
+                        </el-dialog>
+                    </el-form-item>
+
+                   
+
+                    <el-form-item>
+                        <el-button type="primary" @click="submitForm">添加</el-button>
+                      </el-form-item>
+
+                </el-form>
+            </el-card>
+        </el-col>
+    </el-row>
+
+    <el-row style="margin-top: 30px;">
+        <el-card>
+            <table id="test" lay-filter="test"></table>
+            <script type="text/html" id="barDemo">
+                <a lay-event="del" class="btn btn-xs btn-default btn-delete" data-id="" href="javascript:void(0)" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i>删除</a>
+            </script>
+        </el-card>
+    </el-row>
+
+</div>
+
+<script src="/static/element-ui/js/vue.min.js"></script>
+<script src="/static/element-ui/js/element-ui.js"></script>
+
+<script>
+    var table,option
+    document.addEventListener('DOMContentLoaded', function() {
+
+    layui.use(['table'], function () {
+        table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+                
+                const vm = document.getElementById('app').__vue__;
+                if (vm) {
+               // vm.message = 'Hello, World!';
+                } else {
+                console.error('Vue instance not found');
+                }
+            
+            var editable = function(d){
+                if(d.name.indexOf('|') != -1)
+                    return
+               
+                return 'text'; // 这里假设以 editable 字段为判断依据
+            };
+            var ceditable = function(d){
+                if(d.child_name == "" || undefined == d.child_name)
+                    return
+               
+                return 'text'; // 这里假设以 editable 字段为判断依据
+            };
+            var editable_url = function(d){
+                if(d.url == '')
+                    return
+               
+                return 'text'; // 这里假设以 editable 字段为判断依据
+            };
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+        option = {
+            elem: '#test'
+            , height: 450
+            , title: '用户列表'
+            , url: '/admin/slider/list/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , page: false
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                { field: 'id', title: '编号', sort: false, width: 100, hide: false }
+                , { field: 'type', title: '分类', width: 150,templet:function(d){
+                    if(d.type == 0)
+                        return "首页"
+                    else if(d.type == 1)
+                        return "动态发布"
+                    else if(d.type == 2)
+                        return "招募令"
+                    else if(d.type == 3)
+                        return "首页招募令"
+                    else
+                        return ""
+                }}
+                , { field: 'title', title: '图片名称',width: 200,edit: 'text'}
+                , { field: 'url', title: '跳转链接',width: 200,edit: 'text'}
+                , { field: 'pic', title: '图片',width: 200,templet:function(d){
+                    return '<a href="' + d.pic + '" target="_blank">' + '<img src="'+d.pic+'" style="width: 100px;height: 100px;">' + "</a>"
+                }}
+                , { field: 'sort_id', title: '排序', sort: false, edit: 'text', width: 120}
+                , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 120 }
+
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function () {
+                //当数据渲染完后，执行的回调
+                //$('.layui-table-cell').css('height','42px');
+            }
+            , parseData: function (res) {
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.data.length
+                    , "data": res.data
+                };
+            }
+
+        }
+
+        table.render(option);
+  
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event == 'del')
+            {
+                $.confirm({
+                    title: '提示',
+                    content: '确定删除当前记录？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/slider/delete',
+                                    data: {'id': data.id},
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            msg(res.msg);
+                                            return;
+                                        }
+                                        if(res.status == 0){
+                                            layer.alert(res.msg,{icon: 1},function(index){
+                                                location.reload()
+                                            })
+                                        }
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+        });
+
+        table.on('edit(test)', function (obj) {
+            console.log(obj)
+            var field = obj.field; // 得到字段
+            var value = obj.value; // 得到修改后的值
+            var data = obj.data; // 得到所在行所有键值
+            if(data.url != '' && data.url.indexOf('http://') == -1){
+                layer.msg('链接格式不正确')
+                return;
+            }
+            // 编辑后续操作，如提交更新请求，以完成真实的数据更新
+            // …
+            $.ajax({
+                url: '/admin/slider/edit',
+                data:{"name": data.title,'id': data.id,'url': data.url,'sort_id': data.sort_id},
+                type: 'post',
+                dataType: 'json',
+                success: function(res){
+                    if(res.status != 0){
+                        layer.msg(res.msg)
+                        return
+                    }
+                    layer.msg(res.msg)
+                }
+            })
+
+            // 其他更新操作
+            var update = {};
+            update[field] = value;
+            obj.update(update);
+        });
+
+    });
+
+    });
+
+
+  new Vue({
+      el: "#app",
+      delimiters: ['${', '}'],
+      data() {
+        return {
+            labelPosition: 'right',
+            name: '',
+            url: '',
+           menu: '首页',
+           menu_list:['首页','动态信息','招募令','首页招募令'],
+           dialogImageUrl: '',
+          dialogVisible: false,
+          fileList:[],
+        };
+      },
+      mounted() {
+        
+      },
+      methods: {
+        submitForm(){
+            var that = this
+            if(that.url != "" && that.url.indexOf('http://') == -1)
+            {
+                layer.msg('链接格式不正确')
+                return;
+            }
+            const formData = new FormData();
+            formData.append('channel',that.menu)
+            formData.append('name',that.name)
+            formData.append('url',that.url)
+            for(let i in this.fileList){
+                formData.append('upfile_' + i,this.fileList[i].raw)
+            }
+
+            var loading = layer.load(0,{time: 10000});
+            $.ajax({
+                url: '',
+                type: 'POST',
+                dataType: 'json',
+                data: formData,
+                contentType: false,//'multipart/form-data',
+                processData: false, // 不转换数据
+                success: function(data){
+                    layer.close(loading);
+                    if(data.status == 0){
+                        layer.alert(data.msg,{icon: 1},function(index){
+                            location.reload()
+                        })
+                    }
+                    else
+                        layer.msg(data.msg)
+                }
+            })
+        },
+        handleRemove(file, fileList) {
+        },
+        handlePictureCardPreview(file) {
+          this.dialogImageUrl = file.url;
+          this.dialogVisible = true;
+        },
+        handleExceed(files, fileList) {
+          this.$message.warning(`封面图片只可上传 1 个文件`);
+          //，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+        },
+        handleChange(file, fileList) {
+          this.fileList.push(file)
+        },
+      }
+    });
+
+</script>
+
+
+{% endblock %}

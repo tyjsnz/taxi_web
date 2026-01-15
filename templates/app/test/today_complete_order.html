@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>今日完单</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="https://wxapp.flacn.net/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(to bottom, #e6f7ff, #f5f9ff);
+            min-height: 100vh;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+
+        .earnings-circle {
+            background-color: white;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 30px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .earnings-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .earnings-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        
+
+        .category-item {
+            text-align: center;
+            background-color: white;
+            padding: 15px;
+            /* border-radius: 10px; */
+            width: 30%;
+            /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+        }
+
+        .category-item:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .category-item:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .category-name {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .category-amount {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .record-section {
+            background-color: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .record-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .record-icon {
+            font-size: 20px;
+            color: #409EFF;
+        }
+
+        .record-empty {
+            padding: 20px 0;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .header-date {
+            position: absolute;
+            right: 20px;
+            top: 100px;
+            font-size: 14px;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        /* 有记录时的样式 */
+         /* 赚钱记录容器 */
+         .earnings-record-container {
+            background-color: #fff;
+            border-radius: 12px;
+            margin: 2px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 标题区域 */
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .record-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .record-icon {
+            font-size: 20px;
+            color: #409EFF;
+        }
+
+        .record-list {
+            margin-top: 10px;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-type {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .red-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff3366;
+        }
+
+        .positive-amount {
+            color: #1aad19;
+        }
+
+       
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <i class="el-icon-arrow-left back-icon" @click="goBack"></i>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">今日完单</div>
+                    </el-col>
+                </el-row>
+                <div class="header-date" @click="openDatePicker">
+                    ${selectedDate}<i class="el-icon-arrow-down"></i>
+                </div>
+
+                <!-- 添加 mint-ui 的日期选择器 -->
+                <mt-datetime-picker ref="datePicker" type="date" :start-date="minDate" :end-date="maxDate"
+                    @confirm="handleDateConfirm" year-format="{value} 年" month-format="{value} 月"
+                    date-format="{value} 日">
+                </mt-datetime-picker>
+            </div>
+
+            <!-- 头部标题 -->
+            <!-- 圆形收益区域 -->
+            <div class="earnings-circle">
+                <div class="earnings-label"></div>
+                <div class="earnings-amount" v-text="order_num">0</div>
+            </div>
+
+
+         
+
+            <!-- 赚钱记录 -->
+            <el-empty description="暂无订单" v-if="order_list.length == 0">                
+            </el-empty>
+            <!-- 赚钱记录部分 -->
+            <div class="earnings-record-container" v-else>
+                <!-- 标题区域 -->
+                <div class="record-header">
+                    <div class="record-title">订单记录</div>                    
+                </div>
+                <div class="record-list">
+                    <div class="record-item" v-for="(item,index) in order_list" :key="index">
+                        <div class="record-info">
+                            <div class="record-type">${item.start_location}</div>
+                            <div class="record-type">${item.end_location}</div>
+                            <div class="record-time">${item.order_time}</div>
+                        </div>
+                        <div class="positive-amount">${item.total_fee }</div>
+                    </div>
+                    
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="http://wxapp.flacn.net/static/libs/layui/layui.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                const today = new Date(); // 获取当前日期
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    info: {
+                        today_money: 128,
+                        order_money: 0,
+                        reward_money: 0,
+                        red_money: 0
+                    },
+                    // order_list:[
+                    //     {'title':'订单收入','time':'今天 08:30','amount':'35.50','type': 0},
+                    //     {'title':'高峰奖励','time':'今天 18:30','amount':'15.50','type': 1},
+                    //     {'title':'投诉扣费','time':'今天 09:20','amount':'5.50','type': 3},
+                    // ],
+                    selectedDate: '5月9日',
+                    minDate: new Date(2025, 0, 1), // 最小可选日期
+                    maxDate: today, // 最大可选日期
+                    order_num: 0,
+                    order_list:[],
+                }
+            },
+            mounted(){
+                const date = new Date();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                this.selectedDate = `${month}月${day}日`
+                
+                this.get_data()
+            },
+            methods: {
+                openDatePicker() {
+                    this.$refs.datePicker.open(); // 打开日期选择器
+                },
+                handleDateConfirm(date) {
+                    // 格式化日期为“X月X日”
+                    const year = date.getFullYear();
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    this.selectedDate = `${month}月${day}日`;
+                    console.log(`${year}年${month}月${day}日}`);
+                    // 这里可以添加请求逻辑，加载对应日期的数据
+                },
+                goBack() {
+                    window.history.back();
+                },
+                get_data(){
+                    var that = this
+                    $.ajax({
+                        url: '/app/driver/order/today_order_data',
+                        data: {'driver_id': that.driver_id, 'token': that.token},
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (data) {
+                            if(data.status != 0)
+                                return
+                            that.order_list = data.data
+                            that.order_num = that.order_list.length
+                        }
+                    })
+                }
+            },
+        });
+    </script>
+</body>
+
+</html>

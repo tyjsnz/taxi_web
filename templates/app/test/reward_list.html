@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>奖励中心</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/css/ls-icon.css?v=1">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header {
+            z-index: 11;
+            height: 45px;
+            background-color: #ff6b00;
+            line-height: 30px;
+            position: fixed;
+            width: 100%;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+
+        .header i {
+            font-size: 25px;
+        }
+
+        .back-icon {
+            font-size: 25px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+
+
+
+        .record-type {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .red-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff6b00;
+        }
+
+        .positive-amount {
+            color: #1aad19;
+        }
+
+        .el-tabs__item.is-active {
+            color: #333;
+        }
+
+        .el-tabs__active-bar {
+            background-color: #ff6b00;
+        }
+
+        /*订单*/
+        .order-container {
+            background-color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 200px;
+        }
+
+        .order-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .order-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-location {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .location-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            color: #FF6B00;
+        }
+
+        .order-time {
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <div @click="goBack">
+                            <i class="el-icon-arrow-left back-icon"></i>
+                        </div>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">奖励中心</div>
+                    </el-col>
+                    <el-col :span="3">
+                    </el-col>
+                </el-row>
+
+            </div>
+
+
+
+            <!-- 赚钱记录 -->
+            <!-- <el-empty description=" ">
+                <div class="record-empty">
+                    <div>今天无赚钱记录</div>
+                    <div class="empty-text">快去接几单赚钱吧</div>
+                </div>
+            </el-empty> -->
+
+            <div class="order-container">
+                <el-empty v-if="reward_list.length == 0" description=""></el-empty>
+                <div v-else class="order-item" v-for="(order, index) in order_list" :key="index">
+                    <div class="order-info">
+                        <span class="order-id">${order.sn}</span>
+                        <span class="order-price">${order.cost}元</span>
+                    </div>
+                    <div style="margin-left: 10px;">
+                        <div class="order-location">
+                            <i class="icon-circle-green"></i>
+                            <span class="order-location-text">${order.start_location}</span>
+                        </div>
+                        <div class="order-location">
+                            <i class="icon-circle-yellow"></i>
+                            <span class="order-location-text">${order.end_location}</span>
+                        </div>
+                    </div>
+
+                    <div class="order-info">
+                        <span style="margin-left: 6px;">
+                            行程：${(order.distance / 1000).toFixed(2)}km,${order.status}
+                        </span>
+                        <span class="order-time" v-text="order.order_time"></span>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                const today = new Date(); // 获取当前日期
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    activeName: 'first',
+                    reward_list: [],
+                }
+            },
+            mounted() {
+                this.fetchReward()
+            },
+            methods: {
+                fetchReward() {
+                    var that = this
+                    getRequest('/app/api/driver/v1/reward/list', { 'driver_id': this.driver_id, 'token': this.token }, (data, status) => {
+                        if (status == 'success') {
+                            this.reward_list = data.data
+                        }
+                    });
+                },
+                goBack() {
+                    window.history.back();
+                },
+                handleClick() {
+
+                }
+            },
+        });
+    </script>
+</body>
+
+</html>

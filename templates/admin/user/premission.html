@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户权限管理系统</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入Layer样式 -->
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        body {
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fff;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+        .permission-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .permission-tag {
+            margin-right: 5px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+    <el-card class="box-card">
+    <div class="container">
+        <div class="header">
+            <h2>用户权限管理</h2>
+        </div>
+                
+        <table id="userTable" class="layui-table" lay-filter="userTable"></table>
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <!-- <button id="addUserBtn" class="layui-btn layui-btn-sm" lay-event="getCheckData">选择用户设置权限</button> -->
+            </div>
+        </script>
+        <script type="text/html" id="barDemo">
+            <a lay-event='edit' class="btn btn-xs btn-default" href="javascript:void(0)" title="编辑" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a>
+            <a lay-event="del" class="btn btn-xs btn-default btn-delete" data-id="" href="javascript:void(0)" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i></a>
+        </script>
+    </div>
+
+    <!-- 添加/编辑用户弹窗 - 初始隐藏 -->
+    <div id="userFormDialog" style="display: none; padding: 20px;">
+        <form class="layui-form" id="userForm">
+            <input type="hidden" name="id">
+            <div class="el-form-item">
+                <label class="el-form-item__label" style="width: 100px;">用户名</label>
+                <div class="el-form-item__content" style="margin-left: 100px;">
+                    <input type="text" name="username" autocomplete="off" class="el-input__inner" lay-verify="required">
+                </div>
+            </div>
+            <div class="el-form-item">
+                <label class="el-form-item__label" style="width: 100px;">角色</label>
+                <div class="el-form-item__content" style="margin-left: 100px;">
+                    <select name="role" class="el-input__inner" lay-verify="required">
+                        <option value="">请选择角色</option>
+                        <option value="admin">管理员</option>
+                        <option value="editor">编辑</option>
+                        <option value="viewer">查看者</option>
+                    </select>
+                </div>
+            </div>
+            <div class="el-form-item">
+                <label class="el-form-item__label" style="width: 100px;">功能权限</label>
+                <div class="el-form-item__content permission-cell" style="margin-left: 100px;">
+                    <div v-for="permission in allPermissions" :key="permission.value" class="permission-tag">
+                        <input type="checkbox" name="permissions" :value="permission.value" :title="permission.label" lay-skin="primary">
+                    </div>
+                </div>
+            </div>
+            <div class="el-form-item" style="margin-top: 30px; text-align: center;">
+                <button type="button" class="el-button el-button--default" id="cancelBtn">取消</button>
+                <button type="submit" class="el-button el-button--primary" style="margin-left: 15px;">保存</button>
+            </div>
+        </form>
+    </div>
+    </el-card>
+    </div>
+
+    <!-- 引入必要的JS库 -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    
+    <script>
+        // 权限配置
+        const PERMISSIONS = {
+            DASHBOARD_VIEW: 'dashboard:view',
+            USER_MANAGE: 'user:manage',
+            CONTENT_EDIT: 'content:edit',
+            REPORT_VIEW: 'report:view',
+            SETTING_EDIT: 'setting:edit',
+            ACTIVITY_EDIT: 'activity:edit',
+            FINANCE_EDIT: 'finance:edit',
+            CUSTOMER_EDIT: 'customer:edit',
+            DRIVER_EDIT: 'driver:edit',
+            MIRROR_EDIT: 'mirror:edit',
+        };
+        
+        // 所有权限选项
+        const allPermissions = [
+            { value: PERMISSIONS.DASHBOARD_VIEW, label: '查看仪表盘' },
+            { value: PERMISSIONS.USER_MANAGE, label: '用户管理' },
+            { value: PERMISSIONS.ACTIVITY_EDIT, label: '活动管理' },
+            { value: PERMISSIONS.REPORT_VIEW, label: '运营管理' },
+            { value: PERMISSIONS.SETTING_EDIT, label: '系统设置' },
+            { value: PERMISSIONS.FINANCE_EDIT, label: '财务管理' },
+            { value: PERMISSIONS.CUSTOMER_EDIT, label: '乘客管理' },
+            { value: PERMISSIONS.DRIVER_EDIT, label: '司机管理' },
+            { value: PERMISSIONS.MIRROR_EDIT, label: '实时监控' },
+        ];
+        
+        // 模拟数据
+        let users = [
+            { 
+                id: 1, 
+                username: 'admin', 
+                role: 'admin',
+                permissions: Object.values(PERMISSIONS) 
+            },
+            { 
+                id: 2, 
+                username: 'editor1', 
+                role: 'editor',
+                permissions: [PERMISSIONS.CONTENT_EDIT, PERMISSIONS.REPORT_VIEW] 
+            },
+            { 
+                id: 3, 
+                username: 'viewer1', 
+                role: 'viewer',
+                permissions: [PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.REPORT_VIEW] 
+            }
+        ];
+        
+        // 初始化Layui
+        layui.use(['table', 'form', 'layer'], function(){
+            const table = layui.table;
+            const form = layui.form;
+            const layer = layui.layer;
+            const $ = layui.$
+            
+            //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+            // 初始化表格
+            table.render({
+                elem: '#userTable',
+                toolbar: '#toolbarDemo'
+                ,cols: [[
+                    {field: 'id', title: 'ID', width: 80, sort: true},
+                    {field: 'username', title: '用户名', width: 120},
+                    {field: 'role', title: '角色', width: 120, templet: function(d){
+                        const roleNames = {
+                            'admin': '管理员',
+                            'editor': '编辑',
+                            'viewer': '查看者'
+                        };
+                        return roleNames[d.role] || d.role;
+                    }},
+                    {field: 'permissions', title: '功能权限', templet: function(d){
+                        let html = '<div class="permission-cells">';
+                        allPermissions.forEach(perm => {
+                            if(d.permissions.includes(perm.value)) {
+                                html += `<span class="el-tag el-tag--small el-tag--primary permission-tag">${perm.label}</span>`;
+                            }
+                        });
+                        return html + '</div>';
+                    }},
+                    { fixed: 'right', title: '操作', toolbar: '#actionBar', width: 140 }
+                ]],
+                data: users,
+                page: true,
+                limit: 10
+            });
+            
+            table.on('toolbar(userTable)', function (obj) {
+            });
+            // 表格工具条事件
+            table.on('tool(userTable)', function(obj){
+                const data = obj.data;
+                if(obj.event === 'edit'){
+                    showEditDialog(data);
+                } else if(obj.event === 'delete'){
+                    layer.confirm('确定要删除该用户吗？', {
+                        title: '提示',
+                        btn: ['确定', '取消']
+                    }, function(){
+                        //users = users.filter(user => user.id !== data.id);
+                        //table.reload('userTable');
+                        layer.msg('删除成功', {icon: 1});
+                        obj.del()
+                    });
+                }
+            });
+         
+            // 显示编辑对话框
+            function showEditDialog(data) {
+                const title = data.id ? '编辑用户' : '添加用户';
+                const content = $('#userFormDialog').html();
+                
+                const dialogIndex = layer.open({
+                    type: 1,
+                    title: title,
+                    area: ['600px', '500px'],
+                    content: content,
+                    success: function(layero, index){
+                        // 填充表单数据
+                        const form = layui.form;
+                        $('#userForm input[name="id"]').val(data.id);
+                        $('#userForm input[name="username"]').val(data.username);
+                        $('#userForm select[name="role"]').val(data.role);
+                        
+                        // 渲染权限复选框
+                        const permissionHtml = allPermissions.map(perm => `
+                            <input type="checkbox" name="permissions" value="${perm.value}" title="${perm.label}" 
+                                   ${data.permissions.includes(perm.value) ? 'checked' : ''} lay-skin="primary">
+                        `).join('');
+                        $('.permission-cell').html(permissionHtml);
+                        
+                        form.render();
+                        
+                        // 取消按钮事件
+                        $('#cancelBtn').click(function(){
+                            layer.close(index);
+                        });
+                    }
+                });
+                
+            }
+        });
+        
+        // 添加操作列模板
+        document.addEventListener('DOMContentLoaded', function() {
+            const actionBar = document.createElement('script');
+            actionBar.id = 'actionBar';
+            actionBar.type = 'text/html';
+            actionBar.innerHTML = `
+                <div class="layui-btn-group">
+                    <button class="layui-btn layui-btn-xs" lay-event="edit">编辑</button>
+                    <button class="layui-btn layui-btn-xs layui-btn-danger" lay-event="delete">删除</button>
+                </div>
+            `;
+            document.body.appendChild(actionBar);
+        });
+        </script>
+</body>
+</html>

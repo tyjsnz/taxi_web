@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>顺路单</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #fff;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            display: flex;
+            font-size: 16px;
+        }
+
+        .header i{
+            font-size: 25px;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .location-section {
+            padding: 15px;
+            border-bottom: 10px solid #f5f5f5;
+        }
+
+        .location-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .location-label {
+            font-size: 16px;
+            color: #333;
+            width: 100px;
+            align-content: center;
+        }
+
+        .el-input__inner {
+            border: none;
+            border-bottom: 1px solid #DCDFE6;
+        }
+
+        .location-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .destination-list {
+            padding: 0;
+            margin: 0;
+        }
+
+        .destination-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .destination-name {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .destination-address {
+            font-size: 13px;
+            color: #999;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <!-- 头部标题 -->
+            <div class="header" @click="goBack">
+                <i class="el-icon-arrow-left back-icon"></i>
+                <div class="header-title">顺路单</div>
+            </div>
+
+            <!-- 出发地和目的地 -->
+            <div class="location-section">
+                <div class="location-row">
+                    <div @click="sel_address" class="location-label"><span v-text="city"></span><i
+                            class="el-icon-caret-bottom"></i></div>
+                    <el-input v-model="address" clearable placeholder="请输入目的地" class="destination-input"
+                        @input="searchAddress">
+                    </el-input>
+                </div>
+            </div>
+
+            <!-- 位置推荐 -->
+            <ul class="destination-list" v-if="recommendations.length > 0">
+                <li class="destination-item" v-for="(item, index) in recommendations" :key="'rec-'+index"
+                    @click="sel_item(item)">
+                    <div class="destination-name"><i class="el-icon-location-outline"></i> ${item.name}</div>
+                    <div class="destination-address">${item.address}</div>
+                </li>
+            </ul>
+
+            <!-- 目的地列表 -->
+            <ul class="destination-list">
+                <li class="destination-item" v-for="(item, index) in address_list" :key="index" @click="sel_item(item)">
+                    <div class="destination-name"><i class="el-icon-location-outline"></i> ${item.name}</div>
+                    <div class="destination-address">${item.address}</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    city: '楚雄市',
+                    address: '',
+                    lat:'',
+                    lng:'',
+                    map_key: '高德地图key',
+                    address_list: [
+                        { "name": "XX站", "address": "云南省昆明市320国道北侧", "lat": "22.002", "lng": "100.123" },
+                        { "name": "楚雄种子公司", "address": "云南省昆明市北京路130号", "lat": "22.002", "lng": "100.123" },                        
+                    ],
+                    recommendations: [
+                        { name: "市政府", address: "云南省xxx路1号" },
+                        { name: "汽车客运站", address: "云南省昆明市320国道北侧" },
+                        { name: "昆明火车站", address: "云南省昆明市北京路88号" }
+                    ]
+                }
+            },
+            mounted() {
+                this.address_list = []
+                this.recommend_position();
+            },
+            methods: {
+                // 获取推荐位置
+                recommend_position(lng = 116.648834,lat = 39.902901) {
+                    this.$indicator.open({
+                            text: '刷新成功',
+                            duration: 1000,
+                            icon: 'success'
+                        });
+                    console.log(lng,lat)
+                    fetch(`https://restapi.amap.com/v5/place/around?location=${lng},${lat}&keywords=&types=090&radius=1000&offset=10&page=1&key=${this.map_key}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log(data)
+                            this.$indicator.close();
+                            if (data.status === '1' && data.pois) {
+                                this.recommendations = data.pois.map(item => ({
+                                    name: item.name,
+                                    city: item.adname,
+                                    address: item.address,
+                                    lat: item.location ? item.location.split(',')[1] : '',
+                                    lng: item.location ? item.location.split(',')[0] : ''
+                                }));
+                            }
+                        })
+                        .catch(err => {
+                            this.$indicator.close();
+                            console.log(err)
+                        });
+                },
+                goBack() {
+                    // 返回上一页的逻辑                    
+                    window.parent.postMessage({
+                        address: this.address,
+                        city: this.city,
+                        lat: this.lat,
+                        lng: this.lng
+                    }, '*');
+
+                    var index = parent.layer.getFrameIndex(window.name); // 获取当前 layer 窗口的索引
+                    parent.layer.close(index); // 关闭当前弹窗
+                },
+                // 选择了地址
+                sel_item(item) {
+                    console.log(item);
+                    this.address = item.name;
+                    this.city = item.city;                    
+                    this.lat = item.lat;
+                    this.lng = item.lng;
+                    this.address_list = [];
+                    
+                    this.goBack()
+                },
+                sel_address() {
+                    layer.open({
+                        type: 2,
+                        title: false,
+                        closeBtn: 0,
+                        area: ['100%', '100%'],
+                        content: '/app/driver/region.html?type=vs2d11112v121221',
+                    });
+                },
+                // 地址查询
+                searchAddress() {
+                    const keyword = this.address.trim();
+                    const city = this.city.trim();
+
+                    if (!keyword) {
+                        this.address_list = [];
+                        return;
+                    }
+
+                    // 请求高德地图 API
+                    fetch(`https://restapi.amap.com/v5/place/text?keywords=${encodeURIComponent(keyword)}&types=&city=${encodeURIComponent(city)}&citylimit=false&output=json&offset=20&page=1&key=${this.map_key}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === '1' && data.pois) {
+                                const list = data.pois.map(item => ({
+                                    name: item.name,
+                                    city: item.adname,
+                                    address: item.address,
+                                    lat: item.location ? item.location.split(',')[1] : '',
+                                    lng: item.location ? item.location.split(',')[0] : ''
+                                }));
+                                this.address_list = list;
+                            } else {
+                                this.address_list = [];
+                            }
+                        })
+                        .catch(err => {
+                            console.error('地址搜索失败:', err);
+                            this.address_list = [];
+                        });
+                }
+
+            }
+        });
+        window.app = app;
+        // region.html中区域选择的回调
+        window.addEventListener('message', function (e) {
+            if (e.data && e.data.type == 'region') {
+                console.log(e.data)
+                app.city = e.data.address
+            }
+        })
+    </script>
+</body>
+
+</html>

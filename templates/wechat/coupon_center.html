@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>领券中心</title>
+  <!-- 引入Vue和ElementUI CDN -->
+  <script src="/static/libs/element-ui/js/vue.js"></script>
+  <script src="/static/libs/element-ui/js/element-ui.js"></script>
+  <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+  <script src="/static/libs/wechat/jweixin-1.3.2.js"></script>
+  <script type="text/javascript" src="/static/libs/wechat/uni.webview.1.5.6.js"></script>
+  <script src="/static/common/jquery.3.7.1.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    .coupon-center {
+      max-width: 100%;
+      padding: 0;
+    }
+
+    /* 自定义导航栏 */
+    .custom-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background-color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #eee;
+    }
+
+    .navbar-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .navbar-back {
+      font-size: 20px;
+      color: #666;
+    }
+
+    /* 分类标签 */
+    .tabs-container {
+      padding: 10px 15px;
+      background-color: #fff;
+    }
+
+    .el-tabs__item {
+      font-size: 14px;
+      padding: 0 10px;
+    }
+
+    .el-tabs__item.is-active {
+      color: #07C160;
+      font-weight: bold;
+    }
+
+    .el-tabs__active-bar {
+      background-color: #07C160;
+    }
+
+    /* 优惠券列表 */
+    .coupon-list {
+      padding: 15px;
+    }
+
+    .coupon-item {
+      background-color: #fff;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .coupon-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: linear-gradient(to right, #FF7D00, #FFAA00);
+      color: #fff;
+    }
+
+    .coupon-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .coupon-value::before {
+      content: "¥";
+      font-size: 16px;
+    }
+
+    .coupon-type {
+      font-size: 12px;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .coupon-body {
+      padding: 15px;
+    }
+
+    .coupon-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .coupon-desc {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .coupon-time {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .coupon-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      border-top: 1px dashed #eee;
+    }
+
+    .coupon-condition {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .get-btn {
+      font-size: 14px;
+      color: #FF7D00;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .get-btn.disabled {
+      color: #999;
+    }
+
+    .empty-tip {
+      text-align: center;
+      padding: 30px 0;
+      color: #999;
+      font-size: 14px;
+    }
+
+    /* 已领取样式 */
+    .received-tag {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="coupon-center">
+    <!-- 自定义导航栏 -->
+    <div class="custom-navbar" style="display: none;">
+      <div class="navbar-back" @click="goBack">←</div>
+      <div class="navbar-title">领券中心</div>
+      <div style="width: 20px;"></div> <!-- 占位保持对称 -->
+    </div>
+
+    <!-- 分类标签 -->
+    <div class="tabs-container" style="display: none;">
+      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="全部" name="all"></el-tab-pane>
+        <el-tab-pane label="打车券" name="taxi"></el-tab-pane>
+        <el-tab-pane label="专车券" name="premium"></el-tab-pane>
+        <el-tab-pane label="折扣券" name="discount"></el-tab-pane>
+      </el-tabs>
+    </div>
+
+    <!-- 优惠券列表 -->
+    <div class="coupon-list" style="margin-top: 10px;">
+      <div v-if="filteredCoupons.length === 0" class="empty-tip">
+        暂无优惠券
+      </div>
+
+      <div class="coupon-item" v-for="(item, index) in filteredCoupons" :key="index">
+        <!-- <div v-if="item.received" class="received-tag">已领取</div> -->
+        <div class="coupon-header">
+          <div class="coupon-value">${item.amount}</div>
+          <div class="coupon-type">${item.type}</div>
+        </div>
+
+        <div class="coupon-body">
+          <div class="coupon-name">${item.name}</div>
+          <div class="coupon-desc">${item.description}</div>
+          <div class="coupon-time" v-if="item.valid_type==1">领取后 ${item.valid_days}天内使用</div>
+          <div class="coupon-time" v-else>有效期至 ${item.end_time}</div>
+        </div>
+
+        <div class="coupon-footer">
+          <div class="coupon-condition">${item.condition_amount > 0 ? "满"+item.condition_amount+"元可用" : '无门槛'}</div>
+          <a href="javascript:;" class="get-btn" :class="{disabled: item.is_take_me}" @click="getCoupon(item)">
+            ${item.is_take_me ? '已领取' : '立即领取'}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      delimiters: ['${', '}'],
+      data() {
+        return {
+          uid: "{{uid}}",
+          token: "{{token}}",
+          openid: "{{session['openid']}}",
+          activeTab: 'all',
+          couponList: []
+        }
+      },
+      computed: {
+        filteredCoupons() {
+          if (this.activeTab === 'all') {
+            return this.couponList;
+          }
+          return this.couponList.filter(item => item.type === this.activeTab);
+        }
+      },
+      mounted() {
+        this.get_coupon_list()
+      },
+      methods: {
+        get_coupon_list() {
+          var that = this
+          $.ajax({
+            url: '/wechat/api/v1/web/member/coupon_center/json',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+              console.log(data)
+              that.couponList = data.data
+              for (let i in that.couponList) {
+                switch (that.couponList[i].type) {
+                  case "1":
+                    that.couponList[i].type = '代金券'
+                    break;
+                  case 2:
+                    that.couponList[i].type = '满减券'
+                    break;
+                  case 3:
+                    that.couponList[i].type = '拉新券'
+                    break;
+                }
+                // 动态时间，领取后几天
+                if (that.couponList[i].valid_type == 1) {
+
+                }
+              }
+            },
+          })
+        },
+        goBack() {
+          // 返回上一页逻辑
+          console.log('返回');
+        },
+        handleTabClick(tab) {
+          console.log('切换标签:', tab.name);
+        },
+        getCoupon(item) {
+          // 已经领取过
+          if (item.is_take_me) {
+            return;
+          }
+          var that = this
+          $.ajax({
+            url: '/wechat/api/v1/web/member/coupon_center/json',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+              coupon_id: item.id,
+              op: this.openid,
+              uid: this.uid,
+              tk: this.token,
+            },
+            success: function (data) {
+              console.log(data)
+              if (data.status == 0) {
+                that.$message.success('领取成功');
+                item.is_take_me = true;
+
+                // 成功后跳转到首页
+                // uni.redirectTo({
+                //   url: '/pages/index/index?type=web'
+                // });
+              }
+              else{
+                that.$message.error(data.msg);
+              }
+            }
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

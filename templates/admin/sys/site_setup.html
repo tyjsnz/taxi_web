@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站点设置</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <!-- 引入Vue和Element UI JS -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <!-- 引入axios用于HTTP请求 -->
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .app-container {
+            padding: 20px;
+        }
+
+        .setting-card {
+            margin-bottom: 20px;
+        }
+
+        .setting-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #303133;
+        }
+
+        .form-item-label {
+            margin-bottom: 8px;
+            display: block;
+            color: #999;
+        }
+
+        .footer-buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 120px;
+            height: 120px;
+            line-height: 120px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            display: block;
+        }
+
+        .el-divider--horizontal {
+            margin: 15px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app-container">
+        <el-card class="setting-card">
+            <div slot="header" class="setting-header">
+                <span>参数设置</span>
+            </div>
+
+            <el-tabs v-model="activeTab">
+                <el-tab-pane label="乘客订单设置" name="siteSettings">
+                    <el-form ref="order_info" :model="order_info" label-width="150px" label-position="left">
+                        <!-- 联系方式 -->
+                        <div class="setting-header">乘客订单设置</div>
+
+                        <el-form-item label="下单超时" prop="timeout"
+                            :rules="rules.timeout">
+                            <el-input v-model.number="order_info.timeout" placeholder="如：60秒" style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客叫车寻找周边司机的最大等待时长（秒）</span>
+                        </el-form-item>
+
+                        <el-form-item label="订单支付方式" prop="pay_flag">
+                            <el-radio-group v-model="order_info.pay_flag">
+                                <el-radio :label="1">先付后乘</el-radio>
+                                <el-radio :label="0">先乘后付(下车前需司机提醒乘客支付)</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <el-form-item label="先付后乘金额上限" prop="pay_limit" :rules="rules.pay_limit"
+                            v-if="order_info.pay_flag === 1">
+                            <el-input v-model="order_info.pay_limit" placeholder="25" style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客叫车费用超出此金额时必须先支付车费再乘车</span>
+                        </el-form-item>
+
+                        <el-form-item label="加价叫车金额上限" prop="add_price_limit" :rules="rules.add_price_limit">
+                            <el-input v-model="order_info.add_price_limit" placeholder="如：100"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客二次叫车寻找周边司机时加价金额上限,一般不超过100元</span>
+                        </el-form-item>
+
+                        <el-form-item label="委托代扣功能" prop="debit">
+                            <el-radio-group v-model="order_info.auto_debit">
+                                <el-radio :label="1">开启</el-radio>
+                                <el-radio :label="0">关闭</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <el-divider></el-divider>
+
+
+                    </el-form>
+                </el-tab-pane>
+
+                <el-tab-pane label="司机订单相关设置" name="driverSettings">
+                    <el-form ref="driver_info" :model="driver_info" label-width="150px" label-position="left">
+                        <!-- 系统参数设置 -->
+                        <el-form-item label="抢单模式" prop="order_dispatch_flag">
+                            <el-radio-group v-model="driver_info.order_dispatch_flag">
+                                <el-radio :label="1">自动派单(司机综合维度派单)</el-radio>
+                                <el-radio :label="0">系统派单(司机距离最近优先派单)</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <el-form-item label="乘客手机尾号验证" prop="order_phone_verify">
+                            <el-radio-group v-model="driver_info.order_phone_verify">
+                                <el-radio :label="1">验证</el-radio>
+                                <el-radio :label="0">取消</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <el-form-item label="电子围栏功能" prop="order_region_verify">
+                            <el-radio-group v-model="driver_info.order_region_verify">
+                                <el-radio :label="1">开启</el-radio>
+                                <el-radio :label="0">关闭</el-radio>
+                            </el-radio-group>
+                            <span class="form-item-label">开启后司机位置超出围栏区域后无法接单</span>
+                        </el-form-item>
+
+                        <el-form-item label="听单语音播报" prop="play_voice">
+                            <el-radio-group v-model="driver_info.play_voice">
+                                <el-radio :label="1">开启</el-radio>
+                                <el-radio :label="0">关闭</el-radio>
+                            </el-radio-group>
+                            <span class="form-item-label">开启后司机端对订单信息进行语音播报</span>
+                        </el-form-item>
+
+                       
+
+                        <el-form-item label="派单范围" prop="order_dispatch_range"
+                            :rules="rules.order_dispatch_range">
+                            <el-input v-model.number="driver_info.order_dispatch_range" placeholder="如：3000"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客叫车时寻找司机的范围，单位(米)</span>
+                        </el-form-item>
+
+                        <el-form-item label="抢单时间(秒)" prop="odrder_max_seconds"
+                            :rules="rules.odrder_max_seconds">
+                            <el-input v-model.number="driver_info.odrder_max_seconds" placeholder="如：3000"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">抢单大厅获取下单后多少秒内的记录。（注：超出时间的订单不会被显示）<el-tag>${order_minute}</el-tag></span>
+                        </el-form-item>
+
+                        <el-form-item label="每日可拒绝接单次数" prop="order_dispatch_reject_num"
+                            :rules="[{ required: true, message: '请输入拒绝接单最大次数', trigger: 'blur' }]"
+                            v-if="driver_info.order_dispatch_flag === 0">
+                            <el-input v-model.number="driver_info.order_dispatch_reject_num" placeholder="5"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">抢单模式为系统派单时，司机每日可拒绝接单的次数</span>
+                        </el-form-item>
+
+                        <el-form-item label="接单奖励分值" prop="order_dispatch_bonus"
+                            :rules="[{ required: true, message: '请输入接单奖励分值', trigger: 'blur' }]"
+                            v-if="driver_info.order_dispatch_flag === 0">
+                            <el-input v-model="driver_info.order_dispatch_bonus" placeholder="2"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">抢单模式为系统派单时，司机接单的奖励分值</span>
+                        </el-form-item>
+
+                        <el-form-item label="接单拒绝扣分值" prop="order_reject_score"
+                            :rules="[{ required: true, message: '接单拒绝扣分值', trigger: 'blur' }]"
+                            v-if="driver_info.order_dispatch_flag === 0">
+                            <el-input v-model="driver_info.order_reject_score" placeholder="2"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">抢单模式为系统派单时，司机超过拒绝次数后的扣分值</span>
+                        </el-form-item>
+
+                        <el-divider></el-divider>
+
+                        <!-- 其他设置 -->
+                        <div class="setting-header">提现设置</div>
+                        <el-form-item label="最高提现金额" prop="cash_limit_up"
+                            :rules="rules.cash_limit_up">
+                            <el-input v-model.number="driver_info.cash_limit_up" placeholder="1000"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label"></span>
+                        </el-form-item>
+
+                        <el-form-item label="最低提现金额" prop="cash_limit_down"
+                            :rules="rules.cash_limit_down">
+                            <el-input v-model.number="driver_info.cash_limit_down" placeholder="1000"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label"></span>
+                        </el-form-item>
+
+                        <!-- 设置 -->
+                        <div class="setting-header">评价设置</div>
+                        <el-form-item label="差评扣分" prop="bad_review_score"
+                            :rules="rules.bad_review_score">
+                            <el-input v-model="driver_info.bad_review_score" placeholder="0.5"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客每个差评，司机分值扣减多少分值，如：0.1、0.8，注：一星对应1分值</span>
+                        </el-form-item>
+
+                        <el-form-item label="默认评价" prop="default_review_score"
+                            :rules="rules.default_review_score">
+                            <el-input v-model="driver_info.default_review_score" placeholder="1"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客未评价的订单，司机默认得分值（0=不得分）</span>
+                        </el-form-item>
+
+                        <el-form-item label="默认评价时效" prop="default_review_delay"
+                            :rules="rules.default_review_delay">
+                            <el-input v-model.number="driver_info.default_review_delay" placeholder="1"
+                                style="width: 400px;"></el-input>
+                            <span class="form-item-label">乘客未评价的订单多少天后默认给司机好评</span>
+                        </el-form-item>
+                    
+                    </el-form>
+                </el-tab-pane>
+
+                <el-tab-pane label="系统参数设置" name="systemSettings">
+                    <el-form ref="sys_info" :model="sys_info" label-width="150px" label-position="left">
+                        <!-- 联系方式 -->
+                        <div class="setting-header">系统参数</div>
+
+                        <el-form-item label="平台客户电话" prop="service_phone">
+                            <el-input v-model.number="sys_info.service_phone" placeholder="" style="width: 400px;"></el-input>
+                            <span class="form-item-label"></span>
+                        </el-form-item>
+
+                        <el-form-item label="首页弹窗" prop="index_popup_flag" style="display: none;">
+                            <el-radio-group v-model="sys_info.index_popup_flag">
+                                <el-radio :label="0">关闭</el-radio>
+                                <el-radio :label="1">打开</el-radio>
+                            </el-radio-group>
+                            <span class="form-item-label">乘客端小程序首页优惠券弹窗提示</span>
+                        </el-form-item>
+
+                        <el-form-item label="弹窗图片" prop="ad_img" style="display: none;">
+                            <el-upload :auto-upload="true" action="/admin/upload_file" list-type="picture-card" :file-list="fileList"
+                                :on-success="handleLicenseSuccess" :on-preview="handlePictureCardPreview" :limit="1"
+                                :on-change="handleChange" :on-remove="handleLicenseRemove">
+                                <i class="el-icon-plus"></i>
+                            </el-upload>
+                            <el-dialog :visible.sync="dialogVisible">
+                                <img width="100%" :src="dialogImageUrl" alt="">
+                            </el-dialog>
+                            <span class="form-item-label">弹窗图片大小为：300*400</span>
+                        </el-form-item>
+
+                        
+                        <el-form-item label="弹窗跳转地址" prop="ad_url" style="display: none;">
+                            <el-select v-model="sys_info.ad_url" placeholder="请选择弹窗点击跳转地址" style="width: 400px;">
+                                <el-option label="不跳转" value=""></el-option>
+                                <el-option label="我的卡券" value="coupon"></el-option>
+                                <el-option label="优惠券中心" value="coupon_center"></el-option>
+                            </el-select>
+                            <span class="form-item-label">弹窗点击的跳转地址，不设置则只显示，不作跳转处理</span>
+                            <!-- <span class="form-item-label">点击后跳转的地址，不设置则不跳转，要跳转至web地址可为：领券中心(coupon_center)，卡券中心(coupon)，我的行程(order)，紧急联系人(emergency),联系我们(contact),用户协议(agreement), 自定页(参数即为可以访问的路由页面,/wechat/api/v1/web/xx),
+                                !!!注意：如果传入自定页面是，则要在 /wechat/api/v1/ 下自定自己的路由以适应web端传入的路由名称!!! ，如web端传入activity，则相应的wechat/api/v1/下要有activity的路由，且路由名称要和传入的一致</span>
+                            </span> -->
+                        </el-form-item>
+
+                        <el-divider></el-divider>
+
+                    </el-form>
+                </el-tab-pane>
+
+            </el-tabs>
+
+            <div class="footer-buttons">
+                <el-button type="primary" @click="submitSiteForm" :loading="loading" v-if="activeTab === 'siteSettings'">保存乘客订单设置</el-button>
+
+                <el-button type="primary" @click="submitDriverForm" :loading="loading" v-if="activeTab === 'driverSettings'">保存司机订单设置</el-button>
+
+                <el-button type="primary" @click="submitSystemForm" :loading="loading" v-if="activeTab === 'systemSettings'">保存系统参数设置</el-button>
+                <!-- <el-button @click="resetForm">重置</el-button> -->
+            </div>
+        </el-card>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    sys_info:{
+                        service_phone: "{{row['site_config']['service_phone']}}",
+                        index_popup_flag: parseInt("{{row['site_config']['index_popup_flag']}}"),
+                        ad_url: "{{row['site_config']['ad_url']}}",
+                        ad_img: "{{row['site_config']['ad_img']}}",
+                    },
+                    driver_info: {
+                        order_dispatch_flag: parseInt("{{row['driver_config']['order_dispatch_flag']}}"),
+                        order_dispatch_range: parseInt("{{row['driver_config']['order_dispatch_range']}}"),
+                        order_dispatch_bonus: parseFloat("{{row['driver_config']['order_dispatch_bonus']}}"),
+                        order_reject_score: parseFloat("{{row['driver_config']['order_reject_score']}}"),
+                        order_dispatch_reject_num: "{{row['driver_config']['order_dispatch_reject_num']}}",
+                        odrder_max_seconds: "{{row['driver_config']['odrder_max_seconds']}}",
+                        cash_limit_up: parseInt("{{row['driver_config']['cash_limit_up']}}"),
+                        cash_limit_down: parseInt("{{row['driver_config']['cash_limit_down']}}"),
+                        bad_review_score: "{{row['driver_config']['bad_review_score']}}",
+                        default_review_score: "{{row['driver_config']['default_review_score']}}",
+                        default_review_delay: "{{row['driver_config']['default_review_delay']}}",               
+                        order_phone_verify: parseInt("{{row['driver_config']['order_phone_verify']}}"),
+                        order_region_verify: parseInt("{{row['driver_config']['order_region_verify']}}"),
+                        play_voice: parseInt("{{row['driver_config']['play_voice']}}"),                        
+                    },
+                    order_info: {
+                        timeout: parseInt("{{row['customer_config']['timeout']}}"),
+                        pay_flag: parseInt("{{row['customer_config']['pay_flag']}}"),
+                        pay_limit: "{{row['customer_config']['pay_limit']}}",
+                        add_price_limit: "{{row['customer_config']['add_price_limit']}}",
+                        auto_debit: parseInt("{{row['customer_config']['auto_debit']}}"),
+                    },
+                    loading: false,
+                    activeTab: 'siteSettings',
+                    rules: {
+                        pay_limit: [
+                            { required: true, message: '请输入先乘后付金额上限', trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat,message: '请输入先乘后付金额上限', trigger: ['blur', 'change'] }
+                        ],
+                        add_price_limit: [
+                            { required: true, message: '请输入加价上限', trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat, message: '请输入加价上限',trigger: ['blur', 'change'] }
+                        ],
+                        timeout: [
+                            { required: true, message: '请输入订单超时时间', trigger: ['blur', 'change'] },
+                            { type: 'number', message: '订单超时时间必须为数字值', trigger: ['blur', 'change'] }
+                        ],
+                        order_dispatch_range: [
+                            { required: true, message: '请输入抢单范围', trigger: ['blur', 'change'] },
+                            { type: 'number', message: '抢单范围必须为数字值', trigger: ['blur', 'change'] }
+                        ],
+                        cash_limit_up: [
+                            { required: true, message: '请输入最高提现金额', trigger: ['blur', 'change'] },
+                            { type: 'number', message: '最高提现金额必须为数字值', trigger: ['blur', 'change'] }
+                        ],
+                        cash_limit_down: [
+                            { required: true, message: '请输入最低提现金额', trigger: ['blur', 'change'] },
+                            { type: 'number', message: '最低提现金额必须为数字值', trigger: ['blur', 'change'] }
+                        ],
+                        bad_review_score: [
+                            { required: true, message: '请输入差评扣分值',trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat, message:'', trigger: ['blur', 'change'] },
+                        ],
+                        default_review_score: [
+                            { required: true, message: '请输入默认评价得分',trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat, message: '请输入默认评价得分', trigger: ['blur', 'change'] },
+                        ],
+                        default_review_delay:[
+                            { required: true, message: '请输入默认评价时间设置',trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat, message:'', trigger: ['blur', 'change'] },
+                        ],
+                        order_dispatch_bonus: [
+                            { required: true, message: '请输入接单奖励分值', trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat,message: '请输入接单奖励分值', trigger: ['blur', 'change'] }
+                        ],
+                        order_reject_score: [
+                            { required: true, message: '请输入接单拒绝扣分值', trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat,message: '请输入接单拒绝扣分值', trigger: ['blur', 'change'] }
+                        ],
+                        odrder_max_seconds:[
+                            { required: true, message: '请输入抢单大厅拉取多少秒内的订单数据', trigger: ['blur', 'change'] },
+                            { validator: this.validateFloat,message: '请输入抢单大厅拉取多少秒内的订单数据', trigger: ['blur', 'change'] }
+                        ]
+                        
+                    },
+                    dialogImageUrl: '',
+                    dialogVisible: false,
+                    fileList: [],                    
+                }
+            },
+            created() {
+                console.log(this.driver_info)
+                this.fileList = this.sys_info.ad_img ? [{'url': this.sys_info.ad_img}] : []; // Initialize fileList with ad_img if available             
+            },
+            computed:{
+                order_minute(){
+                    let s = parseFloat(this.driver_info.odrder_max_seconds)
+                    return isNaN(s) ? 0 : (s / 60).toFixed(1) + '分钟'
+                }
+            },
+            methods: {
+                validateFloat(rule, value, callback) {
+                    if (!value) {
+                        callback(new Error(rule.message));
+                    } else if (!/^\d+(\.\d+)?$/.test(value)) {
+                        callback(new Error('请输入有效的浮点数'));
+                    } else {
+                        callback();
+                    }
+                },
+                // 提交站点设置表单
+                submitSiteForm() {
+                    this.$refs.order_info.validate((valid) => {
+                        if (valid) {
+                            this.loading = true;
+                            this.order_info = {
+                                ...this.order_info,
+                                type: 'customer'
+                            }
+                            // 这里替换为实际的API请求
+                            axios.post('/admin/sys/system_setup', this.order_info)
+                                .then(response => {
+                                    this.$message.success('设置保存成功');
+                                    this.loading = false;
+                                })
+                                .catch(error => {
+                                    this.$message.error('保存失败：' + error.message);
+                                    this.loading = false;
+                                });
+                        } else {
+                            this.$message.warning('请填写完整的表单信息');
+                            return false;
+                        }
+                    });
+                },
+
+                // 提交司机设置表单
+                submitDriverForm() {
+                    this.$refs.driver_info.validate((valid) => {
+                        if (valid) {
+                            this.loading = true;
+                            this.driver_info = {
+                                ...this.driver_info,
+                                'type': 'driver'
+                            }
+                            // 这里替换为实际的API请求
+                            axios.post('/admin/sys/system_setup', this.driver_info)
+                                .then(response => {
+                                    this.$message.success('设置保存成功');
+                                    this.loading = false;
+                                })
+                                .catch(error => {
+                                    this.$message.error('保存失败：' + error.message);
+                                    this.loading = false;
+                                });
+                        } else {
+                            this.$message.warning('请填写完整的表单信息');
+                            return false;
+                        }
+                    });
+                },
+
+                // 提交系统设置表单
+                submitSystemForm() {
+                    this.$refs.sys_info.validate((valid) => {
+                        if (valid) {
+                            this.loading = true;
+                            this.sys_info = {
+                                ...this.sys_info,
+                                'type': 'system' // Change 'driver' to 'system'
+                            }
+                            // 这里替换为实际的API请求
+                            axios.post('/admin/sys/system_setup', this.sys_info) // Change 'this.driver_info' to 'this.sys_info'
+                                .then(response => {
+                                    this.$message.success('设置保存成功');
+                                    this.loading = false;
+                                })
+                                .catch(error => {
+                                    this.$message.error('保存失败：' + error.message);
+                                    this.loading = false;
+                                });
+                        } else {
+                            this.$message.warning('请填写完整的表单信息');
+                            return false;
+                        }
+                    });
+                },
+
+                // 营业执照上传成功
+                handleLicenseSuccess(res, file) {
+                    console.log(res, file);
+                    this.fileList = [res.data]; // Assuming the response contains the image URL
+                    this.sys_info.ad_img = res.data;
+                },
+
+                // 营业执照移除
+                handleLicenseRemove(file, fileList) {
+                    console.log(file);
+                    img = file.url
+                    if (file.response && file.response.data)
+                        img = file.response.data
+
+                    alert(img)
+                    
+                        
+                    this.fileList = fileList;
+                    this.sys_info.ad_img = '';
+                    $.ajax({
+                        url: '/admin/remove_file',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            file_path: img,
+                            type: 'ad_img'
+                        },
+                        success: function (data) {
+                            console.log(data)
+                            if (data.status == 0) {
+                                this.$message.success('删除成功');
+                                this.sys_info.ad_img = ''
+                                this.fileList = []
+
+                            } else {
+                                this.$message.error('error');
+                            }
+                        }
+                    });
+                },
+
+                handlePictureCardPreview(file) {
+                    this.dialogImageUrl = file.url;
+                    this.dialogVisible = true;
+                },
+                handleChange(file, fileList) {
+                    this.fileList.push(file)
+                },
+
+            }
+        });
+    </script>
+</body>
+
+</html>

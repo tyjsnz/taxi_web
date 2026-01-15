@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>投诉与建议</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: white;
+            padding: 0 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 14px;
+            color: #666;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            color: #FF6B00;
+            font-weight: bold;
+        }
+
+        .tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 3px;
+            background-color: #FF6B00;
+            border-radius: 3px;
+        }
+
+        .content-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 1em;
+        }
+
+        .upload-area {
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .upload-icon {
+            font-size: 24px;
+            color: #FF6B00;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .preview-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .preview-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .preview-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .record-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .record-title {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .record-content {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .record-status {
+            font-size: 12px;
+            color: #FF6B00;
+        }
+
+        .record-images {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .record-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .record-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .empty-record {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        .faq-item {
+            margin-bottom: 15px;
+        }
+
+        .faq-question {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .faq-answer {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .member-center-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            cursor: pointer;
+            z-index: 999;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <!-- 引入Element-UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4790197_oudfd3w0r9.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="back-btn" @click="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="header-title">投诉与建议</div>
+        </div>
+
+        <!-- 标签页 -->
+        <div class="tabs">
+            <div class="tab" :class="{active: activeTab === 'complaint'}" @click="activeTab = 'complaint'">我要投诉</div>
+            <div class="tab" :class="{active: activeTab === 'record'}" @click="activeTab = 'record'">投诉记录</div>
+            <div class="tab" :class="{active: activeTab === 'faq'}" @click="activeTab = 'faq'">常见问题</div>
+        </div>
+
+        <!-- 投诉表单 -->
+        <div v-if="activeTab === 'complaint'">
+            <div class="content-section">
+                <div class="section-title">投诉信息</div>
+
+                <div class="form-group">
+                    <label class="form-label">投诉类型</label>
+                    <select class="form-select" v-model="complaintData.type">
+                        <option value="" disabled selected>请选择投诉类型</option>
+                        <option value="passenger">乘客问题</option>
+                        <option value="order">订单问题</option>
+                        <option value="payment">支付问题</option>
+                        <option value="system">系统问题</option>
+                        <option value="other">其他问题</option>
+                    </select>
+                </div>
+
+                <div class="form-group" v-if="complaintData.type === 'passengerNNNN'">
+                    <label class="form-label">关联订单</label>
+                    <select class="form-select" v-model="complaintData.orderId">
+                        <option value="" disabled selected>请选择关联订单</option>
+                        <option v-for="order in recentOrders" :value="order.id">${order.id} - ${order.time}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">投诉内容</label>
+                    <textarea class="form-textarea" v-model="complaintData.content"
+                        placeholder="请详细描述您的问题或建议（不少于20字）"></textarea>
+                </div>
+
+             
+
+                <div class="form-group">
+                    <label class="form-label">联系方式</label>
+                    <input class="form-input" v-model="complaintData.contact" placeholder="请输入您的手机号码（选填）">
+                </div>
+
+                <button class="submit-btn" @click="submitComplaint">
+                    提交投诉
+                </button>
+            </div>
+        </div>
+
+        <!-- 投诉记录 -->
+        <div v-if="activeTab === 'record'">
+            <div class="content-section">
+                <div class="section-title">投诉记录</div>
+
+                <div v-if="complaintRecords.length === 0" class="empty-record">
+                    <i class="fas fa-file-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <p>暂无投诉记录</p>
+                </div>
+
+                <div v-else>
+                    <div class="record-item" v-for="(record, index) in complaintRecords" :key="index">
+                        <div class="record-header">
+                            <div class="record-title">${getComplaintType(record.type)}</div>
+                            <div class="record-time">${record.time}</div>
+                        </div>
+                        <div class="record-content">${record.content}</div>
+                        <div class="record-status">${getStatusText(record.status)}</div>
+
+                        <div class="record-images" v-if="record.images.length > 0">
+                            <div class="record-image" v-for="(image, imgIndex) in record.images" :key="imgIndex">
+                                <img :src="image" alt="投诉凭证">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 常见问题 -->
+        <div v-if="activeTab === 'faq'">
+            <div class="content-section">
+                <div class="section-title">常见问题</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">1. 如何投诉乘客的不当行为？</div>
+                    <div class="faq-answer">
+                        您可以在"我要投诉"页面选择"乘客问题"类型，填写相关订单号和投诉内容。建议上传相关凭证（如聊天记录截图、录音等），我们的客服将在24小时内处理您的投诉。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">2. 投诉处理需要多长时间？</div>
+                    <div class="faq-answer">
+                        一般情况下，我们会在1-3个工作日内处理您的投诉。复杂问题可能需要更长时间，处理结果将通过APP消息或短信通知您。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">3. 为什么我的投诉被驳回？</div>
+                    <div class="faq-answer">
+                        投诉被驳回可能有以下原因：证据不足、描述不清、不符合投诉条件等。您可以在投诉记录中查看具体原因，如有疑问可联系客服咨询。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">4. 如何查看投诉处理进度？</div>
+                    <div class="faq-answer">
+                        您可以在"投诉记录"页面查看所有投诉的处理状态，包括"处理中"、"已解决"和"已驳回"三种状态。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">5. 投诉后乘客会知道是我投诉的吗？</div>
+                    <div class="faq-answer">
+                        为保护您的隐私，我们不会向乘客透露投诉人的信息。所有投诉信息将严格保密，仅用于平台内部处理。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 会员中心悬浮按钮 -->
+        <!-- <div class="member-center-btn" @click="showMemberCenter()">
+            <i class="fas fa-user"></i>
+        </div> -->
+    </div>
+
+    <!-- 引入Vue和Element-UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js"></script>
+
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    activeTab: 'complaint',
+                    fileList: [],
+                    complaintData: {
+                        type: '',
+                        orderId: '',
+                        content: '',
+                        images: [],
+                        contact: ''
+                    },
+                    recentOrders: [
+                        { id: 'DD202305011234', time: '2023-05-01 08:30' },
+                        { id: 'DD202305011235', time: '2023-05-01 09:15' },
+                        { id: 'DD202305011236', time: '2023-05-01 10:45' }
+                    ],
+                    complaintRecords: [
+                        {
+                            type: 'passenger',
+                            content: '乘客在车内吸烟，经劝阻无效',
+                            time: '2023-05-02 14:30',
+                            status: 'resolved',
+                            images: []
+                        },
+                        {
+                            type: 'order',
+                            content: '订单完成后未正常结算',
+                            time: '2023-04-28 09:15',
+                            status: 'resolved',
+                            images: []
+                        },
+                        {
+                            type: 'other',
+                            content: '建议增加司机端导航优化功能',
+                            time: '2023-04-20 16:45',
+                            status: 'processing',
+                            images: []
+                        }
+                    ]
+                };
+            },
+            computed: {
+                canSubmit() {
+                    return this.complaintData.type &&
+                        this.complaintData.content.length >= 20;
+                }
+            },
+            methods: {
+                getComplaintType(type) {
+                    const typeMap = {
+                        'passenger': '乘客问题',
+                        'order': '订单问题',
+                        'payment': '支付问题',
+                        'system': '系统问题',
+                        'other': '其他问题'
+                    };
+                    return typeMap[type] || type;
+                },
+                getStatusText(status) {
+                    const statusMap = {
+                        'processing': '处理中',
+                        'resolved': '已解决',
+                        'rejected': '已驳回'
+                    };
+                    return statusMap[status] || status;
+                },
+             
+                removeImage(index) {
+                    this.complaintData.images.splice(index, 1);
+                },
+                submitComplaint() {
+                    // 验证表单
+                    if (!this.complaintData.type) {
+                        this.$message.error('请选择投诉类型');
+                        return;
+                    }
+
+                    if (this.complaintData.content.length < 20) {
+                        this.$message.error('投诉内容不能少于20字');
+                        return;
+                    }
+
+                    // 创建FormData对象
+                     const formData = new FormData();
+                    // 添加普通表单数据
+                    formData.append('driver_id', this.driver_id);
+                    formData.append('type', this.complaintData.type);
+                    formData.append('content', this.complaintData.content);
+                    /*if (this.complaintData.orderId) {
+                        formData.append('order_id', this.complaintData.orderId);
+                    }*/
+                 
+                    var that = this
+                    postRequest('/app/driver/suggest/submit', {
+                        "driver_id": this.driver_id,
+                        'type': this.complaintData.type,
+                        'content': this.complaintData.content,
+                        'contact': this.complaintData.contact,
+                    }, (res,status) => {
+                        if (status == 'success') {
+                            if(res.status == 0){
+                                that.$message.success('投诉提交成功');
+                                that.resetForm();
+                                that.fetchComplaintRecords();
+                            }
+                            else{
+                                that.$message.error(res.msg);
+                            }
+                        } else {
+                            that.$message.error(status);
+                        }
+                    });
+                    
+                    // 添加到投诉记录
+                    this.complaintRecords.unshift({
+                        type: this.complaintData.type,
+                        content: this.complaintData.content,
+                        time: new Date().toLocaleString(),
+                        status: 'processing',
+                        images: this.complaintData.images.map(img => img.url)
+                    });
+
+                    this.resetForm();
+                },
+                resetForm() {
+                    this.complaintData = {
+                        type: '',
+                        orderId: '',
+                        content: '',
+                        images: [],
+                        contact: ''
+                    };
+                },
+                fetchComplaintRecords() {
+                    // 这里可以添加API请求获取真实数据
+                    // getRequest('/api/complaint/records', {driver_id: this.driver_id}, (res) => {
+                    //     this.complaintRecords = res.data;
+                    // });
+                },
+                goBack() {
+                    window.history.go(-1);
+                },
+                showMemberCenter() {
+                    // 跳转到会员中心
+                    console.log("跳转到会员中心");
+                }
+            },
+            mounted() {
+                this.fetchComplaintRecords();
+            }
+        });
+
+        window.app = vueApp;
+
+    </script>
+</body>
+
+</html>

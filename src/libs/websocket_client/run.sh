@@ -1,0 +1,1 @@
+nohup /www/server/pyporject_evn/cx_travel_venv/bin/python3 websocket_service.py > websocket.log 2>&1 &

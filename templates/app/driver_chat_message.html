@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>与乘客对话</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 顶部标题栏 */
+        .message-header {
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        
+        .passenger-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        
+        .passenger-details {
+            flex: 1;
+        }
+        
+        .passenger-name {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .passenger-rating {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            margin-top: 3px;
+        }
+        
+        .stars {
+            color: #FFD700;
+            margin-right: 5px;
+        }
+        
+        /* 消息内容区域 */
+        .message-container {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f0f0f0;
+        }
+        
+        .message-wrapper {
+            display: flex;
+            margin-bottom: 12px;
+            max-width: 85%;
+        }
+        
+        .message-wrapper.received {
+            align-self: flex-start;
+        }
+        
+        .message-wrapper.sent {
+            align-self: flex-end;
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            align-self: flex-end;
+            margin: 0 8px 4px 8px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+            max-width: calc(100% - 52px);
+        }
+        
+        .message.received {
+            background-color: white;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.sent {
+            background-color: #FFD700;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        /* 输入区域 */
+        .input-area {
+            padding: 10px 15px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .message-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 14px;
+            outline: none;
+            resize: none;
+            max-height: 100px;
+        }
+        
+        .send-btn {
+            background-color: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        /* 预设消息快捷按钮 */
+        .quick-messages {
+            display: flex;
+            padding: 10px 15px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .quick-message-btn {
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 15px;
+            padding: 8px 12px;
+            margin-right: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        /* 模态框样式 - 如果作为弹窗使用 */
+        .message-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: white;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .message-modal.active {
+            display: flex;
+        }
+        
+        /* 默认头像样式 */
+        .default-avatar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FF9500;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+</head>
+<body>
+    <!-- 消息页面可以作为独立页面或模态框 -->
+    <div class="message-modal" id="messageModal">
+        <!-- 顶部标题栏 -->
+        <div class="message-header">
+            <button class="back-btn" id="backBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="passenger-info">
+                <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="乘客头像" class="avatar" id="passengerAvatar">
+                <div class="passenger-details">
+                    <div class="passenger-name" id="passengerName">乘客: 张女士</div>
+                    <div class="passenger-rating">
+                        <span class="stars">★★★★☆</span>
+                        <span id="passengerRating">4.5分</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息内容区域 -->
+        <div class="message-container" id="messageContainer">
+            <!-- 消息将通过JavaScript动态添加 -->
+            <div class="message-wrapper received">
+                <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="乘客头像" class="message-avatar">
+                <div class="message received">
+                    您好，我已经在上车点等候
+                    <div class="message-time">10:30</div>
+                </div>
+            </div>
+            
+            <div class="message-wrapper sent">
+                <div class="message-avatar default-avatar" id="driverAvatar">司机</div>
+                <div class="message sent">
+                    好的，我大约5分钟后到达
+                    <div class="message-time">10:31</div>
+                </div>
+            </div>
+            
+            <div class="message-wrapper received">
+                <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="乘客头像" class="message-avatar">
+                <div class="message received">
+                    我穿着红色上衣，黑色裤子
+                    <div class="message-time">10:32</div>
+                </div>
+            </div>
+            
+            <div class="message-wrapper sent">
+                <div class="message-avatar default-avatar">司机</div>
+                <div class="message sent">
+                    收到，我已经看到您了
+                    <div class="message-time">10:35</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 预设消息快捷按钮 -->
+        <div class="quick-messages">
+            <button class="quick-message-btn" onclick="sendQuickMessage('我已到达上车点')">我已到达上车点</button>
+            <button class="quick-message-btn" onclick="sendQuickMessage('请稍等，马上到')">请稍等，马上到</button>
+            <button class="quick-message-btn" onclick="sendQuickMessage('交通拥堵，可能会晚到')">交通拥堵，可能会晚到</button>
+            <button class="quick-message-btn" onclick="sendQuickMessage('请确认上车位置')">请确认上车位置</button>
+        </div>
+        
+        <!-- 输入区域 -->
+        <div class="input-area">
+            <textarea class="message-input" id="messageInput" placeholder="输入消息..." rows="1"></textarea>
+            <button class="send-btn" id="sendBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化消息页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const backBtn = document.getElementById('backBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            const messageInput = document.getElementById('messageInput');
+            const messageContainer = document.getElementById('messageContainer');
+            const messageModal = document.getElementById('messageModal');
+            const passengerAvatar = document.getElementById('passengerAvatar');
+            const passengerName = document.getElementById('passengerName');
+            const passengerRating = document.getElementById('passengerRating');
+            const driverAvatar = document.getElementById('driverAvatar');
+            
+            // 设置司机默认头像（可以替换为实际司机头像）
+            function setDriverAvatar(avatarUrl, displayName) {
+                if (avatarUrl) {
+                    driverAvatar.innerHTML = '';
+                    driverAvatar.classList.remove('default-avatar');
+                    driverAvatar.style.backgroundImage = `url(${avatarUrl})`;
+                    driverAvatar.style.backgroundSize = 'cover';
+                } else if (displayName) {
+                    driverAvatar.textContent = displayName.charAt(0);
+                }
+            }
+            
+            // 设置司机默认头像
+            setDriverAvatar('', '王师傅');
+            
+            // 返回按钮点击事件
+            backBtn.addEventListener('click', function() {
+                // 如果是模态框则关闭，否则返回上一页
+                if (window.AndroidBridge) {
+                    AndroidBridge.closeMessageWindow();
+                } else {
+                    messageModal.classList.remove('active');
+                }
+            });
+            
+            // 发送按钮点击事件
+            sendBtn.addEventListener('click', sendMessage);
+            
+            // 输入框回车键发送
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // 输入框自动调整高度
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // 发送消息函数
+            function sendMessage() {
+                const messageText = messageInput.value.trim();
+                if (messageText === '') return;
+                
+                // 添加发送的消息到界面
+                addMessage(messageText, 'sent');
+                
+                // 在实际应用中，这里应该将消息发送到服务器
+                if (window.AndroidBridge) {
+                    AndroidBridge.sendMessageToPassenger(messageText);
+                }
+                
+                // 清空输入框
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                // 滚动到底部
+                scrollToBottom();
+            }
+            
+            // 发送预设消息
+            window.sendQuickMessage = function(messageText) {
+                // 添加发送的消息到界面
+                addMessage(messageText, 'sent');
+                
+                // 在实际应用中，这里应该将消息发送到服务器
+                if (window.AndroidBridge) {
+                    AndroidBridge.sendMessageToPassenger(messageText);
+                }
+                
+                // 滚动到底部
+                scrollToBottom();
+            }
+            
+            // 添加消息到界面
+            function addMessage(text, type) {
+                const now = new Date();
+                const timeString = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+                
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `message-wrapper ${type}`;
+                
+                if (type === 'received') {
+                    messageWrapper.innerHTML = `
+                        <img src="${passengerAvatar.src}" alt="乘客头像" class="message-avatar">
+                        <div class="message received">
+                            ${text}
+                            <div class="message-time">${timeString}</div>
+                        </div>
+                    `;
+                } else {
+                    messageWrapper.innerHTML = `
+                        <div class="message-avatar default-avatar">司机</div>
+                        <div class="message sent">
+                            ${text}
+                            <div class="message-time">${timeString}</div>
+                        </div>
+                    `;
+                }
+                
+                messageContainer.appendChild(messageWrapper);
+                scrollToBottom();
+            }
+            
+            // 滚动到底部
+            function scrollToBottom() {
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 如果是独立页面，直接显示内容
+            if (!window.isModal) {
+                messageModal.classList.add('active');
+                scrollToBottom();
+            }
+            
+            // 模拟接收消息 (仅用于演示)
+            setTimeout(() => {
+                addMessage('我已经在上车点东门等候', 'received');
+            }, 3000);
+        });
+        
+        // 提供给原生应用调用的函数 - 接收新消息
+        window.receivePassengerMessage = function(message) {
+            addMessage(message, 'received');
+        };
+        
+        // 打开消息窗口的函数
+        window.openMessageWindow = function(passengerName, passengerRating, passengerAvatarUrl) {
+            document.getElementById('messageModal').classList.add('active');
+            
+            // 更新乘客信息
+            if (passengerName) {
+                document.getElementById('passengerName').textContent = `乘客: ${passengerName}`;
+            }
+            
+            if (passengerRating) {
+                const stars = '★★★★★'.substring(0, Math.floor(passengerRating)) + 
+                             (passengerRating % 1 >= 0.5 ? '☆' : '');
+                document.querySelector('.stars').textContent = stars;
+                document.getElementById('passengerRating').textContent = passengerRating.toFixed(1) + '分';
+            }
+            
+            if (passengerAvatarUrl) {
+                document.getElementById('passengerAvatar').src = passengerAvatarUrl;
+            }
+            
+            // 滚动到底部
+            document.getElementById('messageContainer').scrollTop = 
+                document.getElementById('messageContainer').scrollHeight;
+        };
+        
+        // 设置司机信息
+        window.setDriverInfo = function(driverName, driverAvatarUrl) {
+            const driverAvatar = document.getElementById('driverAvatar');
+            if (driverAvatarUrl) {
+                driverAvatar.innerHTML = '';
+                driverAvatar.classList.remove('default-avatar');
+                driverAvatar.style.backgroundImage = `url(${driverAvatarUrl})`;
+                driverAvatar.style.backgroundSize = 'cover';
+            } else if (driverName) {
+                driverAvatar.textContent = driverName.charAt(0);
+            }
+        };
+    </script>
+</body>
+</html>

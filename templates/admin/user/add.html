@@ -1,0 +1,140 @@
+
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+<style>
+  input[type=file]{
+                  display: none !important;
+                }
+</style>
+  <div class="container-fluid p-t-15" id="app">
+  
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-body">
+            
+            <el-row>
+                <el-col :span="10">
+                    <el-form label-position="top" label-width="80px" size="mini">
+                      <el-form label-position="top" label-width="80px" size="mini">
+                        <el-form-item label="登录用户名">
+                        <el-input v-model="username"></el-input>
+                        </el-form-item>
+                      </el-form>
+                        <el-form-item label="真实姓名">
+                          <el-input v-model="truename"></el-input>
+                        </el-form-item>
+                        <el-form-item label="联系电话">
+                          <el-input v-model="phone"></el-input>
+                        </el-form-item>
+                        <el-form-item label="用户角色">
+                          <el-input v-model="role" disabled></el-input>
+                        </el-form-item>
+                    </el-form>
+                </el-col>                              
+            </el-row>
+            
+            <el-row>
+              <el-col :span="10" size="mini">
+                <el-form label-position="top" label-width="80px" size="mini">
+                  <el-form-item label="登录密码">
+                  <el-input type="password" v-model="pwd1"></el-input>
+                  <el-link disabled></el-link>
+                  </el-form-item>
+                </el-form>
+                <el-form label-position="top" label-width="80px" size="mini">
+                  <el-form-item label="确认密码">
+                  <el-input type="password" v-model="pwd2"></el-input>
+                  <el-link disabled></el-link>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+            </el-row>
+         
+            <el-row>
+              <button type="button" class="btn btn-primary multitabs" target-form="add-form" @click="add_data">确 定</button>
+              <button type="button" class="btn btn-default multitabs" onclick="javascript:location.reload();return false;">重 置</button>
+            </el-row>
+            
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+  </div>
+
+
+  <script src="/static/libs/element-ui/js/vue.min.js"></script>
+  <script src="/static/libs/element-ui/js/element-ui.js"></script>
+  
+	<!-- 实例化编辑器 -->
+	<script type="text/javascript">
+    new Vue({
+      el: "#app",
+      delimiters: ['${', '}'],
+      data() {
+        return {
+            truename: "",
+            phone: "",
+            username: "",
+            role: '普通管理员',
+            pwd1:'',
+            pwd2:''
+        };
+      },
+      mounted() {
+       
+      },
+      methods: {
+        add_data(){
+          var that = this
+          if(this.pwd1 != '' || this.pwd2 != ''){
+            if(this.pwd1 != this.pwd2){
+              that.$message.error('两次密码不一致')
+              return
+            }
+          }
+          if(this.username == ''){
+            that.$message.error('登录用户名不能为空')
+            return
+          }
+          if(this.truename == ''){
+            that.$message.error('真实姓名不能为空')
+            return
+          }
+          if(this.phone == ''){
+            that.$message.error('联系电话不能为空')
+            return
+          }
+          
+          $.ajax({
+            url: '/admin/user/add',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+              truename: that.truename,
+              phone: that.phone,
+              pwd1: that.pwd1,
+              pwd2: that.pwd2,
+              username: that.username
+            },
+            success: function(res) {
+              if(res.status == 0){
+                layer.alert(res.msg,{icon: 1},function(index){
+                  layer.close(index);
+                  parent.layer.closeAll();
+                  parent.reference_tb()
+                })
+              }else{
+                that.$message.error(res.msg)
+              }
+            }
+          })
+        },
+      }
+    })
+  </script>
+  {% endblock %}

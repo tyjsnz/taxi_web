@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加盟商管理</title>
+
+    <link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/admin/css/style.min.css" rel="stylesheet">
+    <!-- 图标 -->
+    <!-- <link href="/static/admin/css/materialdesignicons.min.css" rel="stylesheet"> -->
+
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <!-- <script type="text/javascript" src="/static/libs/layui/layui.js"></script>
+    <link href="/static/libs/layui/css/layui.css" rel="stylesheet"> -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_6iep7d4szk.css">
+
+    <link href="//unpkg.com/layui@2.10.3/dist/css/layui.css" rel="stylesheet">
+    <!-- 引入 layui.js -->
+    <script src="//unpkg.com/layui@2.10.3/dist/layui.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <el-card class="card-body" style="padding-top: 0px !important; padding-left: 0px !important">
+            <div class="card-header" style="padding-left: 0px !important;">
+                <div class="col-xs-12">
+                    <form id="myform" method="get">
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">加盟商名称</span>
+                            <input class="form-control" type="text" id="name" placeholder="" autocomplete="off"
+                                value="">
+                            <span class="input-group-addon" id="basic-addon1">加盟商简称</span>
+                            <input class="form-control" type="text" id="short_name" placeholder="" autocomplete="off"
+                                value="">
+                            <span class="input-group-addon" id="basic-addon1">联系电话</span>
+                            <input class="form-control" type="text" id="phone" placeholder="" autocomplete="off"
+                                value="">
+                            <span class="input-group-addon" id="basic-addon1">联系人</span>
+                            <input class="form-control" type="text" id="contact" placeholder="" autocomplete="off"
+                                value="">
+                            <span class="input-group-addon" id="basic-addon1">状态</span>
+                            <select class="form-control" type="text" id="status">
+                                <option value="">全部</option>
+                                <option value="0">正常</option>
+                                <option value="-1">禁用</option>
+                            </select>
+                            <a href="#" class="search-btn a-submit btn btn-default input-group-addon" id="basic-addon1">
+                                <i class="mdi mdi-search-web"></i> 查询</a>
+                            <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                    class="mdi mdi-reload"></i> 刷新</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <el-row>
+                <table id="test" lay-filter="test"></table>
+                <script type="text/html" id="toolbarDemo">
+                    <div class="layui-btn-container">
+                        <button class="layui-btn layui-btn-sm" lay-event="addCompany">新增加盟商</button>
+                    </div>
+                </script>
+                <script type="text/html" id="barDemo">
+                    <a lay-event='del' class="layui-btn layui-btn-xs layui-btn-danger" href="javascript:void(0)" title="" data-toggle="tooltip">删除</a>
+                    </script>
+            </el-row>
+        </el-card>
+    </div>
+
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+
+                }
+            },
+            created() {
+            },
+            methods: {
+            }
+        });
+
+
+        function view_img(id, title, img) {
+            layui.use(function () {
+
+                layer.photos({
+                    photos: { // 图片层的数据源
+                        "title": "", // 相册标题
+                        "id": 123, // 相册 id
+                        "start": 0, // 初始显示的图片序号，默认 0
+                        "data": [   // 相册包含的图片，数组格式
+                            {
+                                "alt": title,
+                                "pid": id,
+                                "src": img, // 原图地址
+                                "thumb": img // 缩略图地址
+                            },
+                        ]
+                    },
+                    tab: function (data, layero) { // 图片层切换后的回调
+                        console.log(data); // 当前图片数据信息
+                        console.log(layero); // 图片层的容器对象
+                    }
+                });
+
+            });
+        }
+
+        layui.use(['table'], function () {
+            var table = layui.table
+                , $ = layui.$
+                , laytpl = layui.laytpl
+                , laydate = layui.laydate;
+            var form = layui.form;
+
+            //全局设定某参数
+            table.set({
+                where: {
+                    token: ''
+                }
+                , defaultToolbar: ["filter", "exports", "print"]
+                , toolbar: true
+                , loading: true
+            });
+
+            var option = {
+                elem: '#test'
+                , toolbar: '#toolbarDemo'
+                , height: 600
+                , title: '加盟商列表'
+                , url: '/admin/company/list/json'
+                , request: {
+                    pageName: 'page' //页码的参数名称，默认：page
+                    , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+                }
+                , page: true
+                , limit: 50
+                , loading: true
+                , limits: [50, 100, 200]
+                , cols: [[
+                    { field: 'id', title: '编号', sort: true, width: 120 }
+                    , { field: 'name', title: '加盟商名称' }
+                    , { field: 'short_name', title: '加盟商简称' }
+                    , { field: 'phone', title: '联系电话' }
+                    , { field: 'service_phone', title: '客服电话' }
+                    , { field: 'contact', title: '联系人' }
+                    , { field: 'email', title: '邮箱' }
+                    , { field: 'region', title: '所在地区' }
+                    , { field: 'address', title: '详细地址' }
+                    , {
+                        field: 'license_no', title: '营业执照', width: 180, templet: function (d) {
+                            if (d.license_no == null)
+                                return ""
+                            return `<a href="#" onclick="view_img(${d.id},'营业执照','${d.license_img}')">${d.license_no}</a>`
+                        }
+                    }
+                    , {
+                        field: 'status', title: '状态', templet: function (d) {
+                            if (d.status == 0)
+                                return `<input type="checkbox" name="status" value="${d.status}" data-id="${d.id}" lay-skin="switch" lay-text="正常|禁用" lay-filter="demo-templet-status" checked>`
+                            else
+                                return `<input type="checkbox" name="status" value="${d.status}" data-id="${d.id}" lay-skin="switch" lay-text="正常|禁用" lay-filter="demo-templet-status">`
+
+                            // 使用以下方法时 form.on('switch(demo-templet-status)'
+                            //return `<input type="checkbox" name="status" value="${d.id}" title="热|" lay-filter="demo-templet-status" checked>`
+                        }
+                    }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 150 }
+                ]]
+                , error: function (res, msg) {
+                }
+                , response: {
+                    statusName: 'status'
+                    , statusCode: 0
+                }
+                , done: function (res, curr, count) {
+                    //当数据渲染完后，执行的回调
+                }
+                , parseData: function (res) {
+
+                    return {
+                        "status": res.status
+                        , "msg": res.msg
+                        , "count": res.other
+                        , "data": res.data
+                    };
+                }
+            }
+
+            table.render(option)
+
+            $(".search-btn").click(function () {
+                let n = $("#name").val();
+                let p = $("#phone").val();
+                let c = $("#contact").val();
+
+
+                option.where = { 'name': n, 'phone': p, 'contact': c, 'status': $("#status").val() }
+                table.render(option)
+                return false;
+            })
+
+            $(".ref-btn").click(function () {
+                $("#name").val('');
+                $("#phone").val('');
+                $("#contact").val('');
+                option.where = {}
+                table.render(option)
+                return false;
+            })
+
+            table.on('toolbar(test)', function (obj) {
+                var othis = lay(this);
+                switch (obj.event) {
+                    case 'addCompany':
+                        layer.open({
+                            type: 2,
+                            title: '添加加盟商',
+                            shadeClose: false,
+                            shade: 0.8,
+                            area: ['55%', '85%'],
+                            content: '/admin/company/add'
+                        })
+                        break;
+                };
+            });
+
+            table.on('tool(test)', function (obj) {
+                var data = obj.data; // 获得当前行数据
+                if (obj.event == 'del') {
+                    layer.confirm('是否删除加盟商记录', {
+                        icon: 3,
+                        btn: ['确定', '取消'],
+                    }, function (index) {
+                        layer.close(index)
+                        $.ajax({
+                            url: '/admin/company/delete',
+                            data: { 'id': data.id },
+                            dataType: 'json',
+                            type: 'post',
+                            success: function (res) {
+                                if (res.status != 0) {
+                                    layer.alert(res.msg);
+                                    return;
+                                }
+                                layer.alert(res.msg);
+                                obj.del()
+                            }
+                        })
+                    }, function (index) {
+
+                    });
+                }
+            })
+
+            // 状态 - 开关操作
+            form.on('switch(demo-templet-status)', function (obj) {
+                console.log(obj)
+                var id = obj.elem.attributes["data-id"].value
+                var val = parseInt(this.value);
+                let msg = ""
+                let status = 0
+                if (val == 0) {
+                    msg = "禁用后加盟商及所属司机将无法使用，是否禁用？"
+                    status = -1
+                }
+                else {
+                    msg = "确定启用？"
+                    status = 0
+                }
+
+                layer.confirm(msg, {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                }, function (index) {
+                    layer.close(index)
+                    axios.post('/admin/company/update/status', {
+                        'status': status,
+                        'id': id
+                    }).then(res => {
+                        console.log(res)
+                        if (res.data.status == 0) {
+                            if (val == 0) {
+                                obj.elem.value = -1
+                                obj.checked = false
+                            }
+                            else {
+                                obj.elem.value = 0
+                                obj.elem.checked = true
+                            }
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                    });
+                }, function (index) {
+                    layer.close(index)
+                    console.log(val)
+                    if (val == 0)
+                        obj.elem.checked = true
+                    else
+                        obj.elem.checked = false
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

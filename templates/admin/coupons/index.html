@@ -1,0 +1,294 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-toolbar clearfix">
+                    <div class="card-header" style="padding-left: 0px !important;">
+                        <div class="col-xs-12">
+                            <h4>优惠券活动统计</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- 统计概览卡片 -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card card-inverse card-primary">
+                                <div class="card-body">
+                                    <div class="h1 text-muted text-right mb-4">
+                                        <i class="mdi mdi-ticket-percent"></i>
+                                    </div>
+                                    <div class="h4 mb-0" id="totalCoupons">0</div>
+                                    <small class="text-muted text-uppercase font-weight-bold">总优惠券数量</small>
+                                    <div class="progress progress-xs mt-3 mb-0">
+                                        <div class="progress-bar bg-info" style="width: 100%" role="progressbar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-inverse card-info">
+                                <div class="card-body">
+                                    <div class="h1 text-muted text-right mb-4">
+                                        <i class="mdi mdi-cash-multiple"></i>
+                                    </div>
+                                    <div class="h4 mb-0" id="usedCoupons">0</div>
+                                    <small class="text-muted text-uppercase font-weight-bold">已使用优惠券</small>
+                                    <div class="progress progress-xs mt-3 mb-0">
+                                        <div class="progress-bar bg-primary" style="width: 0%" id="usedProgress" role="progressbar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-inverse card-success">
+                                <div class="card-body">
+                                    <div class="h1 text-muted text-right mb-4">
+                                        <i class="mdi mdi-cash"></i>
+                                    </div>
+                                    <div class="h4 mb-0" id="totalAmount">¥0.00</div>
+                                    <small class="text-muted text-uppercase font-weight-bold">总金额</small>
+                                    <div class="progress progress-xs mt-3 mb-0">
+                                        <div class="progress-bar bg-success" style="width: 100%" role="progressbar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card card-inverse card-warning">
+                                <div class="card-body">
+                                    <div class="h1 text-muted text-right mb-4">
+                                        <i class="mdi mdi-cash-plus"></i>
+                                    </div>
+                                    <div class="h4 mb-0" id="usedAmount">¥0.00</div>
+                                    <small class="text-muted text-uppercase font-weight-bold">已使用金额</small>
+                                    <div class="progress progress-xs mt-3 mb-0">
+                                        <div class="progress-bar bg-warning" style="width: 0%" id="amountProgress" role="progressbar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <!-- 优惠券类型分布 -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">优惠券类型分布</h4>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>优惠券类型</th>
+                                                <th>数量</th>
+                                                <th>占比</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>代金券</td>
+                                                <td id="voucherCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar" id="voucherProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                            <tr>
+                                                <td>满减券</td>
+                                                <td id="discountCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar" id="discountProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                            <tr>
+                                                <td>拉新券</td>
+                                                <td id="referralCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar" id="referralProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                            <tr>
+                                                <td>新用户立减</td>
+                                                <td id="newUserCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar" id="newUserProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 优惠券使用状态 -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">优惠券使用状态</h4>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>使用状态</th>
+                                                <th>数量</th>
+                                                <th>占比</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>已使用</td>
+                                                <td id="usedStatusCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar bg-success" id="usedStatusProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                            <tr>
+                                                <td>未使用</td>
+                                                <td id="unusedCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar bg-info" id="unusedProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                            <tr>
+                                                <td>已过期</td>
+                                                <td id="expiredCount">0</td>
+                                                <td><div class="progress">
+                                                    <div class="progress-bar bg-danger" id="expiredProgress" style="width: 0%"></div>
+                                                </div></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 按类型统计使用情况 -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">按类型统计使用情况</h4>
+                                </div>
+                                <div class="card-body">
+                                    <table id="typeUsageTable" lay-filter="typeUsageTable"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // 获取统计数据
+        $.ajax({
+            url: '/admin/coupons/total/json',
+            type: 'GET',
+            success: function(res) {
+                if (res.status === 0) {
+                    var data = res.data;
+                    console.log(data);
+                    
+                    // 更新概览卡片
+                    $('#totalCoupons').text(data.total.total || 0);
+                    $('#usedCoupons').text(data.usage.used || 0);
+                    $('#totalAmount').text('¥' + parseFloat(data.amount.total_amount || 0).toFixed(2));
+                    $('#usedAmount').text('¥' + parseFloat(data.amount.used_amount || 0).toFixed(2));
+                    
+                    // 计算进度
+                    var totalCoupons = data.total.total || 1;
+                    var totalUsage = data.usage.total || 1;
+                    var usedPercent = (data.usage.used / totalUsage) * 100;
+                    var amountPercent = parseFloat(data.amount.used_amount / parseFloat(data.amount.total_amount || 1)) * 100;
+                    
+                    $('#usedProgress').css('width', usedPercent + '%').text(usedPercent.toFixed(1) + '%');
+                    $('#amountProgress').css('width', amountPercent + '%').text(amountPercent.toFixed(1) + '%');
+                    
+                    // 更新优惠券类型分布
+                    var voucherCount = data.total.voucher || 0;
+                    var discountCount = data.total.discount || 0;
+                    var referralCount = data.total.referral || 0;
+                    var newUserCount = data.total.new_user || 0;
+                    
+                    $('#voucherCount').text(voucherCount);
+                    $('#discountCount').text(discountCount);
+                    $('#referralCount').text(referralCount);
+                    $('#newUserCount').text(newUserCount);
+                    
+                    $('#voucherProgress').css('width', (voucherCount / totalCoupons) * 100 + '%').text(((voucherCount / totalCoupons) * 100).toFixed(1) + '%');
+                    $('#discountProgress').css('width', (discountCount / totalCoupons) * 100 + '%').text(((discountCount / totalCoupons) * 100).toFixed(1) + '%');
+                    $('#referralProgress').css('width', (referralCount / totalCoupons) * 100 + '%').text(((referralCount / totalCoupons) * 100).toFixed(1) + '%');
+                    $('#newUserProgress').css('width', (newUserCount / totalCoupons) * 100 + '%').text(((newUserCount / totalCoupons) * 100).toFixed(1) + '%');
+                    
+                    // 更新优惠券使用状态
+                    var usedStatusCount = data.usage.used || 0;
+                    var unusedCount = data.usage.unused || 0;
+                    var expiredCount = data.usage.expired || 0;
+                    
+                    $('#usedStatusCount').text(usedStatusCount);
+                    $('#unusedCount').text(unusedCount);
+                    $('#expiredCount').text(expiredCount);
+                    
+                    $('#usedStatusProgress').css('width', (usedStatusCount / totalUsage) * 100 + '%').text(((usedStatusCount / totalUsage) * 100).toFixed(1) + '%');
+                    $('#unusedProgress').css('width', (unusedCount / totalUsage) * 100 + '%').text(((unusedCount / totalUsage) * 100).toFixed(1) + '%');
+                    $('#expiredProgress').css('width', (expiredCount / totalUsage) * 100 + '%').text(((expiredCount / totalUsage) * 100).toFixed(1) + '%');
+                    
+                    // 初始化按类型统计使用情况表格
+                    layui.use(['table'], function() {
+                        var table = layui.table;
+                        
+                        // 准备表格数据
+                        var tableData = [];
+                        var typeMap = {
+                            1: '代金券',
+                            2: '满减券',
+                            3: '拉新券',
+                            4: '新用户立减'
+                        };
+                        
+                        if (data.type_usage && data.type_usage.length > 0) {
+                            data.type_usage.forEach(function(item) {
+                                var usageRate = item.issued > 0 ? ((item.used / item.issued) * 100).toFixed(1) + '%' : '0%';
+                                tableData.push({
+                                    type: typeMap[item.type] || '未知类型',
+                                    issued: item.issued || 0,
+                                    used: item.used || 0,
+                                    usageRate: usageRate
+                                });
+                            });
+                        }
+                        
+                        // 渲染表格
+                        table.render({
+                            elem: '#typeUsageTable',
+                            data: tableData,
+                            cols: [[
+                                { field: 'type', title: '优惠券类型', width: 150 },
+                                { field: 'issued', title: '发放数量', width: 150 },
+                                { field: 'used', title: '使用数量', width: 150 },
+                                { field: 'usageRate', title: '使用率', width: 150 }
+                            ]]
+                        });
+                    });
+                }
+            },
+            error: function(err) {
+                console.error('获取统计数据失败:', err);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

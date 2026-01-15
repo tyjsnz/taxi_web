@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司机注册 - XX出行平台</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="https://wxapp.flacn.net/static/libs/layui/css/layui.css">
+
+    <style>
+        body {
+            background: #ffffff;
+            margin: 0px;
+            /* 整体浅橙色背景 */
+        }
+
+        .container {
+            /* background: url('https://img2.baidu.com/it/u=1248572651,866050628&fm=253&fmt=auto&app=138&f=PNG?w=500&h=889') no-repeat center/cover; */
+            background: url('https://bpic.51yuansu.com/backgd/cover/00/01/16/5b4f3e9029bef.jpg?x-oss-process=image/resize,h_800,m_lfit/sharpen,100') no-repeat center/cover;
+            /* 替换为实际背景图URL */
+            min-height: 100vh;
+            position: relative;
+        }
+
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); */
+            position: relative;
+            z-index: 2;
+            /* 调整顶部间距 */
+            transform: none;
+            /* 移除原有负边距 */
+            padding: 10px;
+            top: 30vh;
+        }
+
+        .form-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+        }
+
+        .tabs-wrapper {
+            /* background: #FFF3E0; */
+            /* Tab区域底色 */
+            border-radius: 10px;
+            padding: 0 0 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .region-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .region-display {
+            flex: 1;
+            margin-left: 0px;
+            padding: 0 5px;
+            height: 39px;
+            line-height: 39px;
+            background: #f5f7fa;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            color: #909399;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 0px !important;
+            border-top-left-radius: 0px;
+            border-bottom-left-radius: 0px;
+        }
+
+
+        /* 悬停状态 */
+        .region-display:hover {
+            /* border-color: #FF6B00;
+            background: #fff; */
+        }
+
+        /* 激活状态 */
+        .region-display:active {
+            /* border-color: #FF8F00; */
+        }
+
+
+        .animated-button {
+            border-radius: 25px;
+            animation: pulse 2s infinite;
+            width: 100%;
+            height: 50px;
+            font-size: 18px;
+            background: #FF6B00 !important;
+            border-color: #FF6B00 !important;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+
+
+        .el-tabs__item {
+            color: #666 !important;
+            font-weight: bold;
+        }
+
+        .el-tabs__item.is-active {
+            color: #FF6B00 !important;
+        }
+
+        .el-tabs__active-bar {
+            background-color: #FF6B00;
+        }
+
+        .el-input-group__append,
+        .el-input-group__prepend {
+            padding: 0 10px !important;
+        }
+
+        .el-tabs__header {
+            margin: 0 0 35px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+
+
+            <div class="form-container">
+                <div class="form-box">
+                    <div class="tabs-wrapper">
+                        <el-tabs v-model="activeTab">
+                            <!-- 自带车加入 -->
+                            <el-tab-pane label="自带车加入" name="selfCar">
+                                <div class="region-input">
+                                    <el-input v-model="form.phone" placeholder="请输入手机号码" style="width: 80%">
+                                        <template slot="prepend">+86</template>
+                                    </el-input>
+                                    <div class="region-display" @click="handleSelectRegion">
+                                        {{ selectedRegion || '所在地区' }}
+                                    </div>
+                                </div>
+                            </el-tab-pane>
+
+                            <!-- 租车加入 -->
+                            <el-tab-pane label="租车加入" name="rentCar">
+                                <div class="region-input">
+                                    <el-input v-model="form.phone" placeholder="请输入手机号码" style="width: 80%">
+                                        <template slot="prepend">+86</template>
+                                    </el-input>
+                                    <div class="region-display" @click="handleSelectRegion">
+                                        {{ selectedRegion || '所在地区' }}
+                                    </div>
+                                </div>
+                            </el-tab-pane>
+                        </el-tabs>
+                    </div>
+
+                    <el-button type="primary" class="animated-button" @click="handleSubmit">
+                        立即注册
+                    </el-button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- 引入Vue和Element UI -->
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="http://wxapp.flacn.net/static/libs/layui/layui.js"></script>
+
+    <script>
+        const App = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    activeTab: 'selfCar',
+                    form: {
+                        region: [],
+                        phone: ''
+                    },
+                    selectedRegion: '',
+                    regionOptions: [],
+                    rules: {
+                        region: [
+                            { required: true, message: '请选择区域', trigger: 'change' }
+                        ],
+                        phone: [
+                            { required: true, message: '请输入手机号', trigger: 'blur' },
+                            { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }
+                        ]
+                    }
+                }
+            },
+            mounted() {
+                // 从URL参数获取已选区域（假设从选择页面返回）
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('region')) {
+                    this.selectedRegion = params.get('region');
+                    this.form.region = params.get('regionId');
+                }
+            },
+            methods: {
+                msg() {
+                    alert('msg')
+                },
+                handleSelectRegion() {
+                    layer.open({
+                        type: 2,
+                        title: '选择区域',
+                        area: ['100%', '100%'],
+                        content: '/region?type=212221' + this.activeTab,
+
+                    });
+                    // 跳转区域选择页面逻辑
+                    //window.location.href = '/region-select?type=' + this.activeTab;
+                },
+
+                handleSubmit() {
+                    const formName = this.activeTab === 'selfCar'
+                        ? 'selfForm'
+                        : 'rentForm'
+
+                    this.$refs[formName].validate(valid => {
+                        if (valid) {
+                            this.submitRegistration()
+                        }
+                    })
+                },
+                async submitRegistration() {
+                    try {
+                        const response = await fetch('/app/api/driver/v1/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                type: this.activeTab,
+                                region: this.form.region,
+                                phone: this.form.phone
+                            })
+                        })
+
+                        if (response.ok) {
+                            this.$message.success('注册申请已提交，稍后客服将联系您')
+                            this.form.region = []
+                            this.form.phone = ''
+                        }
+                    } catch (error) {
+                        this.$message.error('提交失败，请稍后重试')
+                    }
+                }
+            }
+        })
+        window.app = App
+
+        function set_region(name, code) {
+            App.selectedRegion = name
+        }
+    </script>
+</body>
+
+</html>

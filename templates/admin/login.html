@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>系统登录</title>
+    <link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/admin/css/style.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: #12597d;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.3;
+            -webkit-font-smoothing: antialiased;
+            /* color: #fff; */
+        }
+
+        .intro {
+            position: absolute;
+            left: 0;
+            top: 8%;
+            padding: 0 20px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .lyear-wrapper {
+            position: relative;
+        }
+        .lyear-login {
+            display: flex !important;
+            min-height: 100vh;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .lyear-login:after{
+            content: '';
+            min-height: inherit;
+            font-size: 0;
+        }
+        .login-center {
+            background-color: rgba(255,255,255,.7);
+            min-width: 29.25rem;
+            padding: 2.14286em 3.57143em;
+            border-radius: 3px;
+            margin: 2.85714em;
+        }
+        .login-header {
+            margin-bottom: 2.0rem !important;
+        }
+        .login-center .has-feedback.feedback-left .form-control {
+            padding-left: 38px;
+            padding-right: 12px;
+            background-color: rgba(255,255,255,.8);
+            border-color: rgba(0,0,0,.075);
+        }
+        .login-center .has-feedback.feedback-left .form-control-feedback {
+            left: 0;
+            right: auto;
+            width: 38px;
+            height: 38px;
+            line-height: 38px;
+            z-index: 4;
+            color: #dcdcdc;
+        }
+        .login-center .has-feedback.feedback-left.row .form-control-feedback {
+            left: 15px;
+        }
+        .login-center .form-control::-webkit-input-placeholder{
+            color: rgba(100, 100, 100, .5);
+        }
+        .login-center .form-control:-moz-placeholder{
+            color: rgba(100, 100, 100, .5);
+        }
+        .login-center .form-control::-moz-placeholder{
+            color: rgba(100, 100, 100, .5);
+        }
+        .login-center .form-control:-ms-input-placeholder{
+            color: rgba(100, 100, 100, .5);
+        }
+        .login-center .custom-control-label::before {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(0, 0, 0, 0.8);
+        }
+        .login-center .lyear-checkbox span::before {
+            border-color: rgba(251,251,251,0.5)
+        }
+        .form-control{
+            color: #666;
+        }
+        /* .login-center .row{
+            margin-left: 0 !important;
+        } */
+    </style>
+</head>
+
+<body>
+<div class="row lyear-wrapper" id="particles">
+    <div class="lyear-login intro"  style="background-image: url(/static/common/images/bg.jpg);background-size: cover;">
+        <div class="login-center">
+            <div class="login-header text-center">
+                <!-- <img src="/static/common/images/logo.png" height="80px"> -->
+                <h2 style="color: #333;">LS出行管理平台</h2>
+            </div>
+            
+            <form id="myform">
+                <input type="hidden" name="_token" value="aWwK8mnRszEnCuVQPxnPsF29vbj0SBPdd1lFXu5d">
+                <div class="form-group has-feedback feedback-left">
+                    <input type="text" placeholder="请输入您的用户名" class="form-control" name="username" id="username" />
+                </div>
+                <div class="form-group has-feedback feedback-left" style="max-height: 36px;">
+                    <input type="password" placeholder="请输入密码" class="form-control" id="password" name="password" />
+                    <span style="position: relative;right: -180px;top: -30px;cursor:pointer;" id="show_pwds">
+                        <span id="hide_pwd">
+                            <svg t="1709042371250" class="icon" viewBox="0 0 1158 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1655" width="20" height="20"><path d="M1150.581784 500.677546a804.191083 804.191083 0 0 0-173.57976-246.986265l-67.320992 67.40023a702.607383 702.607383 0 0 1 151.297907 213.626875c-110.490102 228.90405-267.493177 337.55582-481.864894 337.55582a510.707692 510.707692 0 0 1-187.525729-33.280151l-72.677511 72.598272a590.865313 590.865313 0 0 0 260.20324 56.35439c255.036892-0.095086 445.494443-133.643579 571.372653-398.886384a80.014992 80.014992 0 0 0 0-68.002443zM1065.527226 59.430284L1009.252075 3.155133a10.538715 10.538715 0 0 0-14.896829-0.14263l-0.142629 0.14263-155.133048 154.958723a588.535703 588.535703 0 0 0-260.013067-56.433628c-255.021045 0-445.510291 133.532645-571.388502 398.822993a80.110078 80.110078 0 0 0 0 68.446178 806.504846 806.504846 0 0 0 173.548065 247.097199l-133.706969 133.532645a10.649648 10.649648 0 0 0 0 14.976068l56.354389 56.354389a10.744735 10.744735 0 0 0 15.055307 0L1065.654008 74.152789a10.459476 10.459476 0 0 0-0.079239-14.722505zM428.814543 568.426425a149.206011 149.206011 0 0 1 144.768657-182.755573h0.174325a151.488079 151.488079 0 0 1 33.993297 3.819293z m245.068694-245.005304a233.927768 233.927768 0 0 0-333.895003 211.249722 234.181331 234.181331 0 0 0 22.440331 100.125712l-113.723031 113.738879a701.704065 701.704065 0 0 1-151.472231-213.848743c110.490102-228.919897 267.588264-337.55582 481.880742-337.55582a510.295652 510.295652 0 0 1 187.50988 33.280151l-92.740688 92.724841z m-100.125712 360.059541a141.900226 141.900226 0 0 1-24.991809-2.12359l-68.01829 67.939051a231.376289 231.376289 0 0 0 92.819927 19.128163 233.927768 233.927768 0 0 0 214.62528-326.573369l-67.986595 68.002442a150.72739 150.72739 0 0 1 2.123591 24.896723 148.968296 148.968296 0 0 1-148.492865 148.683037z" fill="#bfbfbf" p-id="1656"></path></svg>
+                        </span>
+                        <span id="show_pwd" style="display:none;">
+                        <svg t="1709042010670" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1487" width="28" height="28"><path d="M512 277.9136c-149.7088 0-266.4448 89.2928-409.6 234.0864 123.2896 123.6992 226.7136 234.0864 409.6 234.0864 182.6816 0 317.0304-139.6736 409.6-231.424C826.9824 407.1424 692.6336 277.9136 512 277.9136L512 277.9136zM512 678.912c-90.3168 0-163.84-74.9568-163.84-166.912 0-92.16 73.5232-166.912 163.84-166.912 90.3168 0 163.84 74.9568 163.84 166.912C675.84 604.16 602.3168 678.912 512 678.912L512 678.912zM512 678.912" fill="#cccccc" p-id="1488"></path><path d="M512 453.4272c0-14.5408 5.3248-27.648 13.9264-37.888-4.5056-0.8192-9.216-1.024-13.9264-1.024-52.6336 0-95.6416 43.6224-95.6416 97.4848s43.008 97.4848 95.6416 97.4848c52.6336 0 95.6416-43.6224 95.6416-97.4848 0-4.3008-0.4096-8.3968-0.8192-12.6976-10.0352 7.7824-22.528 12.6976-36.2496 12.6976C538.2144 512 512 485.7856 512 453.4272L512 453.4272zM512 453.4272" fill="#cccccc" p-id="1489"></path></svg>
+                        </span>
+                    </span>
+                </div>
+                <div class="form-group has-feedback feedback-left row">
+                    <div class="col-xs-7">
+                        <input type="text" name="vcode" id="vcode" class="form-control" placeholder="验证码" maxlength="4">
+                        <span class="mdi mdi-check-all form-control-feedback" aria-hidden="true"></span>
+                    </div>
+                    <div class="col-xs-5" style="text-align: left;">
+                        <img src="/admin/captcha?w=120&h=36" height="36px" class="pull-right" id="captcha" style="cursor: pointer;" onclick="this.src=this.src+'?w=120&h=36&d='+Math.random();" title="点击刷新" alt="captcha">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-block btn-primary btn-login" type="button">立即登录</button>
+                </div>
+            </form>
+
+                        <hr>
+            <footer class="col-sm-12 text-center" style="color: #999;">
+                <p class="m-b-0" >Copyright © 2025 <a>LS出行</a>. All right reserved</p>
+            </footer>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+<script type="text/javascript" src="/static/admin/js/bootstrap.min.js"></script>
+<script src="/static/libs/layui/layui.js"></script>
+
+<script type="text/javascript">    
+    function msg(msg){
+       layer.msg(msg,{icon: 5});
+    }
+    
+    function checkData(){
+         if($("#username").val() == ''){
+                msg('帐号为空~');
+                return false;
+            }
+            if($("#password").val() == ''){
+                msg('密码为空~');
+                return false;
+            }
+            
+        return true;
+    }
+    
+    $(function(){
+        $("#hide_pwd").click(function(){
+            $("#password").attr('type','text');
+            $(this).hide();
+            $("#show_pwd").show();
+            setTimeout(function(){
+                $("#show_pwd").click();
+            },3000);
+        })
+        $("#show_pwd").click(function(){
+            $("#password").attr('type','password');
+            $(this).hide();
+            $("#hide_pwd").show();
+        })
+        
+        $(".btn-login").click(function(){
+            if($("#username").val() == ''){
+                msg('帐号为空~');
+                return;
+            }
+            if($("#password").val() == ''){
+                msg('密码为空~');
+                return;
+            }
+            if($("#vcode").val() == ''){
+                msg('验证码为空');
+                return;
+            }
+            
+            layer.load(0, {time: 10000});
+  
+            var pwd = $("#password").val();
+            $.ajax({
+                url: "/admin/login",
+                data: {'username': $("#username").val(), 'password': pwd,"vcode":$("#vcode").val()},
+                type: 'post',
+                dataType: 'json',
+                success: function(res){
+                    layer.closeAll()
+                    if(res.status == 0) {                        
+                        location.href = "/admin/main"
+                    }
+                    else {
+                        layer.msg(res.msg + " ")
+                        $("#captcha").attr('src','/admin/captcha?w=120&h=36&t='+Math.random());
+                    }
+                }
+            })
+
+        });
+
+        $(document).keydown(function(event){
+            if(event.keyCode==13){
+                $(".btn-login").click();
+            }
+        })
+    })
+
+    $(document).ready(function() {
+        /*$('#particles').particleground({
+            dotColor: 'rgba(255,255,255,0.3)',
+            lineColor: 'rgba(255,255,255,0.2)'
+        });
+        $('.intro').css({
+            'margin-top': -($('.intro').height() / 2)
+        });
+        */
+    });
+</script>
+</body>
+</html>

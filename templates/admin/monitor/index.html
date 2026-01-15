@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>地图监控-实时监管</title>
+    <link href="/static/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/libs/bootstrap/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="/static/libs/bootstrap/js/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
+    <link href="/static/libs/bootstrap/css/animate.min.css" rel="stylesheet">
+    <link href="/static/libs/bootstrap/css/style.min.css" rel="stylesheet">
+    <link href="/static/libs/layui/css/layui.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css" />
+
+    <style>
+        #container {
+            width: 100%;
+            height: 100%;
+
+        }
+
+        .layui-table,
+        .layui-table-view {
+            margin: 0 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div style="position: fixed; z-index: 1999999; width: 80%; height: 50px; background-color: #fff;">
+            <div class="row" style="margin-top: 10px;text-align: center;">
+                <div class="col-sm-3">
+                    总车辆：<span class="layui-badge layui-bg-blue" id="total_driver"></span>
+                </div>
+                <div class="col-sm-3">                    
+                        当前在线车辆：<span class="layui-badge layui-bg-green" id="online_driver"></span>                    
+                </div>
+                <div class="col-sm-3">
+                    当前离线车辆：<span class="layui-badge layui-bg-warning" id="offline_driver"></span>
+                </div>
+            </div>
+        </div>
+        <div class="" style="z-index: 197909999; position: fixed; right: 5px; width: 20%; ">
+            <div class="row">
+                <!-- <div class="col-xl-8">
+                    <div class="card" style="background-image: url('/static/images/common/transparent.png');">
+                        <div class="card-body">
+                            <div id="offline" style="width: 100%; height: 160px;"></div>
+                        </div>
+                    </div>
+                </div> -->
+                <div class="col-md-12" style="padding: 0px;">
+                    <div class="card" style="height: 100vh; padding: 0px; margin: 0px;">
+                        <div class="card-header" style="text-align: center;">
+                            <a href="#" target="_blank">
+                                <!-- <p id="ptotal">总数：</p> -->
+                            </a>
+
+                            <p><a href="#" id="aref">10秒刷新</a></p>
+                        </div>
+
+                        <div class="card-header">
+                            <form class="search-bar">
+                                <div class="input-group ml-md-auto">
+                                    <input type="text" class="form-control" id="search_name" placeholder="车牌号或手机号">
+                                    <div class="input-group-prepend">
+                                        <button type="button" class="btn btn-success btn-xs btn-search">查询</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card-body" style="padding: 1px;">
+
+                            <table id="demo" lay-filter="test"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="position: fixed; left: 10; width: 90%; max-height: 200px; overflow: hidden; z-index: 1444444; background-color: #fff;">
+            <div id="dtotal" class="row" style="margin-top: 20px;">
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <div id="container"></div>
+
+
+    <div id="chart_log">
+        <div id="open_log" style="width: 800px; height: 400px;"></div>
+    </div>
+
+    <script type="text/javascript" src="/static/libs/bootstrap/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/libs/bootstrap/js/popper.min.js"></script>
+    <script type="text/javascript" src="/static/libs/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/libs/bootstrap/js/lyear-loading.js"></script>
+    <script type="text/javascript" src="/static/libs/bootstrap/js/bootstrap-notify.min.js"></script>
+    <script type="text/javascript" src="/static/libs/bootstrap/js/jquery-confirm/jquery-confirm.min.js"></script>
+
+    <script type="text/javascript" src="/static/libs/bootstrap/js/main.min.js"></script>
+
+    <script src="/static/libs/layui/layui.js"></script>
+    <script type="text/javascript" src="/static/libs/bootstrap/js/lightyear.js"></script>
+    <!-- amap -->
+    <script type="text/javascript"
+        src="https://webapi.amap.com/maps?v=2.0&key=03efa032b6a9f665e0ae6c1e5923f2ba&plugin=AMap.Scale,AMap.ToolBa,AMap.MarkerCluster">
+        </script>
+    <script src="https://a.amap.com/Loca/static/mock/adcodes.js"></script>
+
+    <script src="/static/common/coordtransform.js"></script>
+
+    <script type="text/javascript">
+        // 地图初始化应该在地图容器div已经添加到DOM树之后
+        var map = new AMap.Map('container', {
+            zoom: 12,
+            center: [102.749646, 25.035358],
+            // rotateEnable:true,
+            // pitchEnable:true,
+            //pitch: 50,
+            //rotation: -15,
+            viewMode: '3D',
+            features: ['bg', 'road', 'building', 'point'],
+            showLabel: true //不显示地图文字标记
+        })
+
+        $(function () {
+            //setMapStyle();
+            //   addMarker(1, "环城南路传感器", 102.700617, 25.021964, "")
+
+            //addMarker(1, "北京路金星地铁站传感器", 102.727794, 25.076039, "")
+        });
+
+        function setMapStyle() {
+            var styleName = "amap://styles/darkblue";
+            map.setMapStyle(styleName);
+        }
+
+        var Markers = []
+        function addMarker(id, title, lng, lat, icon) {
+            if (title == '' || isNaN(lat) || isNaN(lng))
+                return;
+
+            if (icon == "") {
+                icon = "/static/images/web/car-1.png";
+            }
+
+            // 构造点标记
+            var marker = new AMap.Marker({
+                icon: icon, // "/common/images/temp.png",
+                position: new AMap.LngLat(lng, lat),
+                anchor: 'top-right'
+            });
+            marker.content = 'content' + lng
+            marker.setTitle(id);
+            marker.setLabel({
+                direction: 'right',
+                offset: new AMap.Pixel(-5, -30),  //设置文本标注偏移量
+                anchor: 'top-right',
+                content: "<div class='info' style='color: #333 !important;'>" + title + "</div>", //设置文本标注内容
+            });
+
+            //let _tmp = coordtransform.gcj02towgs84(parseFloat(lng), parseFloat(lat))
+            //lng = _tmp[0]
+            //lat = _tmp[1]
+
+            // 找出原相同marker删除，并重新添加marker
+            findMarker(marker)
+
+            for (let i in nbDevice) {
+                if (nbDevice[i].driver_id == id) {
+                    nbDevice[i].lng = lng
+                    nbDevice[i].lat = lat
+                }
+            }
+
+            Markers.push(marker)
+            map.add(marker)
+            marker.on('click', showInfoM);
+            //marker.on('mouseover', showInfoOver);
+            //marker.on('mouseout', showInfoOut);
+            return marker
+        }
+        var infoWindow = new AMap.InfoWindow({
+            offset: new AMap.Pixel(0, -30)
+        });
+
+        function showInfoM(e) {
+            console.log('点击marker')
+
+        }
+
+        $("#aref").click(function () {
+            // for(let i in Markers){
+            //     Markers[i].remove()
+            //     Markers[i] = null
+            // }
+            // Markers = []
+
+            tableRef(g_table)
+        })
+
+        function findMarker(m) {
+            for (let i in Markers) {
+                if (Markers[i].getTitle() == m.getTitle()) {
+                    Markers[i].remove()
+                    Markers[i] = m
+                }
+            }
+        }
+    </script>
+
+    <script>
+        var nbDevice = []
+        var g_table = null
+        var g_region = []
+
+
+        function findDevicdAndPush(objData) {
+            for (let i in nbDevice) {
+                if (objData.driver_id == nbDevice[i].driver_id)
+                    return true
+            }
+
+            nbDevice.push(objData)
+        }
+
+        function addTotalToUI() {
+            var html = '<div class="offset-1"></div>'
+            for (let i in g_region) {
+                html += '<div class="col-1">'
+                html += g_region[i].name
+                html += '<span>' + g_region[i].num + "</span>"
+                html += '<img src="' + g_region[i].icon + '">'
+                html += '</div>'
+            }
+            $("#dtotal").html(html)
+        }
+        function pull_gps_data() {
+            for (let j in g_region) {
+                g_region[j].num = 0
+            }
+            $.ajax({
+                url: '/admin/monitor/car/list',
+                type: 'get',
+                dataType: 'json',
+                success: function (res) {
+                    console.log(res)
+                    var online = 0
+                    for (let i in res.data) {
+                        let lat = res.data[i].latitude
+                        let lng = res.data[i].longitude
+
+                        let car = { 'driver_id': res.data[i].driver_id, 'truename': res.data[i].truename, 'lng': Number(lng), 'lat': Number(lat), 'phone': res.data[i].phone }
+                        if (findDevicdAndPush(car))
+                            continue
+
+                        addMarker(res.data[i].driver_id, res.data[i].truename, Number(lng), Number(lat), '/static/images/web/car-1.png')
+                    }
+
+                    var html = "在线车辆：" + res.data.length;
+                    $("#ptotal").html(html)
+
+                    let other = res.other
+                    if (other) {
+                        $("#online_driver").html(other.online_total)
+                        $("#offline_driver").html(other.offline_total)
+                        $("#total_driver").html(other.total)
+                    }
+                }
+            })
+        }
+
+        function tableRef(table) {
+            table.render({
+                elem: '#demo'
+                , url: '/admin/monitor/car/list'// '/static/json/table.json'
+                , cellMinWidth: 80                
+                , toolbar: false
+                , response: {
+                    statusName: 'status'
+                    , statusCode: 0
+                }
+                , request: {
+                    pageName: 'page' //页码的参数名称，默认：page
+                    , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+                }
+                , page: true
+                , limit: 50
+                , loading: true
+                , limits: [50, 100, 200]
+                , cols: [[
+                    { field: 'driver_id', hide: true }
+                    , { field: 'truename', title: '司机', sort: true, width: 80 }
+                    , { field: 'car_no', title: '车牌', sort: true, width: 100 }
+                    , { field: 'phone', title: '电话', sort: true, width: 130 }
+                ]]
+                , parseData: function (res) {
+                    var online = 0
+                    if (nbDevice.length <= 0)
+                        nbDevice = res.data
+
+                    for (let i in res.data) {
+                        let lat = res.data[i].latitude
+                        let lng = res.data[i].longitude
+
+                        let car = { 'driver_id': res.data[i].driver_id, 'truename': res.data[i].truename, 'lng': Number(lng), 'lat': Number(lat), 'phone': res.data[i].phone }
+
+                        addMarker(res.data[i].driver_id, res.data[i].truename, Number(lng), Number(lat), '/static/images/web/car-1.png')
+                    }
+
+                    var html = "在线车辆：" + res.data.length;
+                    $("#ptotal").html(html)
+
+                    
+                    let other = res.other
+                    if (other) {
+                        $("#online_driver").html(other.online_total)
+                        $("#offline_driver").html(other.offline_total)
+                        $("#total_driver").html(other.total)
+                    }
+
+                    return {
+                        "status": res.status
+                        , "msg": 'ok'
+                        , "count": res.msg
+                        , "data": res.data
+                    };
+                }
+                
+            });
+        }
+
+        layui.use(['table'], function () {
+            var table = layui.table
+                , $ = layui.$
+                , laytpl = layui.laytpl;
+
+            //全局设定某参数
+            table.set({
+                where: {
+                    token: '6c1c3329c9b75ff5c67514ee813f8a65'
+                    , access: '全局的 access'
+                }
+                //,defaultToolbar: ['filter']
+                , limit: 200
+                //,url: 'list'
+                , height: 700
+            });
+
+            g_table = table
+            tableRef(table)
+            //$('#appendtest').append($('#TPL_appendtest').html())
+            //table.init('appendtest');
+
+            table.on('row(test)', function (obj) {
+                console.log(obj.data)
+                for (let i in nbDevice) {
+                    if (nbDevice[i].driver_id == obj.data.driver_id) {
+                        let lat = nbDevice[i].lat
+                        let lng = nbDevice[i].lng
+                        if (isNaN(lat) || isNaN(lng) || lat == "" || lng == "")
+                            return;
+
+                        map.setZoomAndCenter(21, new AMap.LngLat(lng, lat));
+                        /*AMap.convertFrom([lng, lat], "gps", function (status, result) {
+                            if (result.info === 'ok') {
+                                var resLnglat = result.locations[0];
+                                var position = new AMap.LngLat(resLnglat.lng, resLnglat.lat)
+                                map.setZoomAndCenter(18, position)
+                            }
+                        });*/
+                    }
+                }
+                //layer.closeAll('tips');
+            });
+
+            for (let i in nbDevice) {
+                let lat = nbDevice[i].lat
+                let lng = nbDevice[i].lng
+                addMarker(nbDevice[i].driver_id, nbDevice[i].car_no + "(" + nbDevice[i].truename + ")", Number(lng), Number(lat), nbDevice[i].icon)
+            }
+
+        });
+
+        $(function () {
+            //pull_gps_data()
+            setInterval(pull_gps_data, 10000)
+            var timeInter = 10
+            setInterval(function () {
+                if (timeInter == 0)
+                    timeInter = 10
+                $("#aref").html(timeInter + "秒刷新");
+                timeInter--
+            }, 1000)
+        })
+
+        $(".btn-search").click(function () {
+            let name = $("#search_name").val().trim(); // 获取并去除前后空格
+
+            // 正则表达式：匹配中国大陆手机号（11位数字，以13、14、15、17、18、19开头）
+            const phoneRegex = /^1[3-9]\d{9}$/;
+
+            let isFind = false;
+            if (phoneRegex.test(name)) {
+                
+                // 输入是电话号码，执行定位逻辑
+                for (let i in nbDevice) {
+                    console.log(nbDevice[i].phone, name)
+                    if (nbDevice[i].phone === name) {
+                        let lat = nbDevice[i].lat;
+                        let lng = nbDevice[i].lng;
+                        if (isNaN(lat) || isNaN(lng) || lat === "" || lng === "") return;
+
+                        var position = new AMap.LngLat(lng, lat);
+                        map.setZoomAndCenter(21, position);
+                        isFind = true;
+                        break;
+                    }
+                }
+            } else {
+                // 输入不是电话号码，按车牌号或其他字段处理
+                for (let i in nbDevice) {
+                    if (nbDevice[i].car_no.indexOf(name) !== -1) {
+                        let lat = nbDevice[i].lat;
+                        let lng = nbDevice[i].lng;
+                        if (isNaN(lat) || isNaN(lng) || lat === "" || lng === "") return;
+
+                        var position = new AMap.LngLat(lng, lat);
+                        map.setZoomAndCenter(21, position);
+                        isFind = true;
+                        break;
+                    }
+                }
+            }
+            if (!isFind) {
+                layer.msg("未找到相关车辆");
+            }
+        });
+    </script>
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佣金设置 - 打车平台后台管理</title>
+  <!-- Element UI CSS -->
+  <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+  <!-- Layui CSS -->
+  <link href="/static/libs/layui/css/layui.css" rel="stylesheet">
+  <!-- 引入 layui.js -->
+  <script src="/static/libs/layui/layui.js"></script>
+  <!-- Vue & Element UI JS -->
+  <script src="/static/libs/element-ui/js/vue.js"></script>
+  <script src="/static/libs/element-ui/js/index.js"></script>
+  <script src="/static/libs/axios.min.js"></script>
+
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .search-bar {
+      margin-bottom: 20px;
+    }
+
+    .action-bar {
+      margin-bottom: 15px;
+    }
+
+    .driver-info {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="container">
+    <el-card class="box-card">
+
+      <!-- 加盟商佣金设置 -->
+      <div class="panel">
+        <div class="panel-title">加盟商佣金设置</div>
+
+        <div class="search-bar" style="display: none;">
+          <el-form :inline="true" class="demo-form-inline">
+            <el-form-item label="加盟商名称">
+              <el-input v-model="name" placeholder="请输入加盟商名称" clearable></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleFranchiseeSearch">查询</el-button>
+              <el-button @click="resetFranchiseeSearch">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+        <div id="franchiseeTable"></div>
+      </div>
+
+      <!-- 加盟商下属司机信息 -->
+      <div class="panel" v-if="selectedFranchisee">
+        <div class="panel-title">加盟商下属司机信息 - ${ selectedFranchisee.name }</div>
+
+        <div class="driver-info">
+          <el-row :gutter="20">
+            <el-col :span="6">
+              <div class="driver-stat">
+                <div class="stat-title">司机总数</div>
+                <div class="stat-value">${ driverStats.total }</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="driver-stat">
+                <div class="stat-title">当前佣金比率</div>
+                <div class="stat-value">${ driverStats.currentRate }%</div>
+              </div>
+            </el-col>
+
+            <!-- <el-col :span="6">
+              <div class="driver-stat">
+                <div class="stat-title">最高佣金比率</div>
+                <div class="stat-value">${ driverStats.maxRate }%</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="driver-stat">
+                <div class="stat-title">最低佣金比率</div>
+                <div class="stat-value">${ driverStats.minRate }%</div>
+              </div>
+            </el-col> -->
+
+          </el-row>
+        </div>
+
+        <div class="action-bar">
+          <el-button type="primary" @click="showDriverRateDialog">设置所有司机佣金比率</el-button>
+        </div>
+
+        <div id="driverTable"></div>
+      </div>
+    </el-card>
+
+    <!-- 加盟商佣金设置对话框 -->
+    <el-dialog title="设置加盟商佣金比率" :visible.sync="franchiseeDialogVisible" width="30%">
+      <el-form :model="franchiseeForm" label-width="120px">
+        <el-form-item label="加盟商名称">
+          <el-input v-model="franchiseeForm.name" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="当前佣金比率">
+          <el-input v-model="franchiseeForm.currentRate" disabled>
+            <template slot="append">%</template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="新佣金比率" required>
+          <el-input v-model="franchiseeForm.newRate" type="number" min="0" max="100">
+            <template slot="append">%</template>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-checkbox v-model="franchiseeForm.applyToDrivers">同时应用到所有下属司机</el-checkbox>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="franchiseeDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveFranchiseeRate">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 司机佣金设置对话框 -->
+    <el-dialog title="设置所有司机佣金比率" :visible.sync="driverDialogVisible" width="30%">
+      <el-form :model="driverForm" label-width="120px">
+        <el-form-item label="加盟商名称">
+          <el-input v-model="selectedFranchisee.name" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="司机数量">
+          <span>${ driverStats.total }位司机</span>
+        </el-form-item>
+        <el-form-item label="当前佣金比率">
+          <el-input v-model="driverForm.currentRate" disabled>
+            <template slot="append">%</template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="新佣金比率" required>
+          <el-input v-model="driverForm.newRate" type="number" min="0" max="100">
+            <template slot="append">%</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="driverDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveDriverRate">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+
+
+  <script>
+    new Vue({
+      el: '#app',
+      delimiters: ['${', '}'],
+      data() {
+        return {
+          // 加盟商搜索表单
+          name: '',
+          // 当前选中的加盟商
+          selectedFranchisee: '',
+
+          // 司机统计信息
+          driverStats: {
+            total: 0,
+            currentRate: 0,
+            maxRate: 0,
+            minRate: 0
+          },
+
+          // 加盟商对话框相关
+          franchiseeDialogVisible: false,
+          franchiseeForm: {
+            id: '',
+            name: '',
+            currentRate: '',
+            newRate: '',
+            applyToDrivers: false
+          },
+
+          // 司机对话框相关
+          driverDialogVisible: false,
+          driverForm: {
+            currentRate: '',
+            newRate: ''
+          },
+        }
+      },
+      mounted() {
+        this.initFranchiseeTable();
+      },
+      methods: {
+        // 初始化加盟商表格
+        initFranchiseeTable() {
+          var that = this
+          layui.use('table', () => {
+            const table = layui.table;
+
+            var option = {
+              elem: '#franchiseeTable',
+              url: '/admin/company/commission/setup/json'
+              , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+              }
+              , page: true
+              , limit: 50
+              , loading: true
+              , limits: [50, 100, 200]
+              , cols: [[
+                { field: 'id', title: '加盟商ID', width: 120, sort: true },
+                { field: 'name', title: '加盟商名称' },
+                {
+                  field: 'commission_rate', title: '佣金比率(%)', width: 120, templet: function (d) {
+                    if (d.commission_rate == null)
+                      return '--';
+                    return d.commission_rate + '%';
+                  }
+                },
+                { field: 'driver_num', title: '司机数量', width: 100 },
+                { field: 'created_at', title: '加盟时间', width: 180, sort: true },
+                { title: '操作', width: 150, toolbar: '#franchiseeOperate' }
+              ]],
+              response: {
+                statusName: 'status'
+                , statusCode: 0
+              }
+              , done: (res, curr, count) => {
+                // 表格渲染完成后，如果有选中加盟商，保持选中状态
+                if (this.selectedFranchisee) {
+                  const elem = document.querySelector(`[data-id="${this.selectedFranchisee.id}"]`);
+                  if (elem) {
+                    elem.click();
+                  }
+                }
+              }
+              , parseData: function (res) {
+
+                return {
+                  "status": res.status
+                  , "msg": res.msg
+                  , "count": res.other
+                  , "data": res.data
+                };
+              }
+            }
+
+            table.render(option)
+
+            // 监听行单击事件
+            table.on('row(franchiseeTable)', (obj) => {
+              obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+              this.selectFranchisee(obj.data);
+            });
+
+            // 监听行工具事件
+            table.on('tool(franchiseeTable)', (obj) => {
+              const data = obj.data;
+              if (obj.event === 'edit') {
+                this.showFranchiseeRateDialog(data);
+              }
+            });
+          });
+        },
+
+        // 初始化司机表格
+        initDriverTable() {
+          var that = this
+          layui.use('table', () => {
+            const table = layui.table;
+
+            var option = {
+              elem: '#driverTable',
+              height: 400,
+              url: '/admin/company/commission/driver/json?company_id=' + this.selectedFranchisee.id
+              , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+              }
+              , page: true
+              , limit: 50
+              , loading: true
+              , limits: [50, 100, 200]
+              , cols: [[
+                { field: 'id', title: '司机ID', width: 100, sort: true },
+                { field: 'truename', title: '司机姓名', width: 120 },
+                { field: 'phone', title: '手机号码', width: 150 },
+                {
+                  field: 'commission_rate', title: '佣金比率(%)', width: 120, templet: function (d) {
+                    return d.commission_rate + '%';
+                  }
+                },
+                { field: 'created_at', title: '注册时间', width: 180, sort: true }
+              ]],
+              response: {
+                statusName: 'status'
+                , statusCode: 0
+              }
+              , done: function (res, curr, count) {
+                //当数据渲染完后，执行的回调
+              }
+              , parseData: function (res) {
+
+                that.driverStats = {
+                  total: res.other,
+                  currentRate: that.selectedFranchisee.commission_rate,
+                  maxRate: 0,
+                  minRate: 0
+                };
+
+                return {
+                  "status": res.status
+                  , "msg": res.msg
+                  , "count": res.other
+                  , "data": res.data
+                };
+              }
+
+            }
+            table.render(option);
+          });
+        },
+
+        // 选择加盟商
+        selectFranchisee(franchisee) {
+          this.selectedFranchisee = franchisee;
+          this.initDriverTable();
+        },
+
+
+        // 加盟商搜索
+        handleFranchiseeSearch() {
+          // 实际项目中这里应该是API请求
+          console.log('搜索条件:', this.franchiseeSearchForm);
+          this.$message.success('搜索完成');
+        },
+
+        // 重置加盟商搜索
+        resetFranchiseeSearch() {
+          name: ''
+        },
+
+        // 显示加盟商佣金设置对话框
+        showFranchiseeRateDialog(data) {
+          this.franchiseeForm = {
+            id: data.id,
+            name: data.name,
+            currentRate: data.commission_rate,
+            newRate: '',
+            applyToDrivers: false
+          };
+          this.franchiseeDialogVisible = true;
+        },
+
+        // 保存加盟商佣金比率
+        saveFranchiseeRate() {
+          if (!this.franchiseeForm.newRate) {
+            this.$message.warning('请输入新的佣金比率');
+            return;
+          }
+
+          var that = this
+          // 这里应该是API请求
+          console.log('保存加盟商佣金比率:', this.franchiseeForm);
+          axios.post('/admin/company/commission/setup', {
+            id: this.franchiseeForm.id,
+            rate: this.franchiseeForm.newRate,
+            apply_to_drivers: this.franchiseeForm.applyToDrivers ? 1 : 0
+          }).then(res => {
+            if (res.data.status == 0) {
+              that.$message.success('设置成功');
+              this.initFranchiseeTable()
+              this.initDriverTable()
+            }
+
+          }).catch(err => {
+            console.log(err);
+          })
+
+
+          this.franchiseeDialogVisible = false;
+
+        },
+
+        // 显示司机佣金设置对话框
+        showDriverRateDialog() {
+          if (!this.selectedFranchisee) {
+            this.$message.warning('请先选择一个加盟商');
+            return;
+          }
+
+          this.driverForm = {
+            currentRate: this.driverStats.currentRate,
+            newRate: ''
+          };
+          this.driverDialogVisible = true;
+        },
+
+        // 保存司机佣金比率
+        saveDriverRate() {
+          if (!this.driverForm.newRate) {
+            this.$message.warning('请输入新的佣金比率');
+            return;
+          }
+
+          // 这里应该是API请求
+          console.log('保存司机佣金比率:', this.driverForm);
+
+          var that = this
+          axios.post('/admin/company/commission/driver/setup', {
+            company_id: this.selectedFranchisee.id,
+            rate: this.driverForm.newRate
+          }).then(res => {
+            if (res.data.status == 0) {
+              that.$message.success('设置成功');
+              this.initFranchiseeTable()
+              this.initDriverTable()
+            }
+
+          }).catch(err => {
+            console.log(err);
+          })
+
+          // 模拟保存成功
+          this.$message.success('保存成功');
+          this.driverDialogVisible = false;
+        },
+
+
+      }
+    });
+  </script>
+
+  <!-- 加盟商操作列模板 -->
+  <script type="text/html" id="franchiseeOperate">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">设置佣金</a>
+  </script>
+
+  <style>
+    .driver-stat {
+      text-align: center;
+      padding: 10px;
+    }
+
+    .stat-title {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .layui-table-click {
+      background-color: #f2f2f2 !important;
+    }
+  </style>
+</body>
+
+</html>

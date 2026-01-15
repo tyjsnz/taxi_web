@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发票管理后台</title>
+    <!-- 引入 Element-UI 样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入 Vue 和 Element-UI JS -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    <script src="/static/utils/helper.js?v=1"></script>
+    <style>
+        body {
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #1E88E5;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .status-tag {
+            padding: 0 6px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .status-pending {
+            color: #FF9800;
+            background: #FFF3E0;
+        }
+
+        .status-approved {
+            color: #4CAF50;
+            background: #E8F5E9;
+        }
+
+        .status-rejected {
+            color: #F44336;
+            background: #FFEBEE;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <div class="header-title">发票申请管理</div>
+                <div class="header-actions">
+                    <!-- <el-button type="primary" @click="exportData">导出数据</el-button> -->
+                    <el-button @click="refreshData">刷新</el-button>
+                </div>
+            </div>
+
+            <div class="filter-card">
+                <el-form :inline="true" :model="filterForm" class="filter-form">
+                    <el-form-item label="申请日期">
+                        <el-date-picker v-model="filterForm.dateRange" type="daterange" range-separator="至"
+                            start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd">
+                        </el-date-picker>
+                    </el-form-item>
+
+                    <el-form-item label="申请状态">
+                        <el-select v-model="filterForm.status" placeholder="请选择状态" clearable>
+                            <el-option label="待处理" value="pending"></el-option>
+                            <el-option label="已通过" value="approved"></el-option>
+                            <el-option label="已拒绝" value="rejected"></el-option>
+                        </el-select>
+                    </el-form-item>
+
+                    <el-form-item label="用户电话">
+                        <el-input v-model="filterForm.phone" placeholder="请输入用户电话"></el-input>
+                    </el-form-item>
+
+                    <el-form-item>
+                        <el-button type="primary" @click="handleSearch">搜索</el-button>
+                        <el-button @click="resetFilter">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+
+            <div class="table-card">
+                <el-table :data="tableData" border style="width: 100%" v-loading="loading">
+                    <el-table-column prop="id" label="申请ID" width="100">
+                    </el-table-column>
+                    <el-table-column prop="user_id" label="用户ID" width="120">
+                    </el-table-column>
+                    <el-table-column prop="user_name" label="用户名" width="150">
+                    </el-table-column>
+                    <el-table-column prop="invoice_type" label="发票类型" width="120">
+                        <template slot-scope="scope">
+                            ${ scope.row.invoice_type === 'company' ? '企业发票' : '个人发票' }
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="invoice_title" label="发票抬头" width="200">
+                    </el-table-column>
+                    <el-table-column prop="amount" label="金额(元)" width="120" align="center">
+                        <!-- <template slot-scope="scope">
+                            ${ scope.row.amount.toFixed(2) }
+                        </template> -->
+                    </el-table-column>
+                    <el-table-column prop="apply_time" label="申请时间" width="180">
+                        <template slot-scope="scope">
+                            ${ get_formatTime(scope.row.apply_time) }
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" label="状态" width="120">
+                        <template slot-scope="scope">
+                            <el-tag :type="getStatusType(scope.row.status)" size="small" class="status-tag">
+                                ${ getStatusText(scope.row.status) }
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作" fixed="right">
+                        <template slot-scope="scope">
+                            <div class="action-buttons">
+                                <el-button v-if="scope.row.status === 'pending'" type="success" size="mini"
+                                    @click="handleApprove(scope.row)">
+                                    通过
+                                </el-button>
+                                <el-button v-if="scope.row.status === 'pending'" type="danger" size="mini"
+                                    @click="handleReject(scope.row)">
+                                    拒绝
+                                </el-button>
+                                <el-button type="primary" size="mini" @click="showDetail(scope.row)">
+                                    详情
+                                </el-button>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <div class="pagination">
+                    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                        :current-page="pagination.currentPage" :page-sizes="[10, 20, 50, 100]"
+                        :page-size="pagination.pageSize" layout="total, sizes, prev, pager, next, jumper"
+                        :total="pagination.total">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详情对话框 -->
+        <el-dialog title="发票申请详情" :visible.sync="detailDialogVisible" width="50%">
+            <el-descriptions :column="2" border v-if="currentDetail">
+                <el-descriptions-item label="申请ID">${ currentDetail.id }</el-descriptions-item>
+                <el-descriptions-item label="用户ID">${ currentDetail.user_id }</el-descriptions-item>
+                <el-descriptions-item label="用户名">${ currentDetail.user_name }</el-descriptions-item>
+                <el-descriptions-item label="用户手机">${ currentDetail.user_phone }</el-descriptions-item>
+                <el-descriptions-item label="发票类型">${ currentDetail.invoice_type === 'company' ? '企业发票' : '个人发票'
+                    }</el-descriptions-item>
+                <el-descriptions-item label="发票抬头">${ currentDetail.invoice_title || '个人发票' }</el-descriptions-item>
+                <el-descriptions-item label="税号">${ currentDetail.tax_number || '-' }</el-descriptions-item>
+                <el-descriptions-item label="金额">${ currentDetail.amount }元</el-descriptions-item>
+                <el-descriptions-item label="申请时间">${ currentDetail.apply_time }</el-descriptions-item>
+                <el-descriptions-item label="状态">
+                    <el-tag :type="getStatusType(currentDetail.status)" size="small" class="status-tag">
+                        ${ getStatusText(currentDetail.status) }
+                    </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="处理时间" v-if="currentDetail.status !== 'pending'">
+                    ${ currentDetail.processTime || '-' }
+                </el-descriptions-item>
+                <el-descriptions-item label="处理人" v-if="currentDetail.status !== 'pending'">
+                    ${ currentDetail.processor || '-' }
+                </el-descriptions-item>
+                <el-descriptions-item label="拒绝原因" v-if="currentDetail.status === 'rejected'">
+                    ${ currentDetail.rejectReason || '-' }
+                </el-descriptions-item>
+                <el-descriptions-item label="接收邮箱">${ currentDetail.email }</el-descriptions-item>
+                <el-descriptions-item label="发票文件" v-if="currentDetail.status === 'approved'">
+                    <el-button type="text" @click="downloadInvoice(currentDetail)">下载发票</el-button>
+                </el-descriptions-item>
+            </el-descriptions>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="detailDialogVisible = false">关闭</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 拒绝原因对话框 -->
+        <el-dialog title="拒绝原因" :visible.sync="rejectDialogVisible" width="30%">
+            <el-form :model="rejectForm" label-width="80px">
+                <el-form-item label="拒绝原因">
+                    <el-input type="textarea" :rows="3" v-model="rejectForm.reason" placeholder="请输入拒绝原因(可选)">
+                    </el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="rejectDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="confirmReject">确认拒绝</el-button>
+            </span>
+        </el-dialog>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    filterForm: {
+                        dateRange: [],
+                        status: '',
+                        phone: ''
+                    },
+                    tableData: [
+                    ],
+                    loading: false,
+                    pagination: {
+                        currentPage: 1,
+                        pageSize: 10,
+                        total: 5
+                    },
+                    detailDialogVisible: false,
+                    currentDetail: null,
+                    rejectDialogVisible: false,
+                    rejectForm: {
+                        reason: '',
+                        currentId: null
+                    }
+                }
+            },
+            mounted() {
+                this.get_invoice_list();
+            },
+            methods: {
+                get_invoice_list() {
+                    var that = this
+                    this.loading = true
+                    let b = ''
+                    let e = ''
+                    if (this.filterForm.dateRange && this.filterForm.dateRange.length == 2) {
+                        b = this.filterForm.dateRange[0] + " 00:00:00"
+                        e = this.filterForm.dateRange[1] + " 23:59:59"
+                    }
+                    $.ajax({
+                        url: '/admin/finance/invoice/json',
+                        data: { 'btime': b, 'etime': e, 'status': this.filterForm.status, 'phone': this.filterForm.phone },
+                        type: 'get',
+                        dataType: 'json',
+                        success: function (res) {
+                            that.loading = false
+                            if (res.status != 0) {
+                                return;
+                            }
+                            that.tableData = res.data
+                        }
+                    })
+                },
+                getStatusType(status) {
+                    const map = {
+                        'pending': 'warning',
+                        'approved': 'success',
+                        'rejected': 'danger'
+                    };
+                    return map[status] || '';
+                },
+                getStatusText(status) {
+                    const map = {
+                        'pending': '待处理',
+                        'approved': '已通过',
+                        'rejected': '已拒绝'
+                    };
+                    return map[status] || status;
+                },
+                handleSearch() {
+                    this.get_invoice_list()
+                },
+                resetFilter() {
+                    this.filterForm = {
+                        dateRange: [],
+                        status: '',
+                        userId: ''
+                    };
+                    this.handleSearch();
+                },
+                refreshData() {
+                    this.get_invoice_list()
+                },
+                exportData() {
+                    this.$message({
+                        message: '导出功能将在实际应用中实现',
+                        type: 'info'
+                    });
+                },
+                handleSizeChange(val) {
+                    this.pagination.pageSize = val;
+                    this.handleSearch();
+                },
+                handleCurrentChange(val) {
+                    this.pagination.currentPage = val;
+                    this.handleSearch();
+                },
+                showDetail(row) {
+                    this.currentDetail = row;
+                    this.detailDialogVisible = true;
+                },
+                handleApprove(row) {
+                    var that = this
+                    this.$confirm('确认通过此发票申请吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+
+                        
+                    $.ajax({
+                        url: '/admin/finance/invoice/approve',
+                        type: 'POST',
+                        data: { 'id': row.id, 'status': 'approved' },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.status != 0) {
+                                that.$message.error(data.msg);
+                                return
+                            }
+                            row.status = 'approved';
+                            row.processTime = new Date().toLocaleString();
+                            row.processor = 'admin';
+                            this.$message({
+                                message: '已通过申请',
+                                type: 'success'
+                            });
+                        }
+                    })
+                    /*
+                        // 模拟API调用
+                        setTimeout(() => {
+                            row.status = 'approved';
+                            row.processTime = new Date().toLocaleString();
+                            row.processor = 'admin';
+                            this.$message({
+                                message: '已通过申请',
+                                type: 'success'
+                            });
+                        }, 500);
+                        */
+
+
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消操作'
+                        });
+                    });
+                },
+                handleReject(row) {
+                    this.rejectForm = {
+                        reason: '',
+                        currentId: row.id
+                    };
+                    this.rejectDialogVisible = true;
+                },
+                confirmReject() {
+                    if (!this.rejectForm.currentId) return;
+
+                    var that = this
+                    $.ajax({
+                        url: '/admin/finance/invoice/reject',
+                        type: 'POST',
+                        data: { 'id': this.rejectForm.currentId, 'reason': that.rejectForm.reason,'status': 'rejected' },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.status != 0) {
+                                that.$message.error(data.msg);
+                                return
+                            }
+
+                            const row = that.tableData.find(item => item.id === that.rejectForm.currentId);
+                            if (row) {
+                                row.status = 'rejected';
+                                row.processTime = new Date().toLocaleString();
+                                row.processor = 'admin';
+                                row.rejectReason = that.rejectForm.reason || '无';
+                            }
+
+                            that.$message({
+                                message: '已拒绝申请',
+                                type: 'success'
+                            });
+                            that.rejectDialogVisible = false;
+                        }
+                    })
+                    /*
+                    // 模拟API调用
+                    setTimeout(() => {
+                        const row = this.tableData.find(item => item.id === this.rejectForm.currentId);
+                        if (row) {
+                            row.status = 'rejected';
+                            row.processTime = new Date().toLocaleString();
+                            row.processor = 'admin';
+                            row.rejectReason = this.rejectForm.reason || '无';
+                        }
+
+                        this.$message({
+                            message: '已拒绝申请',
+                            type: 'success'
+                        });
+                        this.rejectDialogVisible = false;
+                    }, 500);
+                    */
+                },
+                downloadInvoice(row) {
+                    this.$message({
+                        message: `将下载发票文件: ${row.invoiceFile}`,
+                        type: 'info'
+                    });
+                    // 实际应用中这里会调用下载API
+                },
+                get_formatTime(_time) {
+                    return formatTimepy(_time)
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

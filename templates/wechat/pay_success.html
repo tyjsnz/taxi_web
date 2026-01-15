@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>支付成功</title>
+    <!-- 引入Vue和ElementUI CDN -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <script src="/static/libs/wechat/jweixin-1.3.2.js"></script>
+    <script type="text/javascript" src="/static/libs/wechat/uni.webview.1.5.6.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            /* background: linear-gradient(to bottom, #f5f5f5, #1a2b4a); */
+            background: #f1f1f1;
+            min-height: 100vh;
+        }
+
+        .payment-success {
+            max-width: 100%;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 成功提示区域 */
+        .success-section {
+            width: 100%;
+            background-color: #fff;
+            border-radius: 0 0 20px 20px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .success-icon {
+            width: 60px;
+            height: 60px;
+            background-color: #07C160;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .success-icon .el-icon-success .el-icon-check {
+            font-size: 30px;
+            color: #fff;
+        }
+
+        .success-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .success-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #07C160;
+        }
+
+        /* 优惠券区域 */
+        .coupon-section {
+            width: calc(100% - 40px);
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .view-all {
+            font-size: 14px;
+            color: #07C160;
+            text-decoration: none;
+        }
+
+        .coupon-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .coupon-item {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+
+        .coupon-left {
+            width: 30%;
+            background: linear-gradient(to right, #FF7D00, #FFAA00);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .coupon-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .coupon-value::before {
+            content: "¥";
+            font-size: 16px;
+        }
+
+        .coupon-type {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .coupon-right {
+            flex: 1;
+            padding: 15px;
+            background-color: #fff;
+        }
+
+        .coupon-condition {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .coupon-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .coupon-expiry {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            width: calc(100% - 40px);
+            height: 50px;
+            background-color: #FFD700;
+            /* background-color: #07C160; border-color: #07C160; */
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            border: none;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .back-btn:active {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="payment-success" v-cloak>
+        <!-- 成功提示区域 -->
+        <div class="success-section">
+            <div class="success-icon">
+                <i class="el-icon-check" style="font-size: 36px; color: #fff;"></i>
+            </div>
+            <div class="success-title">支付成功</div>
+            <div class="success-amount"></div>
+        </div>
+        <!-- 网约车及司机评价区域 -->
+        <div class="coupon-section" style="margin-bottom: 30px;" v-if="showEvaluation">
+            <div class="section-header">
+                <div class="section-title">评价本次行程</div>
+            </div>
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <el-rate v-model="rating" show-text text-color="#ff9900" :colors="['#99A9BF', '#F7BA2A', '#FF9900']" :texts="['非常差', '差', '一般', '好', '非常好']"></el-rate>
+            </div>
+            <el-input
+                v-model="comment"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入您的评价内容（选填）"
+                style="margin-bottom: 20px;"
+            ></el-input>
+            <el-button
+                type="primary"
+                @click="submitEvaluation"
+                style="width: 100%; background-color: #07C160; border-color: #07C160;"
+            >
+                提交评价
+            </el-button>
+        </div>
+        <div class="coupon-section" style="margin-bottom: 30px;" v-else>
+            <div class="section-header">
+                <div class="section-title">订单已评价！</div>
+            </div>
+        </div>
+
+
+        <!-- 优惠券区域 -->
+        <div class="coupon-section">
+            <div class="section-header">
+                <div class="section-title">优惠券</div>
+                <a href="javascript:;" class="view-all" @click="viewAllCoupons">去领取优惠券</a>
+            </div>
+
+            <div class="coupon-list" v-if="coupons.length > 0">
+                <!-- 优惠券1 -->
+                <div class="coupon-item" v-for="(item, index) in coupons">
+                    <div class="coupon-left">
+                        <div class="coupon-value">${item.amount}</div>
+                        <div class="coupon-type">${item.type}</div>
+                    </div>
+                    <div class="coupon-right">
+                        <div class="coupon-condition">${item.description}</div>
+                        <div class="coupon-name">${item.name}</div>
+                        <div class="coupon-expiry" v-if="item.valid_type==1">领取后 ${item.valid_days}天内使用</div>
+                        <div class="coupon-expiry" v-else>有效期至 ${item.end_time}</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <button class="back-btn" @click="backToHome">返回首页</button>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    uid: "{{session['uid']}}",
+                    token: "{{session['token']}}",
+                    openid: "{{session['openid']}}",
+                    order_id: "{{order_id}}",
+                    coupons: [],
+                    rating: 4,  // 新增：评价星级
+                    comment: '默认好评', // 新增：评价内容
+                    showEvaluation: true, // 新增：是否显示评价区域
+                }
+            },
+            mounted() {
+                //this.get_coupon_list()
+              },
+            methods: {
+                viewAllCoupons() {
+                    // 查看全部优惠券
+                    console.log('查看全部优惠券');                    
+                    // 这里使用uni.navigateTo跳转到优惠券列表页面，让用户可返回来
+                    uni.navigateTo({
+                        url: '/pages/trip/list?type=coupon_center'
+                    });
+                },
+                backToHome() {
+                    // 成功后跳转到首页
+                    uni.reLaunch({
+                        url: '/pages/index/index?type=web'
+                    });
+                },
+                get_coupon_list() {
+                  var that = this
+                  $.ajax({
+                    url: '/wechat/api/v1/web/member/coupon_center/json',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                      console.log(data)
+                      that.coupons = data.data
+                      for (let i in that.coupons) {
+                        switch (that.coupons[i].type) {
+                          case "1":
+                            that.coupons[i].type = '代金券'
+                            break;
+                          case 2:
+                            that.coupons[i].type = '满减券'
+                            break;
+                          case 3:
+                            that.coupons[i].type = '拉新券'
+                            break;
+                        }
+                        // 动态时间，领取后几天
+                        if (that.coupons[i].valid_type == 1) {
+        
+                        }
+                      }
+                    },
+                  })
+                },
+                submitEvaluation() {
+                        // 提交评价
+                        var that = this;
+                        $.ajax({
+                            url: '/wechat/api/v1/web/member/trip/comment',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {
+                                rating: that.rating,
+                                comment: that.comment,
+                                uid: that.uid,
+                                token: that.token,
+                                openid: that.openid,
+                                order_id: that.order_id
+                            },
+                            success: function (data) {
+
+                                if (data.status == 0) {
+                                    that.$message.success('评价提交成功');
+                                    that.showEvaluation = false; // 评价成功后隐藏评价区域
+                                } else {
+                                    that.$message.error('评价提交失败，请重试');
+                                }
+                            },
+                            error: function () {
+                                that.$message.error('网络错误，请重试');
+                            }
+                        });
+                    },
+        
+            }
+        });
+    </script>
+</body>
+
+</html>

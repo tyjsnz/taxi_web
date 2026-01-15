@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>抢单大厅正式上线</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #fff;
+        }
+        .container {
+            padding: 0;
+        }
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+        .header i{
+            font-size: 25px;
+        }
+        .back-icon {
+            font-size: 25px;
+            color: #333;
+            margin-right: 10px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <div @click="goBack">
+                            <i class="el-icon-arrow-left back-icon" ></i>
+                        </div>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">抢单大厅正式上线</div>
+                    </el-col>
+                </el-row>
+            </div>
+
+           <img src="/static/images/app/grab_ad.jpg" style="width: 100%; height: 100%;">
+           </div>
+    </div>
+
+    <!-- 引入Vue和Element UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="http://wxapp.flacn.net/static/libs/layui/layui.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                }
+            },
+            methods: {
+                goBack() {
+                    window.history.back()
+                },
+            }
+        });
+        window.app = app;
+    </script>
+</body>
+</html>

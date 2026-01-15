@@ -1,0 +1,19 @@
+{
+  "name": "node_webservice",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "redis": "^5.0.0",
+    "socket.io": "^4.8.1"
+  }
+}

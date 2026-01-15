@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>LS出行管理系统</title>
+<link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+<link href="/static/admin/css/materialdesignicons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/admin/js/bootstrap-multitabs/multitabs.min.css">
+<link href="/static/admin/css/style.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+<!-- <div class="lyear-layout-web" data-headerbg="color_8" data-sidebarbg="color_8" data-logobg="color_8"> -->
+  <div class="lyear-layout-web">
+  <div class="lyear-layout-container">
+    <!--左侧导航-->
+    <aside class="lyear-layout-sidebar">
+
+      <!-- logo -->
+      <div id="logo" class="sidebar-header" style="height: 68px;">
+        <a href="/admin"><img src="/static/common/images/logo.png" title="LightYear" alt="" /></a>
+      </div>
+      <div class="lyear-layout-sidebar-scroll"> 
+        
+        <nav class="sidebar-main">
+          <ul class="nav nav-drawer">
+            <li class="nav-item active"> <a class="multitabs" href="/admin/index"><i class="mdi mdi-home"></i>
+                <span>首页</span></a> </li>
+
+            <li class="nav-item nav-item-has-subnav open">
+              <a href="javascript:void(0)"><i class="mdi mdi-format-align-justify"></i> <span>订单管理</span></a>
+              <ul class="nav nav-subnav">
+                <li class=""> <a class="multitabs" href="/admin/order/list">订单列表</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/order/dispatch">派单调度</a> </li>
+              </ul>
+            </li>
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-monitor"></i> <span>实时监管</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/monitor">地图监控</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/monitor/map/region">电子围栏</a> </li>
+              </ul>
+            </li>
+
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-car"></i> <span>司机车辆管理</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/driver/list">司机管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/driver/car/list">司机注册审核</a> </li>
+              </ul>
+            </li>
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-account"></i> <span>乘客管理</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/customer">乘客列表</a> </li>
+              </ul>
+            </li>
+
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-cash-usd"></i> <span>财务管理</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/finance/commission/list">佣金管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/finance/take_cash">提现管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/fans/list">充值管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/finance/invoice">发票管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/finance/baodan">保单管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/finance/report">报表统计</a> </li>
+              </ul>
+            </li>
+
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-gift"></i> <span>活动管理</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/coupons/list">优惠券管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/ad">广告管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/coupons/total">活动统计</a> </li>
+                <!-- <li class=""> <a class="multitabs" href="/admin/fans/list">活动模板</a> </li> -->
+              </ul>
+            </li>
+
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-account-multiple"></i> <span>运营管理</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/price/list">价格管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/route/list">路线管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/company/list">加盟商管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/company/commission/setup">加盟商佣金设置</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/notice">通知公告</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/complaint">投诉管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/evaluation">评价管理</a> </li>
+              </ul>
+            </li>
+            
+            
+            <li class="nav-item nav-item-has-subnav">
+              <a href="javascript:void(0)"><i class="mdi mdi-settings"></i> <span>系统设置</span></a>
+              <ul class="nav nav-subnav" style="display: none;">
+                <li class=""> <a class="multitabs" href="/admin/user/list">系统用户管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/premission">用户权限管理</a> </li>
+                <li class=""> <a class="multitabs" href="/admin/user/log">操作日志管理</a> </li>
+                <!-- <li class=""> <a class="multitabs" href="/admin/user/identity">第三方接口管理</a> </li> -->
+                <li class=""> <a class="multitabs" href="/admin/sys/system_setup">系统参数配置</a> </li>
+                <!-- <li class=""> <a class="multitabs" href="/admin/suggest">意见及建议</a> </li> -->
+              </ul>
+            </li>
+            
+
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <p class="copyright">Copyright &copy; 2024. LS出行 All rights reserved.</p>
+        </div>
+      </div>
+      
+    </aside>
+    <!--End 左侧导航-->
+    
+    <!--头部信息-->
+    <header class="lyear-layout-header">
+      
+      <nav class="navbar navbar-default">
+        <div class="topbar">
+          
+          <div class="topbar-left">
+            <div class="lyear-aside-toggler">
+              <span class="lyear-toggler-bar"></span>
+              <span class="lyear-toggler-bar"></span>
+              <span class="lyear-toggler-bar"></span>
+            </div>
+          </div>
+          <div class="dcenter">
+            <h3>LS出行平台管理系统</h3>
+          </div>
+          <ul class="topbar-right">
+            <li class="dropdown dropdown-profile">
+              <a href="javascript:void(0)" data-toggle="dropdown">
+                <img class="img-avatar img-avatar-48 m-r-10" src="/static/common/images/noavatar.gif" alt="" />
+                <span>{{ session.get('truename') }} <span class="caret"></span></span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li> <a class="multitabs" data-url="/admin/user/myinfo" href="javascript:void(0)"><i class="mdi mdi-account"></i> 个人信息</a> </li>
+                <li class="divider"></li>
+                <li> <a href="/admin/logout"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+              </ul>
+            </li>
+            <!--切换主题配色-->
+		    <li class="dropdown dropdown-skin">
+			  <span data-toggle="dropdown" class="icon-palette"><i class="mdi mdi-palette"></i></span>
+			  <ul class="dropdown-menu dropdown-menu-right" data-stopPropagation="true">
+			    <li class="drop-title"><p>LOGO</p></li>
+				<li class="drop-skin-li clearfix">
+                  <span class="inverse">
+                    <input type="radio" name="logo_bg" value="default" id="logo_bg_1" checked>
+                    <label for="logo_bg_1"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_2" id="logo_bg_2">
+                    <label for="logo_bg_2"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_3" id="logo_bg_3">
+                    <label for="logo_bg_3"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_4" id="logo_bg_4">
+                    <label for="logo_bg_4"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_5" id="logo_bg_5">
+                    <label for="logo_bg_5"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_6" id="logo_bg_6">
+                    <label for="logo_bg_6"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_7" id="logo_bg_7">
+                    <label for="logo_bg_7"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="logo_bg" value="color_8" id="logo_bg_8">
+                    <label for="logo_bg_8"></label>
+                  </span>
+				</li>
+				<li class="drop-title"><p>头部</p></li>
+				<li class="drop-skin-li clearfix">
+                  <span class="inverse">
+                    <input type="radio" name="header_bg" value="default" id="header_bg_1" checked>
+                    <label for="header_bg_1"></label>                      
+                  </span>                                                    
+                  <span>                                                     
+                    <input type="radio" name="header_bg" value="color_2" id="header_bg_2">
+                    <label for="header_bg_2"></label>                      
+                  </span>                                                    
+                  <span>                                                     
+                    <input type="radio" name="header_bg" value="color_3" id="header_bg_3">
+                    <label for="header_bg_3"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="header_bg" value="color_4" id="header_bg_4">
+                    <label for="header_bg_4"></label>                      
+                  </span>                                                    
+                  <span>                                                     
+                    <input type="radio" name="header_bg" value="color_5" id="header_bg_5">
+                    <label for="header_bg_5"></label>                      
+                  </span>                                                    
+                  <span>                                                     
+                    <input type="radio" name="header_bg" value="color_6" id="header_bg_6">
+                    <label for="header_bg_6"></label>                      
+                  </span>                                                    
+                  <span>                                                     
+                    <input type="radio" name="header_bg" value="color_7" id="header_bg_7">
+                    <label for="header_bg_7"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="header_bg" value="color_8" id="header_bg_8">
+                    <label for="header_bg_8"></label>
+                  </span>
+				</li>
+				<li class="drop-title"><p>侧边栏</p></li>
+				<li class="drop-skin-li clearfix">
+                  <span class="inverse">
+                    <input type="radio" name="sidebar_bg" value="default" id="sidebar_bg_1" checked>
+                    <label for="sidebar_bg_1"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_2" id="sidebar_bg_2">
+                    <label for="sidebar_bg_2"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_3" id="sidebar_bg_3">
+                    <label for="sidebar_bg_3"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_4" id="sidebar_bg_4">
+                    <label for="sidebar_bg_4"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_5" id="sidebar_bg_5">
+                    <label for="sidebar_bg_5"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_6" id="sidebar_bg_6">
+                    <label for="sidebar_bg_6"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_7" id="sidebar_bg_7">
+                    <label for="sidebar_bg_7"></label>
+                  </span>
+                  <span>
+                    <input type="radio" name="sidebar_bg" value="color_8" id="sidebar_bg_8">
+                    <label for="sidebar_bg_8"></label>
+                  </span>
+				</li>
+			  </ul>
+			</li>
+            <!--切换主题配色-->
+          </ul>
+          
+        </div>
+      </nav>
+      
+    </header>
+    <!--End 头部信息-->
+    
+    <!--页面主要内容-->
+    <main class="lyear-layout-content">
+      
+      <div id="iframe-content" style="height: 100% !important;"></div>
+      
+    </main>
+    <!--End 页面主要内容-->
+  </div>
+</div>
+
+<script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+<script type="text/javascript" src="/static/admin/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/static/admin/js/perfect-scrollbar.min.js"></script>
+<script type="text/javascript" src="/static/admin/js/bootstrap-multitabs/multitabs.js"></script>
+<script type="text/javascript" src="/static/admin/js/index.min.js"></script>
+<script type="text/javascript" src="/static/libs/layui/layui.js"></script>
+</body>
+</html>

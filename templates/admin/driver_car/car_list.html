@@ -1,0 +1,480 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+
+                <div class="card-toolbar clearfix">
+
+                    <div class="card-header" style="padding-left: 0px !important;">
+                        <div class="col-xs-12">
+                            <form id="myform" method="get">
+                                <div class="input-group m-b-10">
+                                    <span class="input-group-addon" id="basic-addon1">姓名</span>
+                                    <input class="form-control" type="text" name="name" id="name" placeholder=""
+                                        autocomplete="off" value="">
+                                    <span class="input-group-addon" id="basic-addon1">电话</span>
+                                    <input class="form-control" type="text" id="phone" placeholder="" autocomplete="off"
+                                        value="">
+                                    <span class="input-group-addon" id="basic-addon1">车牌号</span>
+                                    <input class="form-control" type="text" id="car_no" placeholder=""
+                                        autocomplete="off" value="">
+
+                                    <span class="input-group-addon" id="basic-addon1">注册时间</span>
+                                    <input class="form-control js-datepicker" type="text" id="btime" name="btime"
+                                        data-date-format="yyyy-mm-dd" placeholder="从" autocomplete="off" value="">
+                                    <span class="input-group-addon"><i class="mdi mdi-chevron-right"></i></span>
+                                    <input class="form-control js-datepicker" type="text" id="etime" name="etime"
+                                        data-date-format="yyyy-mm-dd" placeholder="至" autocomplete="off" value="">
+                                    <a href="#" class="search-btn a-submit btn btn-default input-group-addon"
+                                        id="basic-addon1"> <i class="mdi mdi-search-web"></i> 查询</a>
+                                    <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                            class="mdi mdi-reload"></i> 刷新</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body">
+                    <table id="test" lay-filter="test"></table>
+                    <script type="text/html" id="barDemo">
+                        <!-- <a lay-event='view' class="layui-btn layui-btn-xs layui-btn-primary" href="javascript:void(0)">照片查看</a> -->
+                        <%# if(d.status == 0){ %>
+                        <a lay-event='ok' class="layui-btn layui-btn-xs layui-btn-default" href="javascript:void(0)">通过审核</a>
+                        <a lay-event='no' class="layui-btn layui-btn-xs layui-btn-primary" href="javascript:void(0)">拒绝审核</a>
+                        <%# }else if(d.status == -1){ %>
+                            <a lay-event='reason' class="layui-btn layui-btn-xs layui-btn-primary" href="javascript:void(0)">拒绝原因</a>
+                        <%# } %>
+                        <a lay-event="del" class="layui-btn layui-btn-xs layui-btn-danger btn-delete" data-id="" href="javascript:void(0)">删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var all_img = []
+    function add_img(id, img_data) {
+        if (all_img.length > 0) {
+            for (let i in all_img) {
+                if (all_img[i].id == id)
+                    return
+                all_img.push({
+                    'id': id,
+                    'img': img_data
+                })
+            }
+        }
+        else {
+            all_img.push({
+                'id': id,
+                'img': img_data
+            })
+        }
+    }
+    // 查看id对应的所有图片
+    function view_all_img(id) {
+        var img_all = []
+        for (let i in all_img) {
+            if (all_img[i].id == id) {
+                img_all = all_img[i].img
+                break
+            }
+        }
+        if (img_all.length == 0)
+            return
+
+        layui.use(function () {
+
+            layer.photos({
+                photos: { // 图片层的数据源
+                    "title": "", // 相册标题
+                    "id": 123, // 相册 id
+                    "start": 0, // 初始显示的图片序号，默认 0
+                    "data": img_all
+                },
+                tab: function (data, layero) { // 图片层切换后的回调
+                    console.log(data); // 当前图片数据信息
+                    console.log(layero); // 图片层的容器对象
+                }
+            });
+
+        });
+    }
+
+    function view_img(id, title, img, img1) {
+        layui.use(function () {
+            var phosts = []
+            phosts.push(
+                    {
+                            "alt": title,
+                            "pid": id,
+                            "src": img, // 原图地址
+                            "thumb": img // 缩略图地址
+                        }
+                );
+            if(img1){
+               phosts.push(
+                {
+                            "alt": title,
+                            "pid": id,
+                            "src": img1, // 原图地址
+                            "thumb": img1 // 缩略图地址
+                        }
+               )
+            }
+            layer.photos({
+                photos: { // 图片层的数据源
+                    "title": "", // 相册标题
+                    "id": 123, // 相册 id
+                    "start": 0, // 初始显示的图片序号，默认 0
+                    "data": phosts
+                },
+                tab: function (data, layero) { // 图片层切换后的回调
+                    console.log(data); // 当前图片数据信息
+                    console.log(layero); // 图片层的容器对象
+                }
+            });
+
+        });
+    }
+
+    function formatDateTime(dateStr) {
+        const date = new Date(dateStr);
+        return date.getUTCFullYear() + '-' +
+            String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getUTCDate()).padStart(2, '0') + ' ' +
+            String(date.getUTCHours()).padStart(2, '0') + ':' +
+            String(date.getUTCMinutes()).padStart(2, '0') + ':' +
+            String(date.getUTCSeconds()).padStart(2, '0');
+    }
+    // 在初始化Layui之前配置模板分隔符
+    layui.config({
+        base: '/static/libs/layui/' // 配置Layui模块的基础目录
+    }).extend({
+        tmpl: 'tmpl' // 定义tmpl模块
+    });
+
+    layui.use(['table'], function () {
+        var table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+            , laydate = layui.laydate;
+
+        // 配置Layui模板语法
+        laytpl.config({
+            open: '<%',
+            close: '%>'
+        });
+
+        laydate.render({
+            elem: '#btime'
+        });
+        laydate.render({
+            elem: '#etime'
+        });
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+        var option = {
+            elem: '#test'
+            , toolbar: '#toolbarDemo'
+            , height: 500
+            , title: '车辆列表'
+            , url: '/admin/driver/register/list/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , page: true
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                { field: 'id', title: '车辆编号', sort: true, width: 150 }
+                , { field: 'truename', title: '司机姓名', width: 120 }
+                , { field: 'phone', title: '司机电话', width: 160 }
+                , {
+                    field: 'id_card', title: '身份证', width: 180, templet: function (d) {
+                        if (d.id_card == null)
+                            return ""
+                        return `${d.id_card}`
+                    }
+                }
+                , {
+                    field: 'car_no', title: '车牌号', width: 160, templet: function (d) {
+                        if (d.car_no == null)
+                            return ""
+                        return d.car_no
+                    }
+                }
+                // , { field: 'car_age', title: '车龄', width: 120 }
+                // , { field: 'car_brand', title: '品牌', width: 120 }
+                , { field: 'car_color', title: '颜色', width: 120 }
+                , { field: 'car_type', title: '车辆类型', width: 120 }
+                , {
+                    field: 'driving_licence', title: '驾驶证', width: 120, templet: function (d) {
+                        if (d.driving_licence == null)
+                            return ""
+                        return `<a href="#" onclick="view_img(${d.id},'驾驶证照片','${d.driving_licence}','${d.driving_licence1}')">查看</a>`
+                    }
+                }
+                , {
+                    field: 'car_licence', title: '行驶证', width: 120, templet: function (d) {
+                        if (d.car_licence == null)
+                            return ""
+                        return `<a href="#" onclick="view_img(${d.id},'行驶证照片','${d.car_licence}','${d.car_licence1}')">查看</a>`
+                    }
+                }
+                , {
+                    field: 'car_img', title: '车辆照', width: 120, templet: function (d) {
+                        if (d.car_img == null)
+                            return ""
+                        return `<a href="#" onclick="view_img(${d.id},'车辆照','${d.car_img}','${d.car_img1}')">查看</a>`
+                    }
+                }
+                , { field: 'created_at', title: '注册时间', width: 180 }
+                , {
+                    field: 'status', title: '审核状态', width: 120, templet: function (d) {
+                        if (d.status == 0)
+                            return '<span class="layui-font-blue">待审核</span>';
+                        else if (d.status == 1)
+                            return '<span class="layui-font-green">已审核</span>';
+                        else if (d.status == -1)
+                            return '<span class="layui-font-danger">拒绝</span>';
+                        else
+                            return ""
+                    }
+                }
+                , { field: 'recommend_name', title: '推荐人姓名', width: 140 }
+                , { field: 'recommend_phone', title: '推荐人电话', width: 140 }
+
+                , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 290 }
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function (res, curr, count) {
+                //当数据渲染完后，执行的回调
+            }
+            , parseData: function (res) {
+                all_img = [];
+                for (let i in res.data) {
+                    
+                    let img_body = []
+                    img_body.push(
+                        {
+                            "alt": '身份证正面',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].id_card_img,
+                            "thumb": res.data[i].id_card_img
+                        },
+                        {
+                            "alt": '身份证反面',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].id_card_img1,
+                            "thumb": res.data[i].id_card_img1
+                        },
+                        {
+                            "alt": '驾驶证',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].driving_licence,
+                            "thumb": res.data[i].driving_licence
+                        },
+                        {
+                            "alt": '驾驶证反面',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].driving_licence1,
+                            "thumb": res.data[i].driving_licence1,
+                        },
+                        {
+                            "alt": '行驶证',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].car_licence,
+                            "thumb": res.data[i].car_licence
+                        },
+                        {
+                            "alt": '行驶证',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].car_licence1,
+                            "thumb": res.data[i].car_licence1,
+                        },
+                        {
+                            "alt": '车辆侧前方',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].car_img,
+                            "thumb": res.data[i].car_img,
+                        },
+                        {
+                            "alt": '车辆侧后方',
+                            "pid": res.data[i].id,
+                            "src": res.data[i].car_img,
+                            "thumb": res.data[i].car_img,
+                        }
+                    )
+
+                    add_img(res.data[i].id, img_body)
+                }
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.data.length
+                    , "data": res.data
+                };
+            }
+        }
+
+        table.render(option);
+
+
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                $.confirm({
+                    title: '提示',
+                    content: '确定删除当前记录？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/driver/register/delete',
+                                    data: { 'id': data.id },
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            layer.alert(res.msg);
+                                            return;
+                                        }
+                                        layer.alert(res.msg);
+                                        obj.del()
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+            else if (obj.event == 'ok') {
+                layer.confirm('确定通过审核吗？', function (index) {
+                    layer.close(index)
+                    $.ajax({
+                        url: '/admin/driver/register/verify',
+                        data: { 'id': data.id, 'status': 1 },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (res) {
+                            if (res.status != 0) {
+                                layer.alert(res.msg);
+                                return;
+                            }
+                            layer.alert('审核成功')
+                            table.reload('test',{where: option.where})
+                        }
+                    })
+                });
+            }
+            else if (obj.event == 'no') {
+                layer.prompt({ title: '请输入拒绝原因', formType: 2 }, function (text, index) {
+                    layer.close(index);
+                    $.ajax({
+                        url: '/admin/driver/register/verify',
+                        data: { 'id': data.id, 'status': -1, 'remark': text },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (res) {
+                            if (res.status != 0) {
+                                layer.alert(res.msg);
+                                return;
+                            }
+                            layer.alert('操作成功')
+                        }
+                    })
+                });
+            }
+            else if (obj.event == 'view') {
+                view_all_img(data.id)
+            }
+            else if (obj.event == 'reason') {
+                layer.alert("拒绝原因：" + data.remark)
+            }
+        });
+
+        $(".search-btn").click(function () {
+            let n = $("#name").val();
+            let p = $("#phone").val();
+            let c = $("#company").val();
+
+            option.where = { 'name': n, 'phone': p, 'btime': $("#btime").val(), 'etime': $("#etime").val(), 'car_no': $("#car_no").val() }
+            table.render(option)
+            return false;
+        })
+
+        $(".ref-btn").click(function () {
+            $("#name").val('');
+            $("#phone").val('');
+            $("#company").val('');
+            $("#btime").val('')
+            $("#etime").val('')
+            $("#car_no").val('')
+            option.where = {}
+            table.render(option)
+            return false;
+        })
+
+        table.on('edit(test)', function (obj) {
+            var field = obj.field; // 得到字段
+            var value = obj.value; // 得到修改后的值
+            var data = obj.data; // 得到所在行所有键值
+            // // 值的校验
+            if (field === 'age' || field === 'mileage') {
+                if (!/^([0-9_\.\-])+$/.test(obj.value)) {
+                    layer.tips('只可输入数值，请重新编辑', this, { tips: 1 });
+                    return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+                }
+            }
+            // 编辑后续操作，如提交更新请求，以完成真实的数据更新
+            // …
+            $.ajax({
+                url: '/admin/driver_car/edit_field',
+                data: { 'value': value, 'id': obj.data.id, 'field': field },
+                type: 'post',
+                dataType: 'json',
+                success: function (res) {
+
+                }
+            })
+            //layer.msg('编辑成功' + field + "," + value, { icon: 1 });
+
+            // 其他更新操作
+            var update = {};
+            update[field] = value;
+            obj.update(update);
+        });
+    });
+</script>
+
+{% endblock %}

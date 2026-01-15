@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>司机端扫码</title>
+    <style>
+        /* 保持原有UI风格 */
+        :root {
+            --orange: #FF6B00;
+            --light-orange: #FFF4EB;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #333;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #scanner-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-width: 300px;
+            aspect-ratio: 1;
+            border: 3px solid var(--orange);
+            border-radius: 8px;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+        }
+
+        .scan-frame::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #FF6B00;
+            animation: scanLine 2s infinite;
+        }
+
+        @keyframes scanLine {
+            0% {
+                top: 0;
+                opacity: 1;
+            }
+
+            95% {
+                top: 97%;
+                opacity: 1;
+            }
+
+            100% {
+                top: 97%;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 顶部标题栏（与爆单预测页风格一致） -->
+    <div class="header" style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #f0f0f0;">
+        <div class="back-btn" id="backBtn" style="margin-right:10px; font-size:20px;">←</div>
+        <div class="title" style="font-weight:bold; font-size:18px; flex-grow:1; text-align:center;">二维码扫描</div>
+    </div>
+
+    <!-- 扫码区域 -->
+    <div class="scanner-container">
+        <video id="scanner-video" muted playsinline></video>
+        <div class="scan-frame"></div>
+    </div>
+
+    <!-- 关键修复：使用CDN备用源加载jsQR -->
+    <script src="/static/common/jsQR.min.js"></script>
+
+    <script>
+        // 确保jsQR加载成功
+        if (typeof jsQR === 'undefined') {
+            console.error('jsQR加载失败，尝试备用源');
+            document.write('<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.min.js"><\/script>');
+        }
+
+        const video = document.getElementById('scanner-video');
+        if (!video) {
+            console.error('错误: 未找到video元素');
+        }
+        let stream = null;
+
+
+        // 启动摄像头（兼容Android WebView）
+        function startScanner() {
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    advanced: [{  // 关键参数
+                        focusMode: 'continuous', // 持续对焦
+                        exposureMode: 'continuous',
+                        whiteBalanceMode: 'continuous'
+                    }],
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            }).then(function (s) {
+
+                stream = s;
+                video.srcObject = stream;
+                video.play();
+                requestAnimationFrame(scanLoop);
+            }).catch(function (err) {
+                console.error('摄像头访问失败:', err);
+                alert('无法访问摄像头，请检查权限设置\n错误: ' + err.message);
+            });
+        }
+
+        // 二维码扫描循环
+        // 二维码扫描循环
+        function scanLoop() {
+            if (video.readyState >= video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                try {
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'dontInvert'
+                    });
+
+                    if (code) {
+                        stopScanner();
+                        handleResult(code.data);
+                    } else {
+                        requestAnimationFrame(scanLoop);
+                    }
+                } catch (e) {
+                    console.error('解析错误:', e);
+                    setTimeout(scanLoop, 500);
+                }
+            } else {
+                requestAnimationFrame(scanLoop);
+            }
+        }
+
+        // 处理扫描结果
+        function handleResult(data) {
+            if (window.androidBridge) {
+                androidBridge.onScanSuccess(data);
+            } else {
+                console.log('扫描成功:', data);
+                alert('扫描成功: ' + data);
+                // 实际业务中跳转到对应页面
+                // location.href = 'order-detail?qrcode=' + encodeURIComponent(data);
+            }
+        }
+
+        // 停止摄像头
+        function stopScanner() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // 初始化
+        startScanner();
+        window.addEventListener('beforeunload', stopScanner);
+
+        // Android返回按钮处理
+         document.getElementById('backBtn').addEventListener('click', function () {
+             if (window.androidBridge) {
+                 androidBridge.closeScanner();
+             } else {
+                 history.back();
+             }
+         });
+    </script>
+</body>
+
+</html>

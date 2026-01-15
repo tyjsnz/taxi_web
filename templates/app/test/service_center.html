@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>服务中心</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/css/ls-icon.css?v=">
+    <link rel="stylesheet" href="/static/css/header.css?v=1">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(to bottom, #e6f7ff, #f5f9ff);
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+        .header i{
+            font-size: 25px;
+        }
+
+        .record-type {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .red-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff3366;
+        }
+
+        .positive-amount {
+            color: #1aad19;
+        }
+
+        .el-tabs__item.is-active {
+            color: #333;
+        }
+
+        .el-tabs__active-bar {
+            background-color: #ff6b00;
+        }
+
+        .order-container {
+            text-align: center;
+        }
+
+        .order-container img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .el-col p {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <div @click="goBack">
+                            <i class="el-icon-arrow-left back-icon"></i>
+                        </div>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">服务中心</div>
+                    </el-col>
+                    <el-col :span="3">
+                    </el-col>
+                </el-row>
+            </div>
+
+            <div class="order-container">
+                <el-card class="box-card" style="margin: 10px; border-radius: 10px;" shadow="false">
+                    <el-row>
+                        <!-- <el-col :span="6">
+                            <div @click="click_item(1)">
+                                <img src="/static/images/app/icon/td.png">
+                                <p>听单检测</p>
+                            </div>
+                        </el-col> -->
+                        <el-col :span="6">
+                            <div @click="click_item(2)">
+                                <img src="/static/images/app/icon/gz.png">
+                                <p>规则中心</p>
+                            </div>
+                        </el-col>
+                        <el-col :span="6">
+                            <div @click="click_item(3)">
+                                <img src="/static/images/app/icon/kf.png">
+                                <p>客服中心</p>
+                            </div>
+                        </el-col>
+                        <el-col :span="6">
+                            <div @click="click_item(4)">
+                                <img src="/static/images/app/icon/tz.png">
+                                <p>通知书</p>
+                            </div>
+                        </el-col>
+                        <el-col :span="6">
+                            <div @click="click_item(5)">
+                                <img src="/static/images/app/icon/kt.png">
+                                <p>司机课堂</p>
+                            </div>
+                        </el-col>
+                        <!-- <el-col :span="6">
+                            <div @click="click_item(6)">
+                                <img src="/static/images/app/icon/hmd.png">
+                                <p>我的黑名单</p>
+                            </div>
+                        </el-col> -->
+                        <!-- <el-col :span="6">
+                            <div @click="click_item(7)">
+                                <img src="/static/images/app/icon/srzb.png">
+                                <p>收入占比</p>
+                            </div>
+                        </el-col>
+                        <el-col :span="6">
+                            <div @click="click_item(8)">
+                                <img src="/static/images/app/icon/rw.png">
+                                <p>我的任务</p>
+                            </div>
+                        </el-col> -->
+                    </el-row>
+                </el-card>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                const today = new Date(); // 获取当前日期
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    activeName: 'second',
+                    task_list: [],
+                    process_task: [],
+                    complete_task: [],
+                }
+            },
+            mounted() {
+                this.fetchOrders()
+            },
+            methods: {
+                fetchOrders() {
+                    var that = this
+                    this.$indicator.open({
+                        text: '加载中...',
+                        duration: 1000,
+                        icon: 'success'
+                    });
+                    axios.get('http://wxapp.flacn.net/app/driver/reward/list/json', {
+                        params: { 'driver_id': this.driver_id, 'token': this.token, 'date': this.selectedDate }
+                    })
+                        .then(response => {
+                            this.$indicator.close()
+                            if (response.data.status != 0) {
+                                console.log("error", response.data.msg)
+                            }
+                            else {
+                                that.task_list = response.data.data
+                                this.process_task = this.order_list.filter(item => item.status === 4);
+                                this.complete_task = this.order_list.filter(item => item.status === -1)
+
+                            }
+                        })
+                        .catch(error => {
+                            this.$indicator.close()
+                            console.log(error);
+                        });
+                },
+                goBack() {
+                    window.history.back();
+                },
+                handleClick() {
+                    // 选择的table
+                },
+                click_item(index) {
+                    switch (index) {
+                        case 1:
+                        case 2:
+                        case 5:
+                        case 6:                            
+                        case 7:
+                            this.$toast('功能暂未开放');
+                            break;                            
+                        case 3:
+                            this.$toast('客服电话：400-888-8888');
+                            break;
+                        case 4:
+                            location.href = 'violation_list.html'
+                            break;
+                        case 8:
+                            location.href = 'my_task.html'
+                            break;
+                    }
+                }
+
+            },
+        });
+    </script>
+</body>
+
+</html>

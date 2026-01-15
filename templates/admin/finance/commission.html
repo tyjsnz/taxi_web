@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佣金管理</title>
+
+    <link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/admin/css/style.min.css" rel="stylesheet">
+    <!-- 图标 -->
+    <!-- <link href="/static/admin/css/materialdesignicons.min.css" rel="stylesheet"> -->
+
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <!-- <script type="text/javascript" src="/static/libs/layui/layui.js"></script>
+    <link href="/static/libs/layui/css/layui.css" rel="stylesheet"> -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_6iep7d4szk.css">
+
+    <link href="/static/libs/layui/css/layui.css" rel="stylesheet">
+    <!-- 引入 layui.js -->
+    <script src="/static/libs/layui/layui.js"></script>
+    <style>
+        #total_money {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" style="padding: 0px">
+        <el-card class="card-body" style="padding-top: 0px !important; padding-left: 0px !important">
+            <el-row>
+                <blockquote class="layui-elem-quote" id="total">
+                    总订单金额￥：<span id="total_money" class='layui-font-red'></span>
+                    未结佣金￥：<span id="un_money" class='layui-font-blue'></span>
+                    <p class="help-block">
+                        未结算佣金为未完成支付的订单，支付成功后佣金会自动结算。
+                    </p>
+                </blockquote>
+            </el-row>
+            <div class="card-header" style="padding-left: 0px !important;">
+                <div class="col-xs-12">
+                    <form id="myform" method="get">
+                        <div class="input-group m-b-10">
+                            <span class="input-group-addon" id="basic-addon1">姓名</span>
+                            <input class="form-control" type="text" name="name" id="name" placeholder=""
+                                autocomplete="off" value="">
+                            <span class="input-group-addon" id="basic-addon1">电话</span>
+                            <input class="form-control" type="text" id="phone" placeholder="" autocomplete="off"
+                                value="">
+                            <span class="input-group-addon" id="basic-addon1">车牌号</span>
+                            <input class="form-control" type="text" id="car_no" placeholder="" autocomplete="off"
+                                value="">
+                            <span class="input-group-addon" id="basic-addon1">所属公司</span>
+                            <select class="form-control" id="company" name="company">
+                                <option value="">请选择</option>
+                                <!-- 这里可以动态加载公司列表 -->
+                            </select>
+                            <span class="input-group-addon" id="basic-addon1">注册时间</span>
+                            <input class="form-control js-datepicker" type="text" id="btime" name="btime"
+                                data-date-format="yyyy-mm-dd" placeholder="从" autocomplete="off" value="">
+                            <span class="input-group-addon"><i class="mdi mdi-chevron-right"></i></span>
+                            <input class="form-control js-datepicker" type="text" id="etime" name="etime"
+                                data-date-format="yyyy-mm-dd" placeholder="至" autocomplete="off" value="">
+                            <a href="#" class="search-btn a-submit btn btn-default input-group-addon" id="basic-addon1">
+                                <i class="mdi mdi-search-web"></i> 查询</a>
+                            <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                    class="mdi mdi-reload"></i> 刷新</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <el-row>
+                <table id="test" lay-filter="test"></table>
+                <script type="text/html" id="barDemo">
+                        <a lay-event='edit' class="layui-btn layui-btn-xs" href="javascript:void(0)" title="" data-toggle="tooltip">订单查看
+                        </a>
+                        
+                    </script>
+            </el-row>
+        </el-card>
+
+
+
+    </div>
+
+    <script>
+        let map;
+
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                };
+            },
+            computed: {
+
+            },
+            mounted() {
+            },
+            methods: {
+
+            }
+        });
+
+
+
+        layui.use(['table'], function () {
+            var table = layui.table
+                , $ = layui.$
+                , laytpl = layui.laytpl
+                , laydate = layui.laydate;
+            var form = layui.form;
+
+            //全局设定某参数
+            table.set({
+                where: {
+                    token: ''
+                }
+                , defaultToolbar: ["filter", "exports", "print"]
+                , toolbar: true
+                , loading: true
+            });
+
+            var option = {
+                elem: '#test'
+                , toolbar: '#toolbarDemo'
+                , height: 600
+                , title: '司机佣金列表'
+                , url: '/admin/finance/commission/list/json'
+                , request: {
+                    pageName: 'page' //页码的参数名称，默认：page
+                    , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+                }
+                , page: true
+                , totalRow: true // 开启合计行
+                , limit: 50
+                , loading: true
+                , limits: [50, 100, 200]
+                , cols: [[
+                    { field: 'id', title: '司机编号', sort: true, width: 120 }
+                    , { field: 'truename', title: '姓名', totalRow: '合计：' }
+                    , { field: 'phone', title: '电话' }
+                    , { field: 'car_no', title: '车牌' }
+                    , { field: 'id_card', title: '身份证' }
+                    , { field: 'order_count', title: '订单数量', totalRow: true }
+                    , { field: 'total_fee', title: '订单总金额', totalRow: true }
+                    , {
+                        field: 'order_commission', title: '未结佣金', totalRow: true, templet: function (d) {
+                            if (d.order_commission == null)
+                                return ''
+                            return "<span class='layui-font-red'>" + d.order_commission + '</span>'
+                        }
+                    }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 150 }
+                ]]
+                , error: function (res, msg) {
+                }
+                , response: {
+                    statusName: 'status'
+                    , statusCode: 0
+                }
+                , done: function (res, curr, count) {
+                    //当数据渲染完后，执行的回调
+                    var total_fee = res.data.reduce((sum, item) => sum + item.order_commission, 0);
+                    // 设置 totalRow 的值，注意：cell-1-0-6即在单元格中的位置
+                    var h = '<div class="layui-table-cell laytable-cell-1-0-6"><span class="layui-font-red">￥：' + total_fee + '</span></div>'
+                    this.elem.next('.layui-table-view').find('.layui-table-total td[data-field="order_commission"]').html(h);
+
+                    total_fee = res.data.reduce((sum, item) => sum + item.order_count, 0);
+                    // 设置 totalRow 的值
+                    h = '<div class="layui-table-cell laytable-cell-1-0-5"><span class="layui-font-red">' + total_fee + '</span></div>'
+                    this.elem.next('.layui-table-view').find('.layui-table-total td[data-field="order_count"]').html(h);
+
+                    total_fee = res.data.reduce((sum, item) => sum + item.total_fee, 0);
+                    // 设置 totalRow 的值
+                    h = '<div class="layui-table-cell laytable-cell-1-0-6"><span class="layui-font-red">' + total_fee + '</span></div>'
+                    this.elem.next('.layui-table-view').find('.layui-table-total td[data-field="total_fee"]').html(h);
+                }
+                , parseData: function (res) {
+                    let order = res.other.order
+                    if (order == null)
+                        order = 0
+                    let comm = res.other.commission
+                    if (comm == null)
+                        comm = 0
+                    let total_money = order
+                    let un_money = comm
+                    $("#total_money").html(total_money)
+                    $("#un_money").html(un_money)
+
+                    return {
+                        "status": res.status
+                        , "msg": res.msg
+                        , "count": res.other.num
+                        , "data": res.data
+                    };
+                }
+            }
+
+            table.render(option)
+
+            table.on('tool(test)', function (obj) {
+                var data = obj.data; // 获得当前行数据
+                if (obj.event == 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '订单佣金查看',
+                        area: ['80%', '85%'],
+                        content: "/admin/order/list?flag=comission&car_no=" + data.car_no
+                    })
+                }
+            })
+
+            function get_company_list() {
+                axios.get('/admin/company/list/json').then(res => {
+                    console.log(res);
+                    if (res.data.status == 0) {
+                        let html = '<option value="">请选择</option>';
+                        res.data.data.forEach(item => {
+                            html += `<option value="${item.id}">${item.name}</option>`;
+                        });
+                        $("#company").html(html);
+                        layui.form.render('select');
+                    }
+                }).catch(error => {
+                    console.log(error);
+                });
+            }
+
+            get_company_list();
+        });
+
+
+    </script>
+
+    <style>
+        #map {
+            width: 100%;
+            height: 80vh;
+        }
+
+        .mb-4 {
+            margin-bottom: 20px;
+        }
+
+        .mt-4 {
+            margin-top: 20px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .mb-2 {
+            margin-bottom: 12px;
+        }
+
+        /* 美化弹窗和表格样式 */
+        .el-dialog {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table {
+            background-color: #fafafa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table th {
+            background-color: #f0f0f0;
+        }
+    </style>
+</body>
+
+</html>

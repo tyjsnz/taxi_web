@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信发票申请</title>
+    <!-- 引入 Element-UI 样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入 Vue 和 Element-UI JS -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/wechat/jweixin-1.3.2.js"></script>
+
+    <style>
+        body {
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+        }
+        .header {
+            background-color: #1E88E5;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            position: relative;
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            font-size: 16px;
+        }
+        .content {
+            padding: 15px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .invoice-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .invoice-item:last-child {
+            border-bottom: none;
+        }
+        .invoice-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        .status-success {
+            color: #4CAF50;
+            background: #E8F5E9;
+        }
+        .status-processing {
+            color: #FF9800;
+            background: #FFF3E0;
+        }
+        .status-failed {
+            color: #F44336;
+            background: #FFEBEE;
+        }
+        .amount {
+            font-weight: bold;
+            color: #FF5722;
+        }
+        .date {
+            color: #999;
+            font-size: 12px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 30px 0;
+            color: #999;
+        }
+        .apply-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 450px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- <div class="header">
+                <span class="back-btn" @click="goBack"><i class="el-icon-arrow-left"></i></span>
+                发票申请
+            </div> -->
+            
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <span>可开发票金额</span>
+                        <span class="amount">¥ ${availableAmount}</span>
+                    </div>
+                    <div class="card-body">
+                        <el-form :model="invoiceForm" label-width="80px">
+                            <el-form-item label="发票类型">
+                                <el-radio-group v-model="invoiceForm.type">
+                                    <el-radio label="personal">个人</el-radio>
+                                    <el-radio label="company">企业</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            
+                            <el-form-item label="发票抬头" v-if="invoiceForm.type === 'company'">
+                                <el-input v-model="invoiceForm.title" placeholder="请输入公司名称"></el-input>
+                            </el-form-item>
+                            
+                            <el-form-item label="税号" v-if="invoiceForm.type === 'company'">
+                                <el-input v-model="invoiceForm.taxNumber" placeholder="请输入纳税人识别号"></el-input>
+                            </el-form-item>
+                            
+                            <el-form-item label="发票金额">
+                                <el-input-number v-model="invoiceForm.amount" :min="1" :max="availableAmount" label="金额"></el-input-number>
+                            </el-form-item>
+                            
+                            <el-form-item label="邮箱地址">
+                                <el-input v-model="invoiceForm.email" placeholder="用于接收电子发票"></el-input>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span>发票记录</span>
+                        <el-button type="text" @click="refreshRecords">刷新</el-button>
+                    </div>
+                    <div class="card-body">
+                        <div v-if="records.length === 0" class="no-data">
+                            <i class="el-icon-document" style="font-size: 40px;"></i>
+                            <p>暂无发票记录</p>
+                        </div>
+                        
+                        <div v-for="(item, index) in records" :key="index" class="invoice-item">
+                            <div>
+                                <div>${item.title || '个人发票'}</div>
+                                <div class="date">${item.date}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="amount">¥ ${item.amount}</div>
+                                <div :class="['invoice-status', 'status-' + item.status]">
+                                    ${statusText[item.status]}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <el-button 
+                type="primary" 
+                class="apply-btn" 
+                @click="applyInvoice"
+                :disabled="invoiceForm.amount <= 0 || invoiceForm.amount > availableAmount">
+                申请发票
+            </el-button>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    availableAmount: 0,
+                    invoiceForm: {
+                        type: 'personal',
+                        title: '',
+                        taxNumber: '',
+                        amount: 100,
+                        email: ''
+                    },
+                    records: [
+                        /*{
+                            title: '北京科技有限公司',
+                            amount: 120.00,
+                            date: '2023-05-15 14:30',
+                            status: 'success'
+                        },
+                        {
+                            title: '',
+                            amount: 80.50,
+                            date: '2023-05-10 09:15',
+                            status: 'success'
+                        },
+                        {
+                            title: '上海信息技术有限公司',
+                            amount: 200.00,
+                            date: '2023-05-05 16:45',
+                            status: 'failed'
+                        },
+                        {
+                            title: '个人发票',
+                            amount: 56.30,
+                            date: '2023-04-28 11:20',
+                            status: 'processing'
+                        }*/
+                    ],
+                    statusText: {
+                        'success': '已开具',
+                        'processing': '处理中',
+                        'failed': '开具失败'
+                    }
+                }
+            },
+            methods: {
+                goBack() {
+                    //alert('返回上一页');
+                    history.back()
+                    // 实际应用中可能是 history.back() 或其他导航逻辑
+                },
+                refreshRecords() {
+                    this.$message({
+                        message: '刷新成功',
+                        type: 'success'
+                    });
+                    // 实际应用中这里应该调用API获取最新记录
+                },
+                applyInvoice() {
+                    if (this.invoiceForm.type === 'company' && (!this.invoiceForm.title || !this.invoiceForm.taxNumber)) {
+                        this.$message.error('请填写完整的发票抬头和税号');
+                        return;
+                    }
+                    
+                    if (!this.invoiceForm.email) {
+                        this.$message.error('请填写接收发票的邮箱地址');
+                        return;
+                    }
+                    
+                    this.$confirm('确认申请发票吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        // 模拟API调用
+                        setTimeout(() => {
+                            this.$message({
+                                message: '发票申请已提交',
+                                type: 'success'
+                            });
+                            
+                            // 添加到记录列表
+                            this.records.unshift({
+                                title: this.invoiceForm.type === 'company' ? this.invoiceForm.title : '',
+                                amount: this.invoiceForm.amount,
+                                date: new Date().toLocaleString(),
+                                status: 'processing'
+                            });
+                            
+                            // 更新可用金额
+                            this.availableAmount = (this.availableAmount - this.invoiceForm.amount).toFixed(2);
+                            
+                            // 重置表单
+                            this.invoiceForm.amount = 100;
+                        }, 1000);
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消申请'
+                        });          
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

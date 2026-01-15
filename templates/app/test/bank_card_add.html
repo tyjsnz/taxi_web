@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加银行卡</title>
+
+    <!-- 引入 Element-UI 样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/css/ls-icon.css?v=1.11">
+    <link rel="stylesheet" href="/static/css/header.css">
+
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        .container {
+            background-color: #f5f5f5;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #409EFF; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+        }
+        .form-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+        }
+
+        .title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .el-input__inner {
+            height: 50px !important;
+        }
+
+        .el-form-item {
+            margin-bottom: 5px;
+        }
+
+        .tips {
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <i class="el-icon-arrow-left back-icon" @click="goBack"></i>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">银行卡添加</div>
+                    </el-col>
+                </el-row>
+                <div class="header-date">
+                </div>
+            </div>
+
+            <div class="form-box">
+                <el-form ref="form" :model="form" :rules="rules" label-width="100px" label-position="top">
+
+
+                    <!-- 持卡人 -->
+                    <el-form-item label="持卡人姓名" prop="name">
+                        <el-input v-model="form.name" placeholder="请输入持卡人姓名" disabled :value="realName"></el-input>
+                    </el-form-item>
+
+                    <!-- 银行卡号 -->
+                    <el-form-item label="银行卡号" prop="cardNumber">
+                        <el-input v-model="form.cardNumber" placeholder="请输入银行卡号" maxlength="23"
+                            @input="formatCardNumber"></el-input>
+                        <b>${form.bankName}</b>
+                    </el-form-item>
+                    <div class="tips" style="margin-bottom: 15px;">
+                        <i class="icon-bank-card"></i> 查看支持银行，仅支持储蓄卡 >
+                    </div>
+                    </el-form-item>
+
+
+
+
+                    <!-- 手机号 -->
+                    <el-form-item label="银行预留手机号" prop="phone">
+                        <el-input v-model="form.phone" placeholder="请输入银行预留手机号" maxlength="11"></el-input>
+                    </el-form-item>
+
+                    <!-- 验证码 -->
+                    <el-form-item label="短信验证码" prop="smsCode">
+                        <el-input v-model="form.smsCode" placeholder="请输入短信验证码" style="width: 60%">
+                        </el-input>
+                        <el-button :disabled="codeDisabled" @click="sendSmsCode" style="width: 30%; margin-left: 5%">
+                            ${ codeButtonText }
+                        </el-button>
+                    </el-form-item>
+
+                    <div class="tips">
+                        温馨提示：绑定的银行卡需为本人名下借记卡，开户姓名需与实名认证姓名一致
+                    </div>
+
+                    <el-button type="primary" class="submit-btn" @click="submitForm">
+                        立即绑定
+                    </el-button>
+                </el-form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element-UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/utils/helper.js?v=1"></script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    form: {
+                        bank: '',
+                        cardNumber: '',
+                        bankName: '',
+                        name: '',
+                        phone: '',
+                        smsCode: ''
+                    },
+                    realName: '张三', // 从接口获取的真实姓名
+                    codeDisabled: false,
+                    codeButtonText: '获取验证码',
+                    countdown: 60,
+
+                    rules: {
+                        bank: [
+                            { required: true, message: '请选择银行', trigger: 'change' }
+                        ],
+                        cardNumber: [
+                            { required: true, message: '请输入银行卡号', trigger: 'blur' },
+                            {
+                                validator: (rule, value, callback) => {
+                                    // 移除所有非数字字符
+                                    const cleanValue = value.replace(/\D/g, '');
+                                    if (!/^\d{16,23}$/.test(cleanValue)) {
+                                        callback(new Error('请输入正确的银行卡号'));
+                                    } else {
+                                        callback();
+                                    }
+                                },
+                                trigger: 'blur'
+                            }
+                        ],
+                        phone: [
+                            { required: true, message: '请输入手机号', trigger: 'blur' },
+                            { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+                        ],
+                        smsCode: [
+                            { required: true, message: '请输入验证码', trigger: 'blur' },
+                            { pattern: /^\d{6}$/, message: '验证码格式不正确', trigger: 'blur' }
+                        ]
+                    }
+                }
+            },
+            watch: {
+                'form.cardNumber': function (val) {
+                    if (val && val.length >= 19) {
+                        this.getBankName();
+                    }
+                }
+            },
+            methods: {
+                // 格式化银行卡号显示
+                formatCardNumber() {
+                    this.form.cardNumber = this.form.cardNumber.replace(/\s/g, '').replace(/(\d{4})(?=\d)/g, '$1 ')
+                },
+                getBankName() {
+                    var that = this
+                    let cardNumber = this.form.cardNumber.replace(/\s/g, '')
+                    fetch('https://api.kertennet.com/tool/bankCardMes?cardNo=' + cardNumber)
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log(data.data.bankName)
+                            if (data.code === 200)
+                                that.form.bankName = data.data.bankName;
+                            else
+                                that.form.bankName = "未知银行";
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        });
+                },
+
+                // 发送短信验证码
+                sendSmsCode() {
+                    if (!this.form.phone) {
+                        this.$message.error('请输入手机号')
+                        return
+                    }
+
+                    this.codeDisabled = true
+                    const timer = setInterval(() => {
+                        this.countdown--
+                        this.codeButtonText = `${this.countdown}秒后重发`
+                        if (this.countdown <= 0) {
+                            clearInterval(timer)
+                            this.codeDisabled = false
+                            this.codeButtonText = '获取验证码'
+                            this.countdown = 60
+                        }
+                    }, 1000)
+
+                    fetch('/app/api/driver/v1/get_sms_code?cardNo=' + cardNumber)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 0)
+                                this.$message.success('验证码已发送')
+                            else {
+                                this.$message.error(data.msg)
+                                clearInterval(this.timer)
+                                this.countdown = 60
+                                this.codeDisabled = false
+                                this.codeButtonText = '获取验证码'
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            clearInterval(this.timer)
+                            this.countdown = 60
+                            this.codeDisabled = false
+                            this.codeButtonText = '获取验证码'
+                        });
+                },
+
+                // 提交表单
+                submitForm() {
+                    this.$refs.form.validate(valid => {
+                        if (valid) {
+                            // 清理卡号
+                            const submitData = {
+                                ...this.form,
+                                cardNumber: this.form.cardNumber.replace(/\D/g, '')
+                            }
+                            // 实际开发中这里调用提交接口
+                            this.$message.success('银行卡绑定成功')
+                            // 跳转到银行卡列表页
+                            setTimeout(() => {
+                                window.location.href = '/bankcards'
+                            }, 1500)
+                        } else {
+                            this.$message.error('请正确填写信息')
+                            return false
+                        }
+                    })
+                },
+                goBack() {
+                    window.parent.postMessage({ address: this.city }, '*');
+                    var index = parent.layer.getFrameIndex(window.name); // 获取当前 layer 窗口的索引
+                    parent.layer.close(index); // 关闭当前弹窗
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

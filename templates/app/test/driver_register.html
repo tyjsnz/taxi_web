@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LS出行 - 司机注册</title>
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 15px;
+        }
+
+        .header {
+            background-color: #ff3366;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-title:before {
+            content: "";
+            display: inline-block;
+            width: 3px;
+            height: 16px;
+            background-color: #FF6B00;
+            margin-right: 8px;
+        }
+
+        .input-item {
+            margin-bottom: 15px;
+        }
+
+        .input-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .input-item input,
+        .input-item select {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 0 12px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-item input:focus,
+        .input-item select:focus {
+            border-color: #FF6B00;
+        }
+
+        .upload-item {
+            margin-bottom: 15px;
+        }
+
+        .upload-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-desc {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .upload-box {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .upload-btn {
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 12px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-btn i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .upload-btn input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+        }
+
+        .preview-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 4px;
+            object-fit: cover;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            height: 48px;
+            background-color: #ff3366;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            outline: none;
+        }
+
+        .submit-btn:disabled {
+            background-color: #ff678d;
+        }
+
+        .agreement {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .agreement input {
+            margin-right: 5px;
+        }
+
+        .agreement a {
+            color: #FF6B00;
+            text-decoration: none;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        .preview-img {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="header">
+            <div class="back-btn" @click="goBack()">
+                <i class="el-icon-arrow-left back-icon"></i>
+            </div>
+            司机注册
+        </div>
+
+        <div class="container">
+            <div class="form-group">
+                <div class="form-title">基本信息</div>
+
+                <div class="input-item">
+                    <label for="phone">手机号码</label>
+                    <input type="tel" id="phone" placeholder="请输入手机号码" v-model="phone">
+                </div>
+
+                <img id="test" src="" alt="">
+            </div>
+
+
+            <div class="form-group">
+                <div class="form-title">证照上传 </div>
+
+                <div class="upload-item">
+                    <div class="upload-title">身份证正面</div>
+                    <div class="upload-desc">请确保身份证信息清晰可见，无遮挡无反光</div>
+                    <div class="upload-box">
+                        <div class="upload-btn" @click="triggerUpload(3)">
+                            <block v-if="!id_card1">
+                                <i class="el-icon-camera"></i>
+                                <span>点击上传</span>
+                            </block>
+                            <img :src="id_card1" alt="" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-item">
+                    <div class="upload-title">身份证反面</div>
+                    <div class="upload-desc">请确保身份证信息清晰可见，无遮挡无反光</div>
+                    <div class="upload-box">
+                        <div class="upload-btn" @click="triggerUpload(4)">
+                            <block v-if="!id_card2">
+                                <i class="el-icon-camera"></i>
+                                <span>点击上传</span>
+                            </block>
+                            <img :src="id_card2" alt="" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-item">
+                    <div class="upload-title">行驶证</div>
+                    <div class="upload-desc">请确保行驶证信息清晰可见，无遮挡无反光</div>
+                    <div class="upload-box">
+                        <div class="upload-btn" @click="open_camera(1)">
+                            <i class="el-icon-camera"></i>
+                            <img id="pic" :src="pic1" alt="" style="width: 100px;">
+                            <span>点击上传</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-item">
+                    <div class="upload-title">驾驶证</div>
+                    <div class="upload-desc">请确保驾驶证信息清晰可见，无遮挡无反光</div>
+                    <div class="upload-box">
+                        <div class="upload-btn" @click="open_camera(2)">
+                            <i class="el-icon-camera"></i>
+                            <img :src="pic2" alt="" style="width: 100%;">
+                            <span>点击上传</span>
+
+                        </div>
+                        <input type="hidden" id="vehicleLicenseBackUrl" value="">
+                        <img src="" alt="" class="preview-img" id="vehicleLicenseBackPreview">
+                    </div>
+                </div>
+
+                <div class="upload-item">
+                    <div class="upload-title">车辆正前方照片</div>
+                    <div class="upload-desc">请确保车牌清晰可见，无遮挡无反光</div>
+                    <div class="upload-box">
+                        <div class="upload-btn" @click="triggerUpload(5)">
+                            <block v-if="!car_img1">
+                                <i class="el-icon-camera"></i>
+                                <span>点击上传</span>
+                            </block>
+                            <img :src="car_img1" alt="" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-item">
+                    <div class="upload-title">车辆侧后方照片</div>
+                    <div class="upload-desc">请确保在车辆左侧后方拍照，无遮挡无反光</div>
+                    <div class="upload-box">
+                        <div class="upload-btn" @click="triggerUpload(6)">
+                            <block v-if="!car_img2">
+                                <i class="el-icon-camera"></i>
+                                <span>点击上传</span>
+                            </block>
+                            <img :src="car_img2" alt="" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="form-group" v-if="info">
+                <div class="form-title">车辆信息</div>
+
+                <div class="input-item">
+                    <label for="name">真实姓名</label>
+                    <input type="text" id="name" placeholder="请输入与身份证一致的姓名" v-model="truename">
+                </div>
+                <div class="input-item">
+                    <label for="idCard">身份证号</label>
+                    <input type="text" id="idCard" placeholder="请输入身份证号码" v-model="idCard">
+                </div>
+
+                <div class="input-item">
+                    <label for="plateNumber">车牌号码</label>
+                    <input type="text" id="plateNumber" placeholder="请输入车牌号码" v-model="car_no">
+                </div>
+
+                <div class="input-item">
+                    <label for="vehicleType">车辆类型</label>
+                    <select id="vehicleType" v-model="car_type">
+                        <option value="">请选择车辆类型</option>
+                        <option value="1">小型轿车</option>
+                        <option value="2">SUV</option>
+                        <option value="3">MPV</option>
+                        <option value="4">新能源车</option>
+                    </select>
+                </div>
+
+                <div class="input-item">
+                    <label for="vehicleColor">车辆颜色</label>
+                    <select id="vehicleColor" v-model="car_color">
+                        <option value="">请选择车辆颜色</option>
+                        <option value="1">白色</option>
+                        <option value="2">黑色</option>
+                        <option value="3">银色</option>
+                        <option value="4">红色</option>
+                        <option value="5">蓝色</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-title">推荐人</div>
+
+                <div class="input-item">
+                    <label for="recommend_phone">推荐人手机号码</label>
+                    <input type="text" id="recommend_phone" placeholder="如有则填写" v-model="recommend_phone">
+                    <div class="upload-desc"></div>
+                </div>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" @click="submitData">提交审核</button>
+
+            <div class="agreement">
+                <input type="checkbox" id="agreeCheck" onchange="checkAgreement()">
+                <span>我已阅读并同意<a href="javascript:showAgreement()">《LS出行司机协议》</a></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="http://wxapp.flacn.net/static/libs/layui/layui.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    phone: '',
+                    truename: '',
+                    idCard: '',
+                    car_no: '',
+                    car_type: '',
+                    car_color: '',
+                    recommend_phone: '',
+                    pic1: '',
+                    pic1_id: 0,
+                    pic2: '',
+                    pic2_id: 0,
+                    flag: '',
+                    allowedTypes: ['image/jpeg', 'image/png', 'image/gif'],
+                    info: false,
+                    id_card1: "",
+                    id_card2: '',
+                    car_img1: '',
+                    car_img2: '',
+                }
+            },
+            mounted() {
+            },
+            methods: {
+                goBack() {
+                    // 与Android交互
+                    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.goBack) {
+                        AndroidBridge.goBack();
+                    } else {
+                        history.back();
+                    }
+                },
+                open_camera(flag) {
+                    this.flag = flag;
+                    if (flag == 1) {
+                        AndroidBridge.open_camera(flag);
+                    }
+                    else if (flag == 2) {
+                        AndroidBridge.open_camera(flag);
+                    }
+                },
+                show_images(p, _id) {
+                    // android 传回的图片存储的ID，及图片路径，需要识别信息时可通过ID获取                
+                    // "http://192.168.3.198:8002" + 
+                    if (this.flag == 1) {
+                        this.pic1 = p + "?" + Date.now();
+                        this.pic1_id = _id;
+                    }
+                    else if (this.flag == 2) {
+                        this.pic2 = p + "?" + Date.now();
+                        this.pic2_id = _id;
+                    }
+                },
+                submitData() {
+                     if(this.pic1_id <= 0 || this.pic2_id <= 0){
+                         this.$toast({
+                             message: '请上传证件',                            
+                             duration: 1500
+                         });
+                         return
+                     }
+
+                    $.ajax({
+                        url: '/app/driver/register/submit',
+                        data: JSON.stringify({ 'phone': this.phone, 'pic1_id': this.pic1_id, 'pic2_id': this.pic2_id, 
+                        'recommend_phone': this.recommend_phone, 'id_card1': this.id_card1, 'id_card2': this.id_card2,
+                        'car_img1': this.car_img1, 'car_img2': this.car_img2}),
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function (data) {
+                            console.log(data);
+                            if (data.status == 0) {
+                                // 注册成功
+                                layui.use(function () {
+                                    layer.alert('注册成功，请注意审核结果', function (index) {
+                                        layer.close(index)
+                                        //window.location.href = '/app/driver'
+                                        // 与Android交互
+                                        if (window.AndroidBridge)
+                                            AndroidBridge.registerSuccess('注册成功，请注意审核结果')
+                                    });
+                                });
+                            }
+                        }
+                    })
+                },
+/////// 文件上传部分
+                // 创建隐藏的文件输入框
+                createFileInput() {
+                    // 检查是否已有文件输入框，如果有则移除
+                    let fileInput = document.getElementById('image-upload-input');
+                    if (fileInput) {
+                        fileInput.remove();
+                    }
+
+                    fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.id = 'image-upload-input';
+                    fileInput.accept = 'image/*';
+                    fileInput.multiple = true;
+                    fileInput.style.display = 'none';
+                    document.body.appendChild(fileInput);
+                    return fileInput;
+                },
+
+                // 触发H5文件上传
+                triggerUpload(index) {
+                   
+
+                    const fileInput = this.createFileInput();
+                    const remainingSlots = 1;
+
+                    fileInput.onchange = (e) => {
+                        const files = e.target.files;
+                        if (!files || files.length === 0) {
+                            this.showMessage('未选择图片','error');
+                            return;
+                        }
+
+                        // 验证并过滤文件
+                        let selectedFiles = Array.from(files).filter(file => {
+                            // 检查文件类型
+                            if (!this.allowedTypes.includes(file.type)) {
+                                this.showMessage(`${file.name} 不是支持的图片格式（仅支持JPG、PNG、GIF）`,'error');
+                                return false;
+                            }
+                       
+                            return true;
+                        });
+
+                        // 限制选择的图片数量
+                        selectedFiles = selectedFiles.slice(0, remainingSlots);
+                        if (selectedFiles.length < files.length) {
+                            this.showMessage(`最多只能选择${remainingSlots}张图片，已自动调整为${selectedFiles.length}张`,'warning');
+                        }
+
+                        if (selectedFiles.length === 0) {
+                            this.showMessage('没有符合要求的图片文件','error');
+                            return;
+                        }
+
+                        this.uploadImages(selectedFiles, index);
+                    };
+
+                    // 触发文件选择对话框
+                    fileInput.click();
+                },
+
+                // 使用H5上传图片到服务器
+                uploadImages(files, index) {
+                    var images = []
+                    const uploadCount = files.length;
+                    let uploadedCount = 1;
+
+                    // 显示进度提示
+                    const loading = this.$loading({
+                        lock: true,
+                        text: `正在上传图片 (${uploadedCount}/${uploadCount})...`,
+                        spinner: 'el-icon-loading',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    });
+
+                    files.forEach((file, idx) => {
+                        const formData = new FormData();
+                        formData.append('files', file);
+                        formData.append('type', index);
+                        
+                        // 使用axios直接上传FormData，避免api.post的JSON序列化问题
+                        axios.post('/app/driver/register/upload', formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                            }
+                        })
+                        .then(response => {
+                            if (response.data && response.data.status === 0) {
+                                let uploaded_files = response.data.data.img || [];
+
+                                console.log(uploaded_files);
+                                if(index == 3){
+                                    this.id_card1 = uploaded_files
+                                }
+                                else if(index == 4){
+                                    this.id_card2 = uploaded_files
+                                }
+                                else if(index == 5){// 正前方
+                                    this.car_img1 = uploaded_files
+                                }
+                                else if(index == 6){
+                                    this.car_img2 = uploaded_files
+                                }
+                                
+                                uploadedCount++;
+                                loading.text = `正在上传图片 (${uploadedCount}/${uploadCount})...`;
+
+                                if (uploadedCount >= uploadCount) {
+                                    loading.close();
+                                    this.showMessage('图片上传完成','success');
+                                }
+                            } else {
+                                this.showMessage(`图片 ${file.name} 上传失败: ${response.data?.message || '未知错误'}`,'error');
+                                uploadedCount++;
+                                if (uploadedCount >= uploadCount) {
+                                    loading.close();
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('图片上传失败:', error);
+                            this.showMessage(`图片 ${file.name} 上传失败`,'error');
+                            uploadedCount++;
+                            if (uploadedCount >= uploadCount) {
+                                loading.close();
+                            }
+                        });
+                    });
+                },
+
+               
+                showMessage(message, type = 'info') {
+                    this.$message({
+                        message: message,
+                        type: type,
+                        customClass: 'custom-message',
+                        duration: 3000
+                    });
+                },
+///////
+
+
+            }
+        });
+        window.app = vueApp
+
+        window.show_pic = function (_p, _id) {
+            window.app.show_images(_p, _id)
+        }
+
+    </script>
+</body>
+
+</html>

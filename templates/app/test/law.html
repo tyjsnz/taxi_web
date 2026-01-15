@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>法律条款</title>
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+
+        .header i{
+            font-size: 25px;
+        }
+        .back-arrow {
+            position: absolute;
+            left: 15px;
+            font-size: 20px;
+        }
+        .title {
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 15px;
+            background-color: white;
+            margin: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .content h2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF6B00;
+        }
+
+        .content p {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .content ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .content ul li {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+            color: #999;
+        }
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+    </style>
+
+<link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_ck65k0e88f.css">
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="fix-header"></div>
+        <!-- 头部 -->
+        <div class="header">
+            <el-row>
+                <el-col :span="3">
+                    <div @click="goBack">
+                        <i class="el-icon-arrow-left back-icon"></i>
+                    </div>
+                </el-col>
+                <el-col :span="18" style="text-align: center;">
+                    <div class="header-title">帐号与安全</div>
+                </el-col>
+                <el-col :span="3">                        
+                </el-col>
+            </el-row>
+
+        </div>
+
+        <!-- 内容 -->
+        <div class="content" style="line-height: 30px;">
+<h3>网约车司机端服务协议</h3>
+
+一、协议声明
+<br>
+1.1 协议定义  
+本协议是司机与平台之间就网约车运营服务达成的具有法律效力的合同。司机通过注册、登录或使用平台服务即视为已阅读、理解并同意接受本协议全部条款。<br>
+
+1.2 司机资格要求  <br>
+- 司机须年满18周岁，具备完全民事行为能力；<br>
+- 持有有效的《机动车驾驶证》及《网络预约出租汽车驾驶员证》；<br>
+- 车辆需符合当地网约车管理规定（如车龄≤5年、车辆登记性质为营运、投保营运险等）；<br>
+- 平台有权对司机资质进行审核，并保留最终准入决定权。<br>
+
+二、服务规则<br>
+
+2.1 接单与履约义务  <br>
+- 司机必须通过平台接单，不得私下联系乘客、绕过平台交易；<br>
+- 接单后应准时到达上车地点，无故取消订单将影响信用评分；<br>
+- 不得拒载、议价、绕路等违规行为，一经查实将依据平台规则处理。<br>
+
+2.2 收费与结算  <br>
+ 平台按订单金额收取一定比例的信息服务费（详见《费用说明》）；<br>
+ 司机收入根据订单完成情况结算，平台有权扣除违约金、投诉赔偿等费用；<br>
+ 提现功能需绑定本人有效银行卡，提现手续费由司机自行承担（如有）。<br>
+
+ 三、数据与隐私保护<br>
+
+3.1 数据收集与使用  <br>
+ 司机授权平台收集并使用其个人信息、行程轨迹、订单记录、评价数据等用于服务优化；<br>
+ 平台承诺严格遵守国家法律法规，不向任何第三方泄露司机个人信息，除非依法需要披露。<br>
+
+3.2 安全监控  <br>
+行程中需保持APP开启并上传实时位置信息；<br>
+平台可调取录音、录像等资料用于纠纷处理、事故调查等场景。<br>
+
+
+四、责任与违约条款<br>
+
+4.1 司机责任  <br>
+司机应对自身驾驶行为负责，承担交通违法、交通事故等法律责任；<br>
+禁止刷单、虚假订单、恶意投诉等作弊行为，违者将被永久封号并追偿损失；<br>
+若因司机原因造成乘客财产或人身损害，司机应依法承担责任。<br>
+
+4.2 平台责任  <br>
+平台提供技术服务支持，尽力保障系统稳定运行；<br>
+如因平台系统故障导致订单异常，平台将协调补发司机应得收入；<br>
+对于司机与乘客之间的线下交易风险，平台不承担任何责任。<br>
+
+
+五、协议变更与终止<br>
+
+5.1 协议修订  <br>
+平台有权根据法律法规变化或业务调整需要修改本协议条款。修改后的协议将在平台上公示，司机继续使用服务即视为接受新条款。<br>
+
+5.2 协议终止  <br>
+司机可申请注销账号，但需结清所有费用、处理完毕相关纠纷；<br>
+平台有权在司机严重违反协议条款、服务规范或法律法规时终止服务关系；<br>
+协议终止后，司机不再享有平台服务权益，平台有权删除其账户及相关数据。<br>
+
+六、争议解决<br>
+
+因本协议引起的或与本协议有关的任何争议，双方应协商解决；<br>
+协商不成的，任一方可向平台所在地人民法院提起诉讼<br>
+
+七、其他约定<br>
+
+本协议未尽事宜，以平台发布的公告、操作指引、服务规则为准；<br>
+本协议自司机首次使用平台服务之日起生效。<br>
+
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            © 2025 LS出行. All Rights Reserved.
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            methods: {
+                goBack() {
+                    window.history.go(-1);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

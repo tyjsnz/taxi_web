@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>司机爆单预测</title>
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入ECharts -->
+    <script src="/static/common/echarts.min.js"></script>
+    <script src="/static/css/header.css"></script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body,
+        html {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #fff;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            overflow-x: visible !important;
+            /* 临时调试用 */
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        .fix-header {
+            z-index: 11;
+            height: 45px;
+            background-color: #ff6b00;
+            line-height: 30px;
+            position: fixed;
+            width: 100%;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 18px;
+        }
+
+        .header i {
+            font-size: 25px;
+        }
+
+        .header1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            margin-top: 30px;
+        }
+
+        .title1 {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .tab-switch {
+            display: flex;
+            background: #F5F5F5;
+            border-radius: 12px;
+            padding: 2px;
+        }
+
+        .tab-switch span {
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .tab-switch span.active {
+            background: #FFF;
+            color: #FF6B00;
+            font-weight: bold;
+        }
+
+        .highlight-periods {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+
+        .period {
+            background: #FFF4EB;
+            color: #FF6B00;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .benefit-card {
+            background: #FFF9F2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 20px;
+        }
+
+        .card-title {
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .benefit-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .highlight {
+            color: #FF6B00;
+            font-weight: bold;
+        }
+
+        .tag {
+            background: #EEE;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #chart-container {
+            width: 100%;
+            min-width: 600px;
+            overflow-x: auto;
+            height: 200px;
+        }
+
+        .highlight-periods {
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 8px 0;
+            gap: 10px;
+        }
+
+        .period {
+            background: #FFF4EB;
+            color: #FF6B00;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            flex-shrink: 0;
+            /* 防止压缩 */
+        }
+
+        .el-badge__content,
+        .el-progress.is-exception .el-progress-bar__inner {
+            background-color: #FF6B00;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="fix-header"></div>
+        <div class="header">
+            <el-row>
+                <el-col :span="3">
+                    <div @click="goBack">
+                        <i class="el-icon-arrow-left back-icon"></i>
+                    </div>
+                </el-col>
+                <el-col :span="18" style="text-align: center;">
+                    <div class="header-title">爆单时段 权益多多</div>
+                </el-col>
+            </el-row>
+        </div>
+        <div class="container">
+
+
+            <div class="header1">
+                <div class="title1">今日爆单时段预测</div>
+                <div class="tab-switch">
+                    <span @click="click_today(1)" :class="is_today_day ? 'active': ''">今日</span>
+                    <span @click="click_today(2)" :class="!is_today_day ? 'active': ''">昨日</span>
+                </div>
+            </div>
+
+            <!-- ECharts 容器 -->
+            <div class="chart-wrapper">
+                <div id="chart-container"></div>
+            </div>
+
+            <div class="highlight-periods">
+                <div class="period">07:00-09:00</div>
+                <div class="period">17:00-19:00</div>
+                <div class="period">21:00-22:00</div>
+                <div class="period">23:00-24:00</div>
+                <!-- 可以继续追加更多 .period -->
+            </div>
+
+            <div class="benefit-card">
+                <div class="card-title">
+                    <div
+                        style="border-radius:5px;background: rgb(255, 107, 0); border: 1px solid #FF6B00; width: 120px; display: flex; align-items: center;">
+                        <span
+                            style="border-top-left-radius: 5px; border-bottom-left-radius: 5px; background: #fff; padding: 5px 5px 5px 5px;">权益1</span>
+                        <span style="background: #FF6B00;color: #FFF; text-align: center;padding: 5px;">爆单限时涨</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="benefit-item">
+                        <span>明天07:00点起</span>
+                    </div>
+                    <el-row>
+                        <el-col :span="10">
+                            <div class=""
+                                style="border: 1px solid #FF6B00;border-radius:12px;text-align: center; line-height: 30px;">
+                                <div style="font-weight: bold; text-align: center;">实时计价</div>
+                                <span
+                                    style="color: #f5934d; font-size: 12px;text-align: center; border-radius: 12px;">爆单惊喜涨+0.1%</span>
+                            </div>
+                        </el-col>
+                        <el-col :span="12" :offset="2">
+                            <div><el-badge is-dot style="margin-top: 6px;color:#FF6B00"></el-badge>听单量预计+11%</div>
+                            <div><el-badge is-dot style="margin-top: 6px;color:#FF6B00"></el-badge>爆单惊喜涨</div>
+                        </el-col>
+                    </el-row>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- 引入Vue和Element-UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/utils/helper.js?v=1"></script>
+
+    <script>
+        // 初始化图表
+        var chart = null
+        var today_data = null
+        var yesterday_data = null
+
+        function load_data() {
+            // 模拟数据（根据UI图精确还原）
+            const hours = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+            const data = [
+                { value: 40, itemStyle: { color: '#FFE8D6' } },
+                { value: 45, itemStyle: { color: '#FFE8D6' } },
+                { value: 50, itemStyle: { color: '#FFE8D6' } },
+                { value: 55, itemStyle: { color: '#FFE8D6' } },
+                { value: 60, itemStyle: { color: '#FFE8D6' } },
+                { value: 65, itemStyle: { color: '#FFE8D6' } },
+                {
+                    value: 75, itemStyle: { color: '#FF6B00' }, label: {
+                        show: true, position: 'top', offset: [0, -10],
+                        formatter: '比前一时段+20%',
+                    }
+                },
+                { value: 85, itemStyle: { color: '#FF6B00' }, label: { show: true, position: 'top', offset: [0, -10], formatter: '比昨天+10%' } },
+                { value: 80, itemStyle: { color: '#FF6B00' } },
+                { value: 70, itemStyle: { color: '#FFE8D6' } },
+                { value: 65, itemStyle: { color: '#FFE8D6' } },
+                { value: 75, itemStyle: { color: '#FF6B00' } },
+                { value: 60, itemStyle: { color: '#FFE8D6' } },
+                { value: 50, itemStyle: { color: '#FFE8D6' } }
+            ];
+
+            // ECharts配置
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                grid: {
+                    left: '0%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '5%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: hours,
+                    axisLabel: {
+                        interval: 0, // 每隔一个标签显示一次
+                        fontSize: 10
+                    },
+                    axisLine: { show: false },
+                    axisTick: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    show: false,
+                    max: 100
+                },
+                series: [{
+                    name: '爆单指数',
+                    type: 'bar',
+                    barWidth: '60%',
+                    data: data,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontSize: 10,
+                        color: '#FF6B00',
+                        formatter: function (params) {
+                            // 只显示有特殊标注的数据
+                            return params.data.label ? params.data.label.formatter : '';
+                        }
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(255,107,0,0.5)'
+                        }
+                    }
+                }],
+                dataZoom: [
+                    {
+                        type: 'slider', // 使用 slider 类型，支持触摸滑动
+                        xAxisIndex: 0,
+                        start: 0,       // 初始显示前 0%
+                        end: 30,        // 显示前 30% 的数据（约 7-8 个时间点）
+                        height: 20,     // 设置滑块高度
+                        bottom: 0,      // 距离底部位置
+                        zoomLock: false // 允许自由滑动
+                    }
+                ]
+            };
+
+            // 渲染图表
+            chart.setOption(option);
+
+            fetch('/app/api/driver/v1/heat_order_data?day=-1')
+                .then(response => response.json())
+                .then(res => {
+                    // 今天
+                    const data = res.data.current
+                    today_data = data
+                    // 昨天
+                    const pre_data = res.data.pre_next
+                    yesterday_data = pre_data
+
+                    // 处理数据
+                    const seriesData = data.map(item => ({
+                        value: item.order_num,
+                        itemStyle: { 'color': '#ff6b00' },
+                        label: { show: true, position: 'top', formatter: item.order_num }
+                    }));
+
+                    console.log(seriesData)
+
+                    // 更新图表数据
+                    chart.setOption({
+                        series: [{
+                            data: seriesData
+                        }]
+                    });
+
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function load_day_data(is_prev_day){
+            var data = today_data
+            if(is_prev_day){
+                data = yesterday_data
+            }
+
+            const seriesData = data.map(item => ({
+                value: item.order_num,
+                itemStyle: { 'color': '#ff6b00' },
+                label: { show: true, position: 'top', formatter: item.order_num }
+            }));
+
+            // 更新图表数据
+            chart.setOption({
+                series: [{
+                    data: seriesData
+                }]
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            chart = echarts.init(document.getElementById('chart-container'));
+            load_data();
+            // 窗口大小变化时重绘
+            window.addEventListener('resize', function () {
+                chart.resize();
+            });
+        });
+    </script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    is_today_day: true,
+                }
+            },
+            mounted() {
+            },
+            methods: {
+                goBack() {
+                    window.history.back();
+                },
+                click_today(_type) {
+                    if (_type == 1) {
+                        this.is_today_day = true;
+                        load_day_data(false);
+                    }
+                    else {
+                        // 昨天
+                        this.is_today_day = false;
+                        load_day_data(true);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑城际路线</title>
+
+    <link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/admin/css/style.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_6iep7d4szk.css">
+
+    <link href="//unpkg.com/layui@2.10.3/dist/css/layui.css" rel="stylesheet">
+    <script src="//unpkg.com/layui@2.10.3/dist/layui.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- <div class="card-header" style="padding: 10px 0px 10px 15px !important;">
+            <h4>编辑城际路线</h4>
+        </div> -->
+        <el-card class="card-body" style="padding-top: 0px !important; padding-left: 0px !important">
+            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-position="top" label-width="100px" class="demo-ruleForm">
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="出发城市" prop="start_city">
+                            <el-input v-model="ruleForm.start_city" placeholder="请输入出发城市"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="到达城市" prop="end_city">
+                            <el-input v-model="ruleForm.end_city" placeholder="请输入到达城市"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="出发站点" prop="start_station">
+                            <el-input v-model="ruleForm.start_station" placeholder="请输入出发站点"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="到达站点" prop="end_station">
+                            <el-input v-model="ruleForm.end_station" placeholder="请输入到达站点"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="车型" prop="car_type">
+                            <el-select v-model="ruleForm.car_type" placeholder="请选择车型">
+                                <el-option label="舒适型" value="舒适型"></el-option>
+                                <el-option label="商务型" value="商务型"></el-option>
+                                <el-option label="豪华型" value="豪华型"></el-option>
+                                <el-option label="七座商务" value="七座商务"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="价格(元)" prop="price">
+                            <el-input-number v-model="ruleForm.price" :min="0" :step="1" placeholder="请输入价格"></el-input-number>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="预计时间(分钟)" prop="estimated_time">
+                            <el-input-number v-model="ruleForm.estimated_time" :min="0" :step="1" placeholder="请输入预计时间"></el-input-number>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="状态" prop="status">
+                            <el-switch v-model="ruleForm.status" :active-value="0" :inactive-value="-1" active-text="正常" inactive-text="禁用"></el-switch>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="24">
+                        <el-form-item label="备注" prop="remark">
+                            <el-input type="textarea" v-model="ruleForm.remark" placeholder="请输入备注信息"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+                    <el-button @click="resetForm('ruleForm')">重置</el-button>
+                    <el-button @click="closeWindow">关闭</el-button>
+                </el-form-item>
+            </el-form>
+        </el-card>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    ruleForm: {
+                        start_city: '',
+                        end_city: '',
+                        start_station: '',
+                        end_station: '',
+                        car_type: '',
+                        price: null,
+                        estimated_time: null,
+                        status: 0,
+                        remark: ''
+                    },
+                    rules: {
+                        start_city: [
+                            { required: true, message: '请输入出发城市', trigger: 'blur' }
+                        ],
+                        end_city: [
+                            { required: true, message: '请输入到达城市', trigger: 'blur' }
+                        ],
+                        start_station: [
+                            { required: true, message: '请输入出发站点', trigger: 'blur' }
+                        ],
+                        end_station: [
+                            { required: true, message: '请输入到达站点', trigger: 'blur' }
+                        ],
+                        car_type: [
+                            { required: true, message: '请选择车型', trigger: 'change' }
+                        ],
+                        price: [
+                            { required: true, message: '请输入价格', trigger: 'blur' },
+                            { type: 'number', min: 0, message: '价格不能为负数', trigger: 'blur' }
+                        ],
+                        estimated_time: [
+                            { required: true, message: '请输入预计时间', trigger: 'blur' },
+                            { type: 'number', min: 0, message: '预计时间不能为负数', trigger: 'blur' }
+                        ]
+                    }
+                };
+            },
+            created() {
+                // 检查是否是编辑模式
+                const urlParams = new URLSearchParams(window.location.search);
+                const id = urlParams.get('id');
+                if (id) {
+                    this.loadRouteData(id);
+                } else {
+                    layer.msg('缺少路线ID参数', { icon: 2 });
+                    setTimeout(() => {
+                        this.closeWindow();
+                    }, 1500);
+                }
+            },
+            methods: {
+                submitForm(formName) {
+                    this.$refs[formName].validate((valid) => {
+                        if (valid) {
+                            // 检查是否是编辑模式
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const id = urlParams.get('id');
+                            const url = '/admin/route/update';
+                            const data = { ...this.ruleForm, id };
+
+                            axios.post(url, data).then(res => {
+                                console.log(res)
+                                if (res.data.status == 0) {
+                                    layer.msg(res.data.msg, { icon: 1 });
+                                    setTimeout(() => {
+                                        window.parent.layer.closeAll();
+                                        window.parent.location.reload();
+                                    }, 1500);
+                                } else {
+                                    layer.msg(res.data.msg, { icon: 2 });
+                                }
+                            }).catch(error => {
+                                console.log(error)
+                                layer.msg('操作失败，请重试', { icon: 2 });
+                            });
+                        } else {
+                            return false;
+                        }
+                    });
+                },
+                resetForm(formName) {
+                    this.$refs[formName].resetFields();
+                },
+                closeWindow() {
+                    window.parent.layer.closeAll();
+                },
+                loadRouteData(id) {
+                    axios.get('/admin/route/detail', { params: { id } }).then(res => {
+                        console.log(res)
+                        if (res.data.status == 0) {
+                            this.ruleForm = res.data.data;
+                        } else {
+                            layer.msg(res.data.msg, { icon: 2 });
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                        layer.msg('加载数据失败，请重试', { icon: 2 });
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

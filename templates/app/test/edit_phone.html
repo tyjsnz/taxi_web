@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>手机号修改</title>
+    <!-- 使用备用CDN源 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+    
+        .header {
+            /* margin-top: 45px; */
+            /* position: fixed; */
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+        }
+        .back-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-container {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 4px;
+        }
+        .el-form-item {
+            margin-bottom: 22px;
+        }
+     .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; width: 100%;
+        }
+        .el-button--danger {
+            background-color: #ff6b00; 
+        }
+    </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <div class="fix-header"></div>
+        <!-- 顶部导航栏 -->
+        <div class="header">
+            <div class="back-btn" @click="goBack">
+                <i class="el-icon-arrow-left" style="font-size: 20px;"></i>
+            </div>
+            <div class="header-title">修改手机号</div>
+            <div style="width: 44px;"></div>
+        </div>
+
+        <!-- 密码修改表单 -->
+        <div class="form-container">
+            <el-form :model="form" :rules="rules" ref="form" label-width="100px" label-position="top">
+                <el-form-item label="原手机号" prop="oldphone">
+                    <el-input 
+                        v-model.number="form.oldphone" 
+                        type="number"
+                        placeholder="原手机号">
+                    </el-input>
+                </el-form-item>
+                
+                <el-form-item label="新手机号" prop="newphone">
+                    <el-input 
+                        v-model="form.newphone" 
+                        placeholder="新手机号码"
+                        type="number">
+                    </el-input>
+                </el-form-item>
+                
+                <el-form-item>
+                    <el-button 
+                        type="danger" 
+                        @click="submitForm"
+                        :loading="loading"
+                        style="width: 100%;">
+                        确认修改
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+
+    <!-- 使用备用CDN源 -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    
+    <script>
+        new Vue({
+            el: '#app', // 改为挂载到#app元素
+            delimiters: ['${', '}'],
+            data() {
+                var validatePass = (rule, value, callback) => {
+                    if (!value) return callback(new Error('请输入新手机号'));
+                    if (value.length != 11) return callback(new Error('手机号不正确'));
+                    callback();
+                };
+           
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    loading: false,
+                    form: {
+                        oldphone: '',
+                        newphone: ''
+                    },
+                    rules: {
+                        oldphone: [
+                            { required: true, message: '请输入原手机号', trigger: 'blur' }
+                        ],
+                        newphone: [
+                            { required: true, validator: validatePass, trigger: 'blur' }
+                        ],
+                    }
+                };
+            },
+            methods: {
+                goBack() {
+                    if (window.android && typeof window.android.goBack === 'function') {
+                        window.android.goBack();
+                    } else if (window.history.length > 1) {
+                        window.history.back();
+                    }
+                },
+                update_phone() { 
+                    var that = this
+                    that.loading = true;
+                    $.ajax({
+                        type: "POST",
+                        url: "",
+                        data: {
+                            'driver_id': that.driver_id,
+                            'token': that.token,
+                            "old_phone": that.form.oldphone,
+                            "new_phone": that.form.newphone
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            that.loading = false;
+                            if (data.status == 0) {
+                                that.$message.success('修改成功');
+                                setTimeout(that.goBack, 1500);
+                            }
+                            else {
+                                that.$message.error(data.msg);
+                            }
+                        }
+
+                    })
+                },
+                submitForm() {
+                    this.$refs.form.validate(valid => {
+                        if (valid) {
+                            if(this.form.oldphone == this.form.newphone){
+                                this.$message.error('新旧手机号不能相同');
+                                return
+                            }
+                            this.update_phone()
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

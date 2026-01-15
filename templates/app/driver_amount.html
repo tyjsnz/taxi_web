@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>收入明细</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .date-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: white;
+            margin-bottom: 10px;
+        }
+
+        .date-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .date-display {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .income-summary {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 0 15px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF6B00;
+        }
+
+        .summary-unit {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .income-tabs {
+            display: flex;
+            background-color: white;
+            padding: 0 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 14px;
+            color: #666;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tab-item.active {
+            color: #FF6B00;
+            font-weight: bold;
+        }
+
+        .tab-item.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 3px;
+            background-color: #FF6B00;
+            border-radius: 3px;
+        }
+
+        .income-container {
+            background-color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 200px;
+        }
+
+        .income-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .income-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .income-item:last-child {
+            border-bottom: none;
+        }
+
+        .income-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .income-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .income-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .detail-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .empty-income {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        .chart-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+        }
+
+        .filter-bar {
+            display: flex;
+            background-color: white;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #666;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            color: #FF6B00;
+            border-color: #FF6B00;
+            background-color: #FFF5F0;
+        }
+
+        .member-center-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            cursor: pointer;
+            z-index: 999;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_ck65k0e88f.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="back-btn" @click="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="header-title">收入明细</div>
+        </div>
+
+        <!-- 日期选择 -->
+        <div class="date-selector">
+            <button class="date-btn" @click="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
+            <div class="date-display">${currentDate}</div>
+            <button class="date-btn" @click="changeDate(1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <!-- 收入概览 -->
+        <div class="income-summary">
+            <div class="summary-title">今日收入</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">总收入</div>
+                    <div class="summary-value">${dailyIncome.total}<span class="summary-unit">元</span></div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">订单数</div>
+                    <div class="summary-value">${dailyIncome.orderCount}<span class="summary-unit">单</span></div>
+                </div>
+                <!-- <div class="summary-item">
+                    <div class="summary-label">平均收入</div>
+                    <div class="summary-value">${dailyIncome.avgIncome}<span class="summary-unit">元/单</span></div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">在线时长</div>
+                    <div class="summary-value">${dailyIncome.onlineTime}<span class="summary-unit">小时</span></div>
+                </div> -->
+            </div>
+        </div>
+
+        <!-- 收入图表 -->
+        <div class="chart-container" style="display: none;">
+            <div class="chart-title">近7日收入趋势</div>
+            <div class="chart-placeholder">
+                <i class="fas fa-chart-line" style="font-size: 24px; margin-right: 10px;"></i>
+                收入趋势图表
+            </div>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar" style="display: none;">
+            <div class="filter-btn" :class="{active: activeFilter === 'all'}" @click="activeFilter = 'all'">全部</div>
+            <div class="filter-btn" :class="{active: activeFilter === 'fast'}" @click="activeFilter = 'fast'">快车</div>
+            <div class="filter-btn" :class="{active: activeFilter === 'premium'}" @click="activeFilter = 'premium'">专车</div>
+            <div class="filter-btn" :class="{active: activeFilter === 'other'}" @click="activeFilter = 'other'">其他</div>
+        </div>
+
+        <!-- 收入明细 -->
+        <div class="income-tabs" style="display: none;">
+            <div class="tab-item" :class="{active: activeTab === 'day'}" @click="activeTab = 'day'">日收入</div>
+            <div class="tab-item" :class="{active: activeTab === 'week'}" @click="activeTab = 'week'">周收入</div>
+            <div class="tab-item" :class="{active: activeTab === 'month'}" @click="activeTab = 'month'">月收入</div>
+        </div>
+
+        <div class="income-container">
+            <div class="income-title">
+                <span>收入明细</span>
+                <span>共${incomeList.length}笔</span>
+            </div>
+
+            <div id="incomeList">
+                <div class="empty-income" v-if="incomeList.length === 0">
+                    <i class="fas fa-wallet" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <p>暂无收入记录</p>
+                </div>
+
+                <div class="income-item" v-for="(income, index) in incomeList" :key="index">
+                    <div class="income-info">
+                        <span class="order-id">订单号: ${income.sn}</span>
+                        <span class="income-amount">+${income.fee}元</span>
+                    </div>
+                    <div class="income-time">${income.created_at}</div>
+                    <div class="income-detail">
+                        <div class="detail-item">
+                            <div class="detail-label">里程</div>
+                            <div class="detail-value">${formatOrderDistance(income.distance)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">时长</div>
+                            <div class="detail-value">${formatOrderDuration(income.duration)}</div>
+                        </div>
+                        <!-- <div class="detail-item">
+                            <div class="detail-label">服务类型</div>
+                            <div class="detail-value">${income.order_type}</div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 会员中心悬浮按钮 -->
+        <div class="member-center-btn" @click="showMemberCenter()">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    currentDate: this.formatDate(new Date()),
+                    activeTab: 'day',
+                    activeFilter: 'all',
+                    dailyIncome: {
+                        total: '0.00',
+                        orderCount: '0',
+                        avgIncome: '0.00',
+                        onlineTime: '0'
+                    },
+                    incomeList: []
+                };
+            },
+            mounted() {
+                this.fetchIncomeData();
+            },
+            methods: {
+                formatDate(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                },
+                changeDate(days) {
+                    const date = new Date(this.currentDate);
+                    date.setDate(date.getDate() + days);
+                    this.currentDate = this.formatDate(date);
+                    console.log(this.currentDate);
+                    this.fetchIncomeData();
+                },
+                fetchIncomeData() {
+                    let btime = this.currentDate + " 00:00:00"
+                    let etime = this.currentDate + " 23:59:59"
+
+                    getRequest('/app/driver/in_come/detail/json', { driver_id: this.driver_id, token: this.token,'btime':btime,'etime':etime }, (res, status) => {                        
+                        if (status == 'success') {
+                            console.log(res)
+                            if (res.status == 0) {
+                                if(res.data.length > 0)
+                                    this.incomeList.push(res.data);
+                                this.dailyIncome = {
+                                    total: res.other.fee,
+                                    orderCount: res.other.num,
+                                    avgIncome: '',
+                                    onlineTime: ''
+                                };
+                            }
+                        }
+                    });
+
+                 },
+                formatOrderDistance(orderDistance) {
+                    return formatDistance(orderDistance)
+                },
+                formatOrderDuration(orderDuration) {
+                    return formatDuration(orderDuration)
+                },
+                goBack() {
+                    window.history.go(-1);
+                },
+                showMemberCenter() {
+                    // 跳转到会员中心
+                    window.history.go(-1);
+                }
+            }
+        });
+
+        window.app = vueApp;
+    </script>
+</body>
+</html>

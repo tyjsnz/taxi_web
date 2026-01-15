@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>横屏证件照拍摄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* 强制横屏提示 */
+        .orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .orientation-warning.show {
+            display: flex;
+        }
+        
+        .orientation-warning h2 {
+            margin-bottom: 20px;
+            color: #ff9800;
+        }
+        
+        /* 相机容器 */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 视频元素 */
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: rotate(0deg);
+        }
+        
+        /* 引导框 */
+        .guide-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        /* 提示文字 */
+        .guide-text {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            z-index: 11;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+        }
+        
+        /* 控制按钮 */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .btn-capture {
+            background-color: white;
+            color: black;
+            width: 70px;
+            height: 70px;
+        }
+        
+        /* 预览区域 */
+        .preview-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
+        
+        .preview-container.show {
+            display: flex;
+        }
+        
+        #photoResult {
+            max-width: 90%;
+            max-height: 80%;
+            border: 2px solid white;
+        }
+        
+        .preview-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 横屏提示 -->
+    <div class="orientation-warning">
+        <h2>请将手机横屏使用</h2>
+        <p>为了获得最佳拍摄效果，请将您的手机横向放置</p>
+    </div>
+    
+    <!-- 相机界面 -->
+    <div class="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="guide-frame"></div>
+        <div class="guide-text">请将证件置于框内</div>
+        
+        <div class="controls">
+            <button class="btn" id="switchBtn">切换</button>
+            <button class="btn btn-capture" id="captureBtn">拍照</button>
+            <button class="btn" id="flashBtn">闪光</button>
+        </div>
+    </div>
+    
+    <!-- 预览界面 -->
+    <div class="preview-container">
+        <img id="photoResult" alt="拍摄结果">
+        <div class="preview-controls">
+            <button class="btn" id="retakeBtn">重拍</button>
+            <button class="btn" id="confirmBtn">确认</button>
+        </div>
+    </div>
+    
+    <!-- 隐藏的canvas元素 -->
+    <canvas id="photoCanvas" style="display: none;"></canvas>
+    
+    <script>
+        // 获取DOM元素
+        const video = document.getElementById('video');
+        const photoCanvas = document.getElementById('photoCanvas');
+        const photoResult = document.getElementById('photoResult');
+        const captureBtn = document.getElementById('captureBtn');
+        const switchBtn = document.getElementById('switchBtn');
+        const flashBtn = document.getElementById('flashBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const previewContainer = document.querySelector('.preview-container');
+        const orientationWarning = document.querySelector('.orientation-warning');
+        
+        let stream = null;
+        let facingMode = 'environment'; // 默认后置摄像头
+        let flashMode = false;
+        
+        // 检查横屏状态
+        function checkOrientation() {
+            const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+            orientationWarning.classList.toggle('show', isPortrait);
+            return !isPortrait;
+        }
+        
+        // 初始化摄像头
+        async function initCamera() {
+            try {
+                // 停止之前的视频流
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                // 获取摄像头权限
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                });
+                
+                video.srcObject = stream;
+                
+                // 设置canvas尺寸与视频一致
+                video.onloadedmetadata = () => {
+                    photoCanvas.width = video.videoWidth;
+                    photoCanvas.height = video.videoHeight;
+                };
+                
+            } catch (err) {
+                console.error('摄像头访问错误:', err);
+                alert('无法访问摄像头: ' + err.message);
+            }
+        }
+        
+        // 拍照
+        function capturePhoto() {
+            const context = photoCanvas.getContext('2d');
+            
+            // 绘制图像到canvas
+            context.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+            
+            // 获取引导框在canvas中的位置和尺寸
+            const guideFrame = document.querySelector('.guide-frame');
+            const guideRect = guideFrame.getBoundingClientRect();
+            
+            // 计算裁剪区域
+            const scaleX = photoCanvas.width / video.clientWidth;
+            const scaleY = photoCanvas.height / video.clientHeight;
+            
+            const cropX = guideRect.left * scaleX;
+            const cropY = guideRect.top * scaleY;
+            const cropWidth = guideRect.width * scaleX;
+            const cropHeight = guideRect.height * scaleY;
+            
+            // 创建新canvas用于存储裁剪后的图像
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = cropWidth;
+            croppedCanvas.height = cropHeight;
+            const croppedCtx = croppedCanvas.getContext('2d');
+            
+            // 裁剪图像
+            croppedCtx.drawImage(
+                photoCanvas, 
+                cropX, cropY, cropWidth, cropHeight,
+                0, 0, cropWidth, cropHeight
+            );
+            
+            // 显示预览
+            photoResult.src = croppedCanvas.toDataURL('image/jpeg', 0.9);
+            previewContainer.classList.add('show');
+            
+            // 关闭摄像头
+            stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // 切换摄像头
+        function switchCamera() {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            initCamera();
+        }
+        
+        // 重拍
+        function retakePhoto() {
+            previewContainer.classList.remove('show');
+            initCamera();
+        }
+        
+        // 确认照片
+        function confirmPhoto() {
+            // 这里可以添加将照片上传到服务器的代码
+            alert('证件照已确认，可以上传使用');
+            
+            // 重置界面
+            previewContainer.classList.remove('show');
+            initCamera();
+        }
+        
+        // 事件监听
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
+        captureBtn.addEventListener('click', capturePhoto);
+        switchBtn.addEventListener('click', switchCamera);
+        retakeBtn.addEventListener('click', retakePhoto);
+        confirmBtn.addEventListener('click', confirmPhoto);
+        
+        flashBtn.addEventListener('click', () => {
+            // 注意：移动端浏览器对闪光灯的支持有限
+            alert('H5端无法直接控制闪光灯，请使用设备自带的闪光灯功能');
+        });
+        
+        // 初始化
+        checkOrientation();
+        if (checkOrientation()) {
+            initCamera();
+        }
+    </script>
+</body>
+</html>

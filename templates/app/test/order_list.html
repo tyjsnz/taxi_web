@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的订单</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/css/ls-icon.css?v=1">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+        .header i{
+            font-size: 25px;
+        }
+
+        .back-icon {
+            font-size: 25px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+
+
+
+        .record-type {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .red-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff3366;
+        }
+
+        .positive-amount {
+            color: #1aad19;
+        }
+
+        .el-tabs__item.is-active {
+            color: #333;
+        }
+
+        .el-tabs__active-bar {
+            background-color: #ff6b00;
+        }
+
+        /*订单*/
+        .order-container {
+            background-color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 200px;
+        }
+
+        .order-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .order-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-location {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;            
+        }
+
+        .location-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            color: #FF6B00;
+        }
+
+        .order-time {            
+            color: #999;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <div class="header">
+                <el-row>
+                    <el-col :span="3">
+                        <div @click="goBack">
+                            <i class="el-icon-arrow-left back-icon"></i>
+                        </div>
+                    </el-col>
+                    <el-col :span="18" style="text-align: center;">
+                        <div class="header-title">我的订单</div>
+                    </el-col>
+                    <el-col :span="3">
+                        <i class="el-icon-date" @click="openDatePicker" style="margin-top: 3px;font-size: 18px;"></i>
+                    </el-col>
+                </el-row>
+
+
+                <!-- 添加 mint-ui 的日期选择器 -->
+                <mt-datetime-picker ref="datePicker" type="date" :start-date="minDate" :end-date="maxDate"
+                    @confirm="handleDateConfirm" year-format="{value} 年" month-format="{value} 月"
+                    date-format="{value} 日">
+                </mt-datetime-picker>
+            </div>
+
+
+
+            <!-- 赚钱记录 -->
+            <!-- <el-empty description=" ">
+                <div class="record-empty">
+                    <div>今天无赚钱记录</div>
+                    <div class="empty-text">快去接几单赚钱吧</div>
+                </div>
+            </el-empty> -->
+
+            <div class="order-container">
+                <el-tabs v-model="activeName" @tab-click="handleClick" :stretch="true">
+                    <el-tab-pane label="全部订单" name="first">                        
+                        <el-empty v-if="order_list.length == 0" description="无订单记录"></el-empty>
+                        <div v-else class="order-item" v-for="(order, index) in order_list" :key="index">                            
+                            <div class="order-info">
+                                <span class="order-id">${order.sn}</span>
+                                <span class="order-price">${order.total_fee}元</span>
+                            </div>
+                            <div style="margin-left: 10px;">
+                                <div class="order-location">
+                                    <i class="icon-circle-green"></i>
+                                    <span class="order-location-text">${order.start_location}</span>
+                                </div>
+                                <div class="order-location">
+                                    <i class="icon-circle-yellow"></i>
+                                    <span class="order-location-text">${order.end_location}</span>
+                                </div>
+                            </div>
+
+                            <div class="order-info">                            
+                                <span style="margin-left: 6px;">                                
+                                    行程：${(order.distance / 1000).toFixed(2)}km
+                                </span>
+                                <span class="order-time" v-text="order.order_time"></span>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="未支付" name="second">
+                        <el-empty v-if="no_pay_order.length == 0" description="无未支付记录"></el-empty>
+                        <div v-else class="order-item" v-for="(order, index) in no_pay_order" :key="index">                            
+                            <div class="order-info">
+                                <span class="order-id">${order.sn}</span>
+                                <span class="order-price" style="color: #ff3366;">${order.total_fee}元</span>
+                            </div>
+                            <div style="margin-left: 10px;">
+                                <div class="order-location">
+                                    <i class="icon-circle-green"></i>
+                                    <span class="order-location-text">${order.start_location}</span>
+                                </div>
+                                <div class="order-location">
+                                    <i class="icon-circle-yellow"></i>
+                                    <span class="order-location-text">${order.end_location}</span>
+                                </div>
+                            </div>
+
+                            <div class="order-info">                            
+                                <span style="margin-left: 6px;">                                
+                                    行程：${(order.distance / 1000).toFixed(2)}km
+                                </span>
+                                <span class="order-time" v-text="order.order_time"></span>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="已取消" name="third">
+                        <el-empty v-if="cancel_order.length == 0" description="无取消记录"></el-empty>
+                        <div v-else class="order-item" v-for="(order, index) in cancel_order" :key="index">                            
+                            <div class="order-info">
+                                <span class="order-id">${order.sn}</span>
+                                <span class="order-price"></span>
+                            </div>
+                            <div style="margin-left: 10px;">
+                                <div class="order-location">
+                                    <i class="icon-circle-green"></i>
+                                    <span class="order-location-text">${order.start_location}</span>
+                                </div>
+                                <div class="order-location">
+                                    <i class="icon-circle-yellow"></i>
+                                    <span class="order-location-text">${order.end_location}</span>
+                                </div>
+                            </div>
+
+                            <div class="order-info">                            
+                                <span style="margin-left: 6px;">                                
+                                </span>
+                                <span class="order-time" v-text="order.order_time"></span>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+        </div>
+
+
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js"></script>
+    <script src="/static/common/jquery.3.7.1.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                const today = new Date(); // 获取当前日期
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    activeName: "first",
+                    selectedDate: '',
+                    minDate: new Date(2025, 0, 1), // 最小可选日期
+                    maxDate: today, // 最大可选日期
+                    order_list: [],
+                    no_pay_order:[],
+                    cancel_order:[],
+                }
+            },
+            mounted() {
+                this.fetchOrders()
+            },
+            methods: {
+                fetchOrders() {
+                    var that = this
+                    this.$indicator.open({
+                            text: '加载中...',
+                            duration: 1000,
+                            icon: 'success'
+                        });
+                    axios.get('/app/driver/order/list/json', {
+                        params: { 'driver_id': this.driver_id, 'token': this.token,'date': this.selectedDate }
+                    })
+                        .then(response => {
+                            this.$indicator.close()
+                            if (response.data.status != 0) {
+                                console.log("error", response.data.msg)
+                            }
+                            else {
+                                that.order_list = response.data.data                       
+                                this.no_pay_order = this.order_list.filter(item => item.status === 4);
+                                this.cancel_order = this.order_list.filter(item => item.status === -1)
+
+                            }
+                        })
+                        .catch(error => {
+                            this.$indicator.close()
+                            console.log(error);
+                        });
+                },
+                openDatePicker() {
+                    this.$refs.datePicker.open(); // 打开日期选择器
+                },
+                handleDateConfirm(date) {
+                    // 格式化日期为“X月X日”
+                    const year = date.getFullYear();
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    this.selectedDate = `${year}-${month}-${day}`;
+                    console.log(this.selectedDate);
+                    this.fetchOrders();
+                },
+                goBack() {
+                    window.history.back();
+                },
+                handleClick() {
+
+                }
+            },
+        });
+    </script>
+</body>
+
+</html>

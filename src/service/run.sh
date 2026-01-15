@@ -1,0 +1,1 @@
+nohup /www/server/pyporject_evn/ls_travel_venv/bin/python3 SchedulerTaskController.py > scheduler.log 2>&1 &

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>城市选择</title>
+    <!-- 引入Element-UI样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 0px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 45px;
+            display: flex;
+        }
+
+        .city-selector {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .search-bar {
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+
+        .city-list {
+            height: calc(100vh - 104px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .city-group {
+            margin-bottom: 10px;
+        }
+
+        .group-title {
+            padding: 8px 15px;
+            font-size: 14px;
+            color: #999;
+            background-color: #f5f5f5;
+        }
+
+        .city-item {
+            padding: 12px 15px;
+            font-size: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .city-item:active {
+            background-color: #f5f5f5;
+        }
+
+        .letter-index {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 5px;
+        }
+
+        .letter-item {
+            font-size: 12px;
+            color: #409EFF;
+            padding: 2px 5px;
+            text-align: center;
+        }
+
+        .current-letter {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            font-size: 24px;
+            z-index: 101;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="city-selector" v-cloak>
+        <div class="fix-header"></div>
+        <!-- 头部标题 -->
+        <div class="header">            
+            
+        </div>
+        <div class="search-bar">
+            <el-input placeholder="输入城市名或拼音" prefix-icon="el-icon-search" v-model="searchQuery">
+            </el-input>
+        </div>
+
+        <div class="city-list" ref="cityList">
+            <div @click="selectCity(current_city)"  style="line-height: 40px; padding: 5px 15px;"><i class="el-icon-location-outline"></i> 当前城市：<span v-text="current_city">昆明市</span></div>
+            <template v-for="(group, index) in filteredGroups">
+                <div class="city-group" :key="index" :data-letter="group.letter.trim()">
+                    <div class="group-title">${group.letter}</div>
+                    <div class="city-item" v-for="city in group.cities" :key="city.id" @click="selectCity(city)">
+                        ${city.name}
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="letter-index">
+            <div class="letter-item" v-for="letter in letters" :key="letter" @click="scrollToLetter(letter.trim())"
+                @touchstart="handleTouchStart" @touchmove="handleTouchMove">
+                ${letter}
+            </div>
+        </div>
+
+        <div class="current-letter" ref="currentLetter"></div>
+    </div>
+
+    <!-- 引入Vue和Element-UI -->
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://wxapp.flacn.net/static/common/jquery.3.7.1.js"></script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    current_city: '楚雄州',
+                    searchQuery: '',
+                    letters: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z'],
+                    cityGroups: [
+                        {
+                            letter: 'A',
+                            cities: [
+                                { id: 1, name: '鞍山' },
+                                { id: 2, name: '安庆' },
+                                { id: 3, name: '安阳' }
+                            ]
+                        },
+                        {
+                            letter: 'B',
+                            cities: [
+                                { id: 4, name: '北京' },
+                                { id: 5, name: '保定' },
+                                { id: 6, name: '包头' },
+                                { id: 7, name: '蚌埠' }
+                            ]
+                        },
+                        {
+                            letter: 'C',
+                            cities: [
+                                { id: 8, name: '重庆' },
+                                { id: 9, name: '成都' },
+                                { id: 10, name: '长沙' },
+                                { id: 11, name: '长春' },
+                                { id: 12, name: '常州' }
+                            ]
+                        },
+                        {
+                            letter: 'D',
+                            cities: [
+                                { id: 13, name: '大连' },
+                                { id: 14, name: '东莞' },
+                                { id: 15, name: '大庆' },
+                                { id: 16, name: '大同' }
+                            ]
+                        },
+                        {
+                            letter: 'G',
+                            cities: [
+                                { id: 17, name: '广州' },
+                                { id: 18, name: '贵阳' },
+                                { id: 19, name: '桂林' },
+                                { id: 20, name: '赣州' }
+                            ]
+                        },
+                        {
+                            letter: 'H',
+                            cities: [
+                                { id: 21, name: '杭州' },
+                                { id: 22, name: '合肥' },
+                                { id: 23, name: '哈尔滨' },
+                                { id: 24, name: '海口' }
+                            ]
+                        },
+                        {
+                            letter: 'S',
+                            cities: [
+                                { id: 25, name: '上海' },
+                                { id: 26, name: '深圳' },
+                                { id: 27, name: '苏州' },
+                                { id: 28, name: '沈阳' },
+                                { id: 29, name: '石家庄' }
+                            ]
+                        }
+                    ]
+                }
+            },
+            computed: {
+                filteredGroups() {
+                    if (!this.searchQuery) {
+                        return this.cityGroups;
+                    }
+
+                    const query = this.searchQuery.toLowerCase();
+                    return this.cityGroups
+                        .map(group => {
+                            const filteredCities = group.cities.filter(city => {
+                                return city.name.toLowerCase().includes(query) ||
+                                    this.getPinyin(city.name).toLowerCase().includes(query);
+                            });
+                            return { letter: group.letter, cities: filteredCities };
+                        })
+                        .filter(group => group.cities.length > 0);
+                }
+            },
+            mounted() {
+                this.get_region();
+            },
+            methods: {
+                groupCitiesByLetter(data) {
+                    const allowedLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z'];
+
+                    // 过滤出 B、C、D 开头的记录
+                    const filtered = data.filter(item => allowedLetters.includes(item.letter.trim()));
+
+                    // 按照 letter 分组
+                    const grouped = filtered.reduce((acc, item) => {
+                        const key = item.letter.trim();
+
+                        let existingGroup = acc.find(group => group.letter === key);
+                        if (!existingGroup) {
+                            acc.push({
+                                letter: key,
+                                cities: [{ id: item.id, name: item.name }]
+                            });
+                        } else {
+                            existingGroup.cities.push({ id: item.id, name: item.name });
+                        }
+
+                        return acc;
+                    }, []);
+
+                    // 可选：按字母顺序排序
+                    grouped.sort((a, b) => a.letter.localeCompare(b.letter));
+
+                    return grouped;
+                },
+                get_region() {
+                    var that = this
+                    $.ajax({
+                        url: 'https://wxapp.flacn.net:8002/api/get_region',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            console.log(response);
+                            const result = that.groupCitiesByLetter(response.data);
+                            // 更新 Vue 数据
+                            that.cityGroups = result;
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(error);
+                        }
+                    });
+                },
+                // 简单拼音匹配 - 实际项目中应该使用更完善的拼音库
+                getPinyin(name) {
+                    // 这里只是简单示例，实际应该使用拼音库
+                    const pinyinMap = {
+                        '北京': 'beijing',
+                        '上海': 'shanghai',
+                        '广州': 'guangzhou',
+                        '深圳': 'shenzhen',
+                        '杭州': 'hangzhou',
+                        '成都': 'chengdu'
+                        // 其他城市...
+                    };
+                    return pinyinMap[name] || name;
+                },
+                scrollToLetter(letter) {
+                    const cleanLetter = letter.trim();
+                    const groupElement = this.$el.querySelector(`.city-group[data-letter="${cleanLetter}"]`);
+                    if (groupElement) {
+                        this.$refs.cityList.scrollTop = groupElement.offsetTop;
+                        this.showCurrentLetter(cleanLetter);
+                    }
+                },
+                showCurrentLetter(letter) {
+                    const currentLetter = this.$refs.currentLetter;
+                    currentLetter.textContent = letter;
+                    currentLetter.style.display = 'block';
+
+                    clearTimeout(this.letterTimer);
+                    this.letterTimer = setTimeout(() => {
+                        currentLetter.style.display = 'none';
+                    }, 500);
+                },
+                handleTouchStart(e) {
+                    const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+                    if (target && target.classList.contains('letter-item')) {
+                        this.scrollToLetter(target.textContent.trim());
+                    }
+                },
+                handleTouchMove(e) {
+                    const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+                    if (target && target.classList.contains('letter-item')) {
+                        this.scrollToLetter(target.textContent.trim());
+                    }
+                },
+                selectCity(city) {
+                    // 实际项目中这里可以触发事件或跳转页面
+                    // 子页面选择区域后调用
+                    console.log(city)
+                    
+                    if(typeof(city) == "string")
+                        city = {'name':city}
+                    /*
+                    try{
+                        parent.set_region(city.name, city.id)
+                    }catch(e){
+                        console.log(e)
+                    }*/
+                    window.parent.postMessage({ address: city.name,type: 'region' }, '*');
+                    
+                    var index = parent.layer.getFrameIndex(window.name); // 获取当前 layer 窗口的索引
+                    parent.layer.close(index); // 关闭当前弹窗
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

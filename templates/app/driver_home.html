@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>司机端首页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .status-bar {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* 默认状态（非活跃） */
+        .status-btn:not(.active) {
+            opacity: 0.6;
+            filter: grayscale(50%);
+        }
+
+        .active {
+            /* color: yellow !important; */
+        }
+
+        #workBtn {
+            background-color: #FF6B00;
+            color: white;
+        }
+
+        #restBtn {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        #offBtn {
+            background-color: #666;
+            color: white;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 0 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .order-container {
+            background-color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 200px;
+        }
+
+        .order-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .order-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .order-location {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .location-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            color: #FF6B00;
+        }
+
+        .order-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .accept-btn {
+            background-color: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 14px;
+            margin-top: 10px;
+            margin-left: 10px;
+            float: right;
+            cursor: pointer;
+        }
+
+
+        .empty-order {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        /* 新增的乘客上车确认样式 */
+        .trip-panel {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .trip-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .trip-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .trip-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        .btn-primary:active {
+            background-color: #FFC000;
+        }
+
+        /* 手机尾号验证弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            width: 85%;
+            max-width: 350px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .phone-input {
+            display: flex;
+            justify-content: center;
+        }
+
+        .digit-input {
+            width: 50px;
+            height: 60px;
+            font-size: 24px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background-color: #f0f0f0;
+            color: #666;
+            flex: 1;
+        }
+
+        .btn-confirm {
+            background-color: #FFD700;
+            color: #333;
+            flex: 1;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 当前行程信息 */
+        .current-trip {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .trip-info {
+            margin-bottom: 15px;
+        }
+
+        .trip-location {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .trip-location-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            color: #FF6B00;
+        }
+
+        .trip-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .trip-action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .call-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .message-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .cancel-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            display: none;
+        }
+
+        .arrived-btn {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        /* 账单信息面板 */
+        .bill-panel {
+            /* display: none; */
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .bill-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #FF6B00;
+        }
+
+        .bill-details {
+            margin-bottom: 20px;
+        }
+
+        .bill-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .bill-row.total {
+            font-weight: bold;
+            border-bottom: none;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .bill-label {
+            color: #666;
+        }
+
+        .bill-value {
+            font-weight: bold;
+        }
+
+        .bill-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .bill-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .send-bill-btn {
+            background-color: #FF6B00;
+            color: white;
+        }
+
+        .close-bill-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        /* 支付状态面板 */
+        .payment-status {
+            /* display: none; */
+            text-align: center;
+            padding: 20px;
+        }
+
+        .payment-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .payment-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .payment-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF6B00;
+            margin: 15px 0;
+        }
+
+        .payment-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .complete-btn {
+            background-color: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* 会员中心悬浮按钮 */
+        .header-content {
+            position: relative;
+        }
+
+        .vip-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #FFD700;
+            color: #333;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .vip-btn i {
+            margin-right: 5px;
+        }
+
+        .member-center-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            cursor: pointer;
+            z-index: 999;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .member-center-btn i {
+            font-size: 22px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_ck65k0e88f.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    </link>
+</head>
+
+<body>
+    <div id="app">
+        <div class="header">
+            <h2>彝州出行司机端</h2>
+            <p id="currentTime" v-text="currentTime">2023年7月15日 上午10:30</p>
+
+            <button class="vip-btn" onclick="showMemberCenter()">
+                <i class="fas fa-crown"></i> VIP
+            </button>
+        </div>
+
+        <!-- 状态切换按钮 -->
+        <div class="status-bar" id="status_bar" v-if="status_bar">
+            <div id="workBtn" class="status-btn" :class="{ active: currentStatus === 'working' }"
+                @click="changeStatus('working')">
+                <i class="fas fa-car"></i> 上班
+            </div>
+            <div id="restBtn" class="status-btn" :class="{ active: currentStatus === 'resting' }"
+                @click="changeStatus('resting')">
+                <i class="fas fa-coffee"></i> 休息
+            </div>
+            <div id="offBtn" class="status-btn" :class="{ active: currentStatus === 'offline' }"
+                @click="changeStatus('offline')">
+                <i class="fas fa-home"></i> 下班
+            </div>
+        </div>
+
+        <!-- 当前行程信息 (新增) -->
+        <div class="current-trip" id="currentTripPanel" v-if="currentTripPanel">
+            <div class="order-title">
+                <span>服务中订单</span>
+                <span id=""></span>
+            </div>
+            <div class="trip-info">
+                <div class="order-info">
+                    <span>订单号: <span id="currentOrderId">dd</span></span>
+                    <span ></span>
+                </div>
+                <div class="trip-location">
+                    <i class="fas fa-map-marker-alt trip-location-icon"></i>
+                    <span >望京SOHO</span>
+                </div>
+                <div class="trip-location">
+                    <i class="fas fa-flag trip-location-icon"></i>
+                    <span >中关村软件园</span>
+                </div>
+                <div class="trip-location">
+                    <i class="iconfont icon-tubiaozhizuomoban trip-location-icon"></i>
+                    <span>元</span>
+                </div>
+                <div class="trip-location">
+                    <i class="iconfont icon-juli trip-location-icon"></i>
+                    <span></span>
+                </div>
+                <div class="trip-location">
+                    <i class="iconfont icon-shichangtongji trip-location-icon"></i>
+                    <span></span>
+                </div>
+            </div>
+            <div class="trip-actions">
+
+                <button class="trip-action-btn message-btn" @click="cancel_accept()">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </button>
+               
+            </div>
+        </div>
+
+
+
+        <!-- 数据统计 -->
+        <div class="stats-container" id="statsContainer" v-if="statsContainer">
+            <div class="stat-card">
+                <div class="label">今日接单</div>
+                <div class="value" v-text="today_data.order_count">8</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">今日收入(元)</div>
+                <div class="value" v-text="today_data.in_pay">286.5</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">在线时长</div>
+                <div class="value" v-text="today_data.online_time">3h 25m</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">服务分</div>
+                <div class="value" v-text="today_data.score">98.5</div>
+            </div>
+        </div>
+
+        <!-- 订单列表 -->
+        <div class="order-container" id="orderContainer" v-if="orderContainer">
+            <div class="order-title">
+                <span>最新订单</span>
+                <span id="orderCount" v-if="currentStatus === 'working'">${order_list.length} 单待接</span>
+            </div>
+
+            <div id="orderList">
+                <div v-if="currentStatus === 'working'">
+                    <div class="empty-order" id="emptyOrder" v-if="order_list.length === 0">
+                        <i class="fas fa-car" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <p>暂无新订单</p>
+                    </div>
+
+                    <div class="order-item" v-else v-for="(order, index) in order_list" :key="index">
+                        <div class="order-info">
+                            <span class="order-id">${order.sn}</span>
+                            <span class="order-price">${order.total_fee}元</span>
+                        </div>
+                        <button class="accept-btn" @click="acceptOrder(order)">查看</button>
+                        <div class="order-location">
+                            <i class="fas fa-map-marker-alt location-icon"></i>
+                            <span class="order-location-text">${order.start_location}</span>
+                        </div>
+                        <div class="order-location">
+                            <i class="fas fa-flag location-icon"></i>
+                            <span class="order-location-text">${order.end_location}</span>
+                        </div>
+                        <div class="order-info">
+                            <span>
+                                <i class="iconfont icon-juli trip-location-icon"></i>
+                                ${formatOrderDistance(order.distance)}
+                            </span>
+                            <span class="order-time" v-text="formatOrderTime(order.order_time)"></span>
+                        </div>
+                    </div>
+                </div>
+                <div v-else-if="currentStatus === 'resting'" class="empty-order"><i class="fas fa-coffee"
+                        style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <p>休息中，暂停接单</p>
+                </div>
+                <div v-else="currentStatus === 'offline'" class="empty-order"><i class="fas fa-home"
+                        style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <p>已下班</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 新增的账单信息面板 -->
+    <div class="bill-panel" id="billPanel" v-if="billPanle">
+        <div class="bill-title">行程账单</div>
+        <div class="bill-details">
+            <div class="bill-row">
+                <span class="bill-label">订单编号</span>
+                <span class="bill-value" id="billOrderId">${currentOrder.sn}</span>
+            </div>
+            <div class="bill-row">
+                <span class="bill-label">行程距离</span>
+                <span class="bill-value" id="billDistance">8.5公里</span>
+            </div>
+            <div class="bill-row">
+                <span class="bill-label">行驶时长</span>
+                <span class="bill-value" id="billDuration">25分钟</span>
+            </div>
+            <div class="bill-row">
+                <span class="bill-label">基础费用</span>
+                <span class="bill-value" id="billBaseFee">¥${currentOrder.start_fee}</span>
+            </div>
+            <div class="bill-row">
+                <span class="bill-label">里程费</span>
+                <span class="bill-value" id="billMileageFee">¥12.50</span>
+            </div>
+            <div class="bill-row">
+                <span class="bill-label">时长费</span>
+                <span class="bill-value" id="billTimeFee">¥8.00</span>
+            </div>
+            <div class="bill-row total">
+                <span class="bill-label">总计</span>
+                <span class="bill-value" id="billTotal">¥${currentOrder.total_fee}元</span>
+            </div>
+        </div>
+        <div class="bill-actions">
+            <!-- <button class="bill-btn send-bill-btn" id="sendBillBtn">发送账单</button> -->
+            <button class="bill-btn close-bill-btn" id="closeBillBtn" @click="closeBillBtn">关闭</button>
+        </div>
+    </div>   
+    
+    <!-- 新增的支付状态面板 -->
+    <div class="payment-status" id="paymentStatusPanel" v-if="paymentStatusPanel">
+        <svg class="payment-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="#4CAF50"/>
+        </svg>
+        <div class="payment-title" id="paymentStatusTitle">支付成功</div>
+        <div class="payment-amount" id="paymentAmount">¥45.50</div>
+        <div class="payment-desc" id="paymentDesc">乘客已支付本次行程费用</div>
+        <button class="complete-btn" id="completeTripBtn">完成行程</button>
+    </div>
+
+        <!-- 会员中心悬浮按钮 -->
+        <div class="member-center-btn" @click="showMemberCenter()">
+            <i class="fas fa-user"></i>
+        </div>
+
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    billPanle: false,
+                    paymentStatusPanel:false,
+
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    currentTime: '',
+                    currentStatus: 'resting',
+                    currentOrder: null,
+
+                    order_list: [],
+                    today_data: {
+                        order_count: 0,
+                        in_pay: 0,
+                        online_time: 0,
+                        score: 0,
+                    },
+                    currentTripPanel: false, // 当前行程信息暂时不用
+                    statsContainer: true,
+                    orderContainer: true,
+                    status_bar: true, // 上班、下班、休息部分
+                    vicon: '',
+                    work_status: 0, // 默认下班状态服务端返回
+                    arrivedBtn: '确认接单',
+                    pull_order_interval: null,
+                    loading: false,
+                };
+            },
+            mounted() {
+                this.fetchOrders();
+                this.updateCurrentTime()
+                setInterval(() => {
+                    this.updateCurrentTime();
+                }, 60000);
+            },
+            methods: {
+                fetchOrders() {
+                    var that = this
+                    //this.driver_id = 3
+                    getRequest('/app/driver/order/total_data', { 'driver_id': this.driver_id, 'token': this.token }, (res, status) => {
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            that.today_data.order_count = res.data.order_num
+                            that.today_data.in_pay = res.data.in_pay
+                            that.today_data.online_time = this.formatOrderDuration(res.data.online_total_time)
+                            that.today_data.score = res.data.score
+                            that.work_status = parseInt(res.data.work_status)
+                            if (that.work_status == 1)
+                                that.currentStatus = 'working'
+                            else if (that.work_status == 2)
+                                that.currentStatus = 'resting'
+                            else if (that.work_status == 3)
+                                that.currentStatus = 'offline'
+
+                            that.changeStatus(that.currentStatus)
+                        }
+                    })
+                    // 这里在点击上班后再拉取
+                    //this.pullOrder()
+                },
+                pullOrder() {
+                    var that = this
+                    this.loading = true
+                    getRequest('/app/driver/order/accept/list', { 'driver_id': this.driver_id, 'token': this.token }, (res, status) => {
+                        that.loading = false
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            that.order_list = res.data
+                            for (let i in that.order_list) {
+                                let order_type = that.order_list[i].order_type
+                                if (order_type == 1) {
+                                    that.order_list[i].order_type = '先付后乘'
+                                }
+                                else {
+                                    that.order_list[i].order_type = '先乘后付'
+                                }
+                            }
+                        }
+                    })
+                },
+                changeStatus(newStatus) {
+                    this.currentStatus = newStatus;
+
+                    this.updateDriverStatus()
+
+                    // 通知原生应用状态变化
+                    if (window.AndroidBridge) {
+                        AndroidBridge.onStatusChanged(newStatus);
+                    } else {
+                        //alert('切换状态：' + newStatus);
+                    }
+                },
+                // 更新当前时间
+                updateCurrentTime() {
+                    const now = new Date();
+                    const options = {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+                    this.currentTime = now.toLocaleString('zh-CN', options);
+                },
+                // 更新司机状态
+                updateDriverStatus() {
+                    let state = 1
+                    if (this.currentStatus == 'working') {
+                        state = 1
+                        // 工作状态下，拉取新订单
+                        if (this.pull_order_interval == null) {
+                            this.pull_order_interval = setInterval(() => {
+                                this.pullOrder()
+                            }, 5000);
+                        }
+                    }
+                    else if (this.currentStatus == 'resting') {
+                        state = 2
+                        // 非工作状态下，清除定时器不拉取新订单
+                        clearInterval(this.pull_order_interval)
+                        this.pull_order_interval = null
+                    }
+                    else if (this.currentStatus == 'offline') {
+                        state = 0
+                        clearInterval(this.pull_order_interval)
+                        this.pull_order_interval = null
+                    }
+
+                    postRequest('/app/api/driver/v1/work_status', {
+                        'driver_id': this.driver_id,
+                        'token': this.token,
+                        'work_status': state,
+                    }, (res, status) => {
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            this.work_status = 1
+                        }
+                    });
+                },
+                // 接单列表接单
+                acceptOrder(item) {
+                    if (this.currentStatus != 'working') {
+                        AndroidBridge.showMsg('当前状态不允许接单')
+                        return
+                    }
+
+                    // 保存当前订单信息
+                    this.currentOrder = item
+
+                    item.distance = this.formatOrderDistance(item.distance)
+                    item.duration = this.formatOrderDuration(item.duration)
+                    //AndroidBridge.showMsg(item.distance + ' ' + item.duration)
+
+                    if (window.AndroidBridge) {
+                        const latlng = AndroidBridge.acceptOrder(JSON.stringify(item), true)
+
+                        this.arrivedBtn = '服务中'
+                        //document.getElementById('arrivedBtn').innerHTML = '<i class="fas fa-user-check"></i> 服务中';
+                        document.getElementById('cancelBtn').style.display = 'block';
+                    }
+                },
+               
+                cancel_accept() {
+                    this.showDefaultPlan()
+                },
+                showMemberCenter() {
+                    // 显示会员中心面板
+                    location.href = "/app/driver/member?token=" + this.token;
+                },
+               
+                showDefaultPlan() {
+                    this.currentTripPanel = false;
+                    this.orderContainer = true;
+                    this.statsContainer = true;
+                    this.status_bar = true
+
+                    this.billPanle = false
+                    this.paymentStatusPanel = false
+                },
+                formatOrderTime(orderTime) {
+                    return formatTime(orderTime)
+                },
+                formatOrderDistance(orderDistance) {
+                    return formatDistance(orderDistance)
+                },
+                formatOrderDuration(orderDuration) {
+                    return formatDuration(orderDuration)
+                },
+                // 拒绝接单，app端调用，系统派单才生效
+                rejectOrder(reject_flag) {
+                    // 当app拒绝订单时，检查是否大于当天最大，如是则真正拒绝
+                    postRequest('/app/api/driver/v1/order_reject', {
+                        'driver_id': this.driver_id,
+                        'order_id': this.currentOrder.order_id,
+                        'accept_id': this.currentOrder.accept_id,
+                        'token': this.token,
+                        'reject_flag': reject_flag
+                        }, (res, status) => {
+                            if ('success' == status) {
+                                if (res.status == 0) {
+                                    this.pullOrder()
+                                }
+                                else {
+                                    // 已经超过拒绝次数，不能再拒绝，必须要接订单
+                                    var item = this.currentOrder
+
+                                    item["max_reject"] = res.data.max_reject
+
+                                    if (window.AndroidBridge) {
+                                        const latlng = AndroidBridge.acceptOrder(JSON.stringify(item), true)
+                                    }
+                                }
+                            }
+                            else {
+                                console.log("error", res)
+                            }
+                        }
+                    )
+                },
+                closeBillBtn(){
+                    this.billPanle = false
+                    this.orderContainer = true;
+                    this.statsContainer = true;
+                    this.status_bar = true
+                },
+                billOrder(order_id) {
+                    alert('订单号1：' + order_id + "," + this.currentOrder.sn)
+               
+                    this.billPanle = true
+                    this.currentTripPanel = false;
+                    this.orderContainer = false;
+                    this.paymentStatusPanel = false
+
+                    this.statsContainer = false;
+                    this.status_bar = false
+                },
+            },
+        });
+
+        window.app = vueApp
+      
+        // 原生刷新订单数据，有新订单
+        window.refOrderData = function (order_id) {
+            window.app.pullOrder()
+        }
+        // 原生系统订单时，拒绝接单
+        window.rejectOrder = function (reject_flag) {
+            window.app.rejectOrder(reject_flag)
+        }
+        window.billOrder = function (order_id) {
+            window.app.billOrder(order_id)
+        }
+
+    </script>
+
+</body>
+
+</html>

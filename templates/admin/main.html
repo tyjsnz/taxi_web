@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>LS出行后台管理系统</title>
+
+<link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+<link href="/static/admin/css/materialdesignicons.min.css" rel="stylesheet">
+<link href="/static/admin/css/style.min.css" rel="stylesheet">
+
+<script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+<script src="/static/libs/element-ui/js/vue.js"></script>
+<script src="/static/libs/element-ui/js/element-ui.js"></script>
+<link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+
+<script src="/static/libs/layui/layui.js"></script>
+<script src="/static/common/echarts.js"></script>
+
+</head>
+  
+<body>
+<div class="container-fluid p-t-15" id="app">
+  
+  <div class="row">
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-primary">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h4 text-white m-t-0">当日订单数量</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" v-text="today_num">987</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-book fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-danger">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h4 text-white m-t-0">当日订单金额</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" v-text="today_fee">2,9495</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-currency-cny fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-success">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h4 text-white m-t-0">累计订单数量</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" v-text="total_num">12,122</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-book fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-3">
+      <div class="card bg-purple">
+        <div class="card-body clearfix">
+          <div class="pull-right">
+            <p class="h4 text-white m-t-0">累计总收入</p>
+            <p class="h3 text-white m-b-0 fa-1-5x" v-text="total_fee">362,167</p>
+          </div>
+          <div class="pull-left"> <span class="img-avatar img-avatar-48 bg-translucent"><i class="mdi mdi-currency-cny fa-1-5x"></i></span> </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    
+    <div class="col-md-6"> 
+      <div class="card">
+        <div class="card-header">
+          <h4>近30日订单量</h4>
+        </div>
+        <div class="card-body">
+          <div id="div_chart" style="height: 300px; width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6"> 
+      <div class="card">
+        <div class="card-header">
+          <h4>近30日司机注册量</h4>
+        </div>
+        <div class="card-body">
+          <div id="div_chart_2" style="height: 300px; width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+     
+  </div>
+  
+  <div class="row">
+    
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h4>实时订单数据</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>车牌号</th>
+                  <th>司机姓名</th>
+                  <th>电话</th>
+                  <th>订单时间</th>
+                  <th>行程里程(km)</th>
+                  <th>订单状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item,index) in result" :key="index">
+                  <td>${item.sn}</td>
+                  <td>${item.car_no}</td>
+                  <td>${item.driver_name}</td>
+                  <td>${item.driver_phone}</td>
+                  <td>${item.order_time}</td>
+                  <td>${item.distance}</td>
+                  <td><span class="label label-success">${item.status}</span></td>
+                </tr>
+                
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+</div>
+<script type="text/javascript">
+  new Vue({
+      el: "#app",
+      delimiters: ['${', '}'],
+      data() {
+        return {
+          today_num: 0,
+          today_fee: 0,
+          total_num: 0,
+          total_fee: 0,
+          result: [],
+          total:[],
+          day7_data:[],
+          day7driver_data:[],
+          three_role_data:[]
+        };
+      },
+      mounted() {
+        this.get_total()        
+      },
+      methods: {
+        get_total(){
+          var that = this
+          $.ajax({
+            url: '/admin/total',
+            dataType: 'json',
+            type: 'get',
+            success: function(res){
+              that.today_num = res.other.num
+              that.today_fee = res.other.fee
+              that.total_num = res.other.total_num
+              that.total_fee = res.other.total_fee
+              that.day7_data = res.other.day7
+              that.day7driver_data = res.other.day7driver
+
+              that.result = res.data
+              for(let i in that.result){
+                if(that.result[i].status == 0)
+                  that.result[i].status = '待接单'
+                else if(that.result[i].status == 1)
+                  that.result[i].status = '已接单'
+                else if(that.result[i].status == 2)
+                  that.result[i].status = '乘客已上车'
+                else if(that.result[i].status == 3)
+                  that.result[i].status = '行程中'
+                else if(that.result[i].status == 4)
+                  that.result[i].status = '到达目的地'
+                else if(that.result[i].status == 1)
+                  that.result[i].status = '已完成'
+
+                  that.result[i].distance = parseInt(that.result[i].distance)
+              }
+
+              that.draw_chart()
+              that.draw_chart2()
+            }
+          })
+        },
+     
+        formatDateTime(dateStr) {
+          const date = new Date(dateStr);
+          return date.getUTCFullYear() + '-' +
+                String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+                String(date.getUTCDate()).padStart(2, '0') + ' ' +
+                String(date.getUTCHours()).padStart(2, '0') + ':' +
+                String(date.getUTCMinutes()).padStart(2, '0') + ':' +
+                String(date.getUTCSeconds()).padStart(2, '0');
+          },
+
+        formatDateMD(dateStr) {
+          const date = new Date(dateStr);
+          return String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+                String(date.getUTCDate()).padStart(2, '0');
+          },
+
+        draw_chart(){
+          //7天 总用户量折线图
+          var chartDom = document.getElementById('div_chart');
+          var myChart = echarts.init(chartDom);
+          var option;
+
+          var day_data = []
+          var day_value = []
+          for(let i in this.day7_data){
+            day_data.push(this.formatDateMD(this.day7_data[i].register_date))
+            day_value.push(this.day7_data[i].register_count)
+          }
+
+          option = {
+            tooltip: {
+              trigger: 'axis',
+              //formatter: '{b0} <br />{c0}人'
+            },
+            xAxis: {
+              type: 'category',
+              data: day_data
+            },
+            yAxis: {
+              type: 'value',
+              splitLine: {
+                show: false
+              },
+              interval : 10,
+              minInterval: 5
+            },
+            series: [
+              {
+                data: day_value,
+                type: 'line',
+                smooth: true
+              }
+            ]
+          };
+
+          option && myChart.setOption(option);
+        },
+        
+        draw_chart2(){
+          //7天 总用户量折线图
+          var chartDom = document.getElementById('div_chart_2');
+          var myChart = echarts.init(chartDom);
+          var option;
+
+          var day_data = []
+          var day_value = []
+          for(let i in this.day7driver_data){
+            day_data.push(this.formatDateMD(this.day7driver_data[i].register_date))
+            day_value.push(this.day7driver_data[i].register_count)
+          }
+
+          option = {
+            tooltip: {
+              trigger: 'axis',
+              formatter: '{b0} <br />{c0}人'
+            },
+            xAxis: {
+              type: 'category',
+              data: day_data
+            },
+            yAxis: {
+              type: 'value',
+              splitLine: {
+                show: false
+              },
+              interval : 10,
+              minInterval: 5
+            },
+            series: [
+              {
+                data: day_value,
+                type: 'line',
+                smooth: true
+              }
+            ]
+          };
+
+          option && myChart.setOption(option);
+        },
+        
+
+      },
+    })
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>资金提现</title>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+        .header i{
+            font-size: 25px;
+        }
+
+        .back-icon {
+            font-size: 25px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #FF9500, #FF6B00);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .balance-amount {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .withdraw-btn {
+            background-color: white;
+            color: #FF6B00;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            float: right;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .add-btn {
+            color: #FF6B00;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .bank-card {
+            background: linear-gradient(135deg, #4A6FA5, #1661C3);
+            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .bank-card.default:after {
+            content: '默认';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FF6B00;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .bank-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .bank-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1661C3;
+            font-size: 12px;
+        }
+
+        .card-number {
+            font-size: 18px;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .card-user {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .amount-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .amount-option {
+            flex: 1;
+            min-width: calc(33.33% - 10px);
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .amount-option.active {
+            border-color: #FF6B00;
+            background-color: #FFF5F0;
+            color: #FF6B00;
+        }
+
+        .custom-amount {
+            position: relative;
+        }
+
+        .custom-amount:after {
+            content: '元';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .rules {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .record-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-title {
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .record-amount {
+            font-weight: bold;
+            color: #FF6B00;
+        }
+
+        .record-status {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .empty-record {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: white;
+            padding: 0 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 14px;
+            color: #666;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            color: #FF6B00;
+            font-weight: bold;
+        }
+
+        .tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 3px;
+            background-color: #FF6B00;
+            border-radius: 3px;
+        }
+
+        .member-center-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            cursor: pointer;
+            z-index: 999;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/ls-icon.css">
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="fix-header"></div>
+        <!-- 头部 -->
+        <div class="header">
+            <el-row>
+                <el-col :span="3">
+                    <div @click="goBack">
+                        <i class="el-icon-arrow-left back-icon"></i>
+                    </div>
+                </el-col>
+                <el-col :span="18" style="text-align: center;">
+                    <div class="header-title">资金提现</div>
+                </el-col>
+            </el-row>
+            <div class="header-date">
+            </div>
+
+        </div>
+
+        <!-- 账户余额 -->
+        <div class="balance-card">
+            <div class="balance-label">可提现余额 (元)</div>
+            <div class="balance-amount">${balance.toFixed(2)}</div>
+            <button class="withdraw-btn" @click="showAllBalance">全部提现</button>
+            <div style="clear: both;"></div>
+        </div>
+
+        <!-- 提现标签页 -->
+        <div class="tabs">
+            <div class="tab" :class="{active: activeTab === 'withdraw'}" @click="activeTab = 'withdraw'">提现</div>
+            <div class="tab" :class="{active: activeTab === 'record'}" @click="activeTab = 'record'">提现记录</div>
+        </div>
+
+        <!-- 提现表单 -->
+        <div v-if="activeTab === 'withdraw'">
+            <!-- 银行卡选择 -->
+            <div class="card">
+                <div class="card-title">
+                    <span>提现到银行卡</span>
+                    <!-- <span class="add-btn" @click="addBankCard">
+                        <i class="fas fa-plus"></i> 添加银行卡
+                    </span> -->
+                </div>
+
+                <div class="bank-card default" v-if="defaultBankCard" @click="selectBankCard(defaultBankCard)">
+                    <div class="bank-name">
+                        <div class="bank-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        ${defaultBankCard.bankName}
+                    </div>
+                    <div class="card-number">**** **** **** </div>
+                    <div class="card-user">${defaultBankCard.userName}</div>
+                </div>
+
+                <div v-else class="empty-record">
+                    <div @click="addBankCard">
+                        <i class="icon-bank-card" style="font-size: 26px; margin-bottom: 0px;"></i>
+                        <p>暂无银行卡，请先添加银行卡</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提现金额 -->
+            <div class="card" v-if="defaultBankCard">
+                <div class="card-title">提现金额</div>
+
+                <div class="form-group">
+                    <label class="form-label">提现金额 (元)</label>
+                    <input type="number" class="form-input custom-amount" v-model="withdrawAmount" placeholder="请输入提现金额"
+                        @input="validateAmount">
+                </div>
+
+                <div class="amount-options">
+                    <div class="amount-option" :class="{active: withdrawAmount === '100'}" @click="setAmount('100')">
+                        100元</div>
+                    <div class="amount-option" :class="{active: withdrawAmount === '200'}" @click="setAmount('200')">
+                        200元</div>
+                    <div class="amount-option" :class="{active: withdrawAmount === '500'}" @click="setAmount('500')">
+                        500元</div>
+                    <div class="amount-option" :class="{active: withdrawAmount === '1000'}" @click="setAmount('1000')">
+                        1000元</div>
+                    <div class="amount-option" :class="{active: withdrawAmount === '2000'}" @click="setAmount('2000')">
+                        2000元</div>
+                    <div class="amount-option" :class="{active: withdrawAmount === '5000'}" @click="setAmount('5000')">
+                        5000元</div>
+                </div>
+
+                <button class="submit-btn" :disabled="!canSubmit" @click="submitWithdraw">
+                    确认提现
+                </button>
+
+                <div class="rules">
+                    <p>· 提现时间：工作日9:00-17:00申请的提现，2小时内到账；其他时间申请的提现，次日到账</p>
+                    <p>· 单笔提现金额最低<span>100</span>元，最高<span>50000</span>元</p>
+                    <p>· 每日最多可提现3次，单日累计提现不超过50000元</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提现记录 -->
+        <div v-if="activeTab === 'record'">
+            <div class="card">
+                <div class="card-title">提现记录</div>
+
+                <div v-if="withdrawRecords.length === 0" class="empty-record">
+                    <i class="fas fa-file-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <p>暂无提现记录</p>
+                </div>
+
+                <div v-else>
+                    <div class="record-item" v-for="(record, index) in withdrawRecords" :key="index">
+                        <div class="record-info">
+                            <div class="record-title">提现到 ${record.bank_name} (尾号6789)</div>
+                            <div class="record-time">${record.created_at}</div>
+                        </div>
+                        <div>
+                            <div class="record-amount">-${record.amount}</div>
+                            <div class="record-status" :style="{color: getStatusColor(record.status)}">
+                                ${getStatusText(record.status)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 会员中心悬浮按钮 -->
+        <!-- <div class="member-center-btn" @click="showMemberCenter()">
+            <i class="fas fa-user"></i>
+        </div> -->
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    activeTab: 'withdraw',
+                    balance: 3568.50,
+                    withdrawAmount: '',
+                    selectedBankCard: null,
+                    driverInfo: {},
+                    defaultBankCard: {
+                        bankName: '中国工商银行',
+                        cardNumber: '6212260200123456789',
+                        userName: '张师傅'
+                    },
+                   
+                    withdrawRecords: [
+                        {
+                            bankName: '中国工商银行',
+                            cardNumber: '6212260200123456789',
+                            amount: 1000.00,
+                            time: '2023-05-01 10:30',
+                            status: '0'
+                        },
+                        {
+                            bankName: '中国建设银行',
+                            cardNumber: '6227001234567890123',
+                            amount: 500.00,
+                            time: '2023-04-28 15:45',
+                            status: '1'
+                        },
+                        {
+                            bankName: '中国工商银行',
+                            cardNumber: '6212260200123456789',
+                            amount: 2000.00,
+                            time: '2023-04-25 09:20',
+                            status: '2'
+                        },
+                        {
+                            bankName: '中国工商银行',
+                            cardNumber: '6212260200123456789',
+                            amount: 800.00,
+                            time: '2023-04-20 16:10',
+                            status: '4'
+                        }
+                    ]
+                };
+            },
+            computed: {
+                canSubmit() {
+                    const amount = parseFloat(this.withdrawAmount);
+                    return this.selectedBankCard &&
+                        !isNaN(amount) &&
+                        amount >= 100 &&
+                        amount <= this.balance &&
+                        amount <= 50000;
+                }
+            },
+            mounted() {
+                //this.selectedBankCard = this.defaultBankCard;
+                this.withdrawRecords = []
+                this.fetchWithdrawData();
+                this.fetchDriverInfo()
+            },
+            methods: {
+                fetchDriverInfo() {
+                    // 这里可以添加API请求获取真实数据
+                    getRequest('/app/driver/profile/json', { driver_id: this.driver_id, token: this.token }, (res, status) => {
+                        if (status == 'success') {
+                            if (res.status == 0) {
+                                this.driverInfo = res.data;
+                                console.log(this.driverInfo.driver_config)
+                                this.selectedBankCard = this.defaultBankCard = {
+                                    'bankName': res.data.bank_name,
+                                    'cardNumber': res.data.bank_card,
+                                    'userName': res.data.truename
+                                }
+                            }
+                        }
+                    });
+                },
+                fetchWithdrawData() {
+                    // 这里可以添加API请求获取真实数据
+                    getRequest('/app/driver/take_cash/json', { driver_id: this.driver_id, token: this.token }, (res, status) => {
+                        if (status == 'success') {
+                            this.balance = res.other.balance;
+                            //this.bankCards = res.data.bankCards;
+                            this.withdrawRecords = res.data;
+                        }
+                    });
+                },
+                showAllBalance() {
+                    this.withdrawAmount = this.balance.toFixed(2);
+                },
+                setAmount(amount) {
+                    this.withdrawAmount = amount;
+                },
+                validateAmount() {
+                    const amount = parseFloat(this.withdrawAmount);
+                    if (amount > this.balance) {
+                        this.withdrawAmount = this.balance.toFixed(2);
+                    }
+                },
+                selectBankCard(card) {
+                    this.selectedBankCard = card;
+                },
+
+                submitWithdraw() {
+                    const amount = parseFloat(this.withdrawAmount);
+
+                    // 提现请求
+                    postRequest('/app/driver/take_cash/json', {
+                        driver_id: this.driver_id,
+                        amount: amount
+                    }, (res, status) => {
+                        console.log(res, status)
+                        if (status == 'success') {
+                            if (res.status == 0) {
+                                this.$message.success('提现申请已提交');
+                                //this.balance -= amount;
+                                this.withdrawAmount = '';
+                                this.fetchWithdrawData();
+                            }
+                            else {
+                                this.$message.error(res.msg);
+                            }
+                        } else {
+                            this.$message.error(status);
+                        }
+                    });
+
+                    // 添加到提现记录
+                    this.withdrawRecords.unshift({
+                        bank_name: this.selectedBankCard.bankName,
+                        bank_card: this.selectedBankCard.cardNumber,
+                        amount: amount,
+                        created_at: new Date().toLocaleString(),
+                        status: '0'
+                    });
+
+                    this.withdrawAmount = '';
+                },
+                getStatusText(status) {
+                    const statusMap = {
+                        '0': '待处理',
+                        '1': '审核中',
+                        '2': '处理中',
+                        '4': '提现成功',
+                        '3': '提现失败'
+                    };
+                    return statusMap[status] || status;
+                },
+                getStatusColor(status) {
+                    const colorMap = {
+                        '4': '#4CAF50',
+                        '2': '#FF9800',
+                        '3': '#F44336'
+                    };
+                    return colorMap[status] || '#999';
+                },
+                goBack() {
+                    window.history.go(-1);
+                },
+                showMemberCenter() {
+                    // 跳转到会员中心
+                    console.log("跳转到会员中心");
+                },
+                addBankCard() {
+                    layer.open({
+                        type: 2,
+                        title: false,
+                        closeBtn: 0,
+                        area: ['100%', '100%'],
+                        content: '/bank_card_add.html?type=',
+                    });
+                }
+            },
+        });
+
+        window.app = vueApp;
+    </script>
+</body>
+
+</html>

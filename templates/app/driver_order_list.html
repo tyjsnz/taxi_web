@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>接单记录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .status-bar {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* 默认状态（非活跃） */
+        .status-btn:not(.active) {
+            opacity: 0.6;
+            filter: grayscale(50%);
+        }
+
+        .active {
+            /* color: yellow !important; */
+        }
+
+        #workBtn {
+            background-color: #FF6B00;
+            color: white;
+        }
+
+        #restBtn {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        #offBtn {
+            background-color: #666;
+            color: white;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 0 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .order-container {
+            background-color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 200px;
+        }
+
+        .order-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .order-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .order-location {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .location-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            color: #FF6B00;
+        }
+
+        .order-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .accept-btn {
+            background-color: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 14px;
+            margin-top: 10px;
+            margin-left: 10px;
+            float: right;
+            cursor: pointer;
+        }
+
+
+        .empty-order {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        /* 新增的乘客上车确认样式 */
+        .trip-panel {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .trip-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .trip-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .trip-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        .btn-primary:active {
+            background-color: #FFC000;
+        }
+
+        /* 手机尾号验证弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            width: 85%;
+            max-width: 350px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .phone-input {
+            display: flex;
+            justify-content: center;
+        }
+
+        .digit-input {
+            width: 50px;
+            height: 60px;
+            font-size: 24px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background-color: #f0f0f0;
+            color: #666;
+            flex: 1;
+        }
+
+        .btn-confirm {
+            background-color: #FFD700;
+            color: #333;
+            flex: 1;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 当前行程信息 */
+        .current-trip {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .trip-info {
+            margin-bottom: 15px;
+        }
+
+        .trip-location {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .trip-location-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            color: #FF6B00;
+        }
+
+        .trip-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .trip-action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .call-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .message-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .cancel-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            display: none;
+        }
+
+        .arrived-btn {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        /* 账单信息面板 */
+        .bill-panel {
+            /* display: none; */
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .bill-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #FF6B00;
+        }
+
+        .bill-details {
+            margin-bottom: 20px;
+        }
+
+        .bill-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .bill-row.total {
+            font-weight: bold;
+            border-bottom: none;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .bill-label {
+            color: #666;
+        }
+
+        .bill-value {
+            font-weight: bold;
+        }
+
+        .bill-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .bill-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .send-bill-btn {
+            background-color: #FF6B00;
+            color: white;
+        }
+
+        .close-bill-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        /* 支付状态面板 */
+        .payment-status {
+            /* display: none; */
+            text-align: center;
+            padding: 20px;
+        }
+
+        .payment-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .payment-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .payment-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF6B00;
+            margin: 15px 0;
+        }
+
+        .payment-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .complete-btn {
+            background-color: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* 会员中心悬浮按钮 */
+        .header-content {
+            position: relative;
+        }
+
+        .vip-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #FFD700;
+            color: #333;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .vip-btn i {
+            margin-right: 5px;
+        }
+
+        .member-center-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00, #FF9500);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            cursor: pointer;
+            z-index: 999;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .member-center-btn i {
+            font-size: 22px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_ck65k0e88f.css">
+</head>
+
+<body>
+    <div id="app">
+     
+        
+        <!-- 订单列表 -->
+        <div class="order-container" id="orderContainer">
+            <div class="order-title">
+                <span>订单记录</span>
+                <span id="orderCount">接单数量：${order_list.length}</span>
+            </div>
+
+            <div id="orderList">
+                <div>
+                    <div class="empty-order" id="emptyOrder" v-if="order_list.length === 0">
+                        <i class="fas fa-car" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <p>暂无新订单</p>
+                    </div>
+
+                    <div class="order-item" v-else v-for="(order, index) in order_list" :key="index">
+                        <div class="order-info">
+                            <span class="order-id">${order.sn}</span>
+                            <span class="order-price">${order.cost}元</span>
+                        </div>
+                        
+                        <div class="order-location">
+                            <i class="fas fa-map-marker-alt location-icon"></i>
+                            <span class="order-location-text">${order.start_location}</span>
+                        </div>
+                        <div class="order-location">
+                            <i class="fas fa-flag location-icon"></i>
+                            <span class="order-location-text">${order.end_location}</span>
+                        </div>
+                        <div class="order-info">
+                            <span>
+                                <i class="iconfont icon-juli trip-location-icon"></i>
+                                ${order.distance}
+                            </span>
+                            <span class="order-time" v-text="order.order_time"></span>
+                        </div>
+                    </div>
+                </div>
+              
+            </div>
+        </div>
+
+        <!-- 会员中心悬浮按钮 -->
+        <div class="member-center-btn" @click="showMemberCenter()">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    order_list: [],
+
+                };
+            },
+            mounted() {
+                this.fetchOrders();
+            },
+            methods: {
+                fetchOrders() {
+                    var that = this
+                    getRequest('/app/driver/order/list/json', { 'driver_id': this.driver_id, 'token': this.token }, (res, status) => {
+                        if (status != 'success') {
+                            console.log("error", res)
+                        }
+                        else {
+                            that.order_list = res.data
+                        }
+                    })
+                },
+                showMemberCenter() {
+                    window.history.go(-1);
+                }
+            }
+               
+        });
+
+        window.app = vueApp
+
+    </script>
+
+</body>
+
+</html>

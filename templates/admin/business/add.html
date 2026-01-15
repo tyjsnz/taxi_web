@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加计价规则</title>
+    <!-- 引入Element-UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4790197_oudfd3w0r9.css">
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        }
+        .form-title {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ebeef5;
+            font-size: 18px;
+            color: #303133;
+        }
+        .form-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .time-range-picker {
+            display: flex;
+            align-items: center;
+        }
+        .time-range-picker .el-input {
+            width: 200px;
+        }
+        .time-range-picker .separator {
+            margin: 0 10px;
+            color: #909399;
+        }
+        .section-title {
+            margin: 20px 0 15px;
+            font-size: 16px;
+            color: #606266;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <div class="form-container">
+                <h2 class="form-title">添加计价规则</h2>
+                <el-form ref="form" :model="form" :rules="rules" label-width="180px">
+
+                    <div class="section-title">加盟商</div>
+                    <el-form-item label="加盟商" prop="company">
+                        <el-select v-model="form.company_id" placeholder="请选择加盟商"> 
+                            <el-option
+                                v-for="item in form.company_list"
+                                :key="item.id"
+                                :label="item.name + '(' + item.short_name + ')'"
+                                :value="item.id">                                
+                            </el-option>
+                        </el-select>                        
+                    </el-form-item>
+
+                    <!-- 基本信息 -->
+                    <div class="section-title">基本信息</div>
+                    <el-form-item label="规则名称" prop="title">
+                        <el-input v-model="form.title" placeholder="例如：工作日高峰时段"></el-input>
+                    </el-form-item>
+                    
+                    <el-form-item label="适用时段" prop="timeRange">
+                        <div class="time-range-picker">
+                            <el-time-picker
+                                v-model="form.start_time"
+                                placeholder="开始时间"
+                                format="HH:mm"
+                                value-format="HH:mm">
+                            </el-time-picker>
+                            <span class="separator">至</span>
+                            <el-time-picker
+                                v-model="form.end_time"
+                                placeholder="结束时间"
+                                format="HH:mm"
+                                value-format="HH:mm">
+                            </el-time-picker>
+                        </div>
+                    </el-form-item>
+                    
+                    <!-- 起步费用 -->
+                    <div class="section-title">起步费用</div>
+                    <el-form-item label="起步费(元)" prop="start_fee">
+                        <el-input-number v-model="form.start_fee" :min="0" :precision="2" :step="0.1"></el-input-number>
+                    </el-form-item>
+                    
+                    <el-form-item label="起步里程(公里)" prop="start_mileage">
+                        <el-input-number v-model="form.start_mileage" :min="0" :precision="1" :step="0.1"></el-input-number>
+                    </el-form-item>
+                    
+                    <!-- 里程费用 -->
+                    <div class="section-title">里程费用</div>
+                    <el-form-item label="里程费单价(元/公里)" prop="mileage_fee_per_km">
+                        <el-input-number v-model="form.mileage_fee_per_km" :min="0" :precision="2" :step="0.1"></el-input-number>
+                    </el-form-item>
+                    
+                    <!-- 远途费用 -->
+                    <div class="section-title">远途费用</div>
+                    <el-form-item label="远途费触发里程(公里)" prop="long_distance_trigger_mileage">
+                        <el-input-number v-model="form.long_distance_trigger_mileage" :min="0" :precision="1" :step="0.1"></el-input-number>
+                    </el-form-item>
+                    
+                    <el-form-item label="远途费单价(元/公里)" prop="long_distance_fee_per_km">
+                        <el-input-number v-model="form.long_distance_fee_per_km" :min="0" :precision="2" :step="0.1"></el-input-number>
+                    </el-form-item>
+                    
+                    <!-- 时长费用 -->
+                    <div class="section-title">时长费用</div>
+                    <el-form-item label="时长费单价(元/分钟)" prop="duration_fee_per_minute">
+                        <el-input-number v-model="form.duration_fee_per_minute" :min="0" :precision="2" :step="0.1"></el-input-number>
+                    </el-form-item>
+                    
+                    <!-- 其他设置 -->
+                    <div class="section-title">其他设置</div>
+                    <el-form-item label="是否启用" prop="enabled">
+                        <el-switch v-model="form.enabled" active-text="启用" inactive-text="禁用"></el-switch>
+                    </el-form-item>
+                    
+                    <el-form-item label="规则描述" prop="description">
+                        <el-input type="textarea" :rows="3" v-model="form.description" placeholder="请输入规则描述"></el-input>
+                    </el-form-item>
+                    
+                    <el-form-item class="form-footer">
+                        <el-button type="primary" @click="submitForm">立即创建</el-button>
+                        <el-button @click="resetForm">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element-UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    form: {
+                        title: '',
+                        start_time: '',
+                        end_time: '',
+                        start_fee: 0,
+                        start_mileage: 0,
+                        mileage_fee_per_km: 0,
+                        long_distance_trigger_mileage: 0,
+                        long_distance_fee_per_km: 0,
+                        duration_fee_per_minute: 0,
+                        enabled: true,
+                        description: '',
+                        company_list:[],
+                        company_id: '',
+                    },
+                    rules: {
+                        title: [
+                            { required: true, message: '请输入规则名称', trigger: 'blur' },
+                            { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+                        ],
+                        timeRange: [
+                            { validator: this.validateTimeRange, trigger: 'change' }
+                        ],
+                        start_fee: [
+                            { required: true, message: '请输入起步费', trigger: 'blur' },
+                            { validator: this.validatePositiveNumber, trigger: 'blur' }
+                        ],
+                        start_mileage: [
+                            { required: true, message: '请输入起步里程', trigger: 'blur' },
+                            { validator: this.validatePositiveNumber, trigger: 'blur' }
+                        ],
+                        mileage_fee_per_km: [
+                            { required: true, message: '请输入里程费单价', trigger: 'blur' },
+                            { validator: this.validatePositiveNumber, trigger: 'blur' }
+                        ],
+                        long_distance_trigger_mileage: [
+                            { validator: this.validateNonNegativeNumber, trigger: 'blur' }
+                        ],
+                        long_distance_fee_per_km: [
+                            { validator: this.validateNonNegativeNumber, trigger: 'blur' }
+                        ],
+                        duration_fee_per_minute: [
+                            { validator: this.validateNonNegativeNumber, trigger: 'blur' }
+                        ]
+                    }
+                }
+            },
+            created() {
+                this.get_company_list()
+            },            
+            methods: {
+                // 验证时间范围
+                validateTimeRange(rule, value, callback) {
+                    if (!this.form.start_time || !this.form.end_time) {
+                        callback(new Error('请选择时段范围'));
+                    } else if (this.form.start_time >= this.form.end_time) {
+                        callback(new Error('结束时间必须晚于开始时间'));
+                    } else {
+                        callback();
+                    }
+                },
+                
+                // 验证正数
+                validatePositiveNumber(rule, value, callback) {
+                    if (value === null || value === undefined || value === '') {
+                        callback(new Error('请输入数值'));
+                    } else if (Number(value) <= 0) {
+                        callback(new Error('必须大于0'));
+                    } else {
+                        callback();
+                    }
+                },
+                
+                // 验证非负数
+                validateNonNegativeNumber(rule, value, callback) {
+                    if (value === null || value === undefined || value === '') {
+                        callback(new Error('请输入数值'));
+                    } else if (Number(value) < 0) {
+                        callback(new Error('不能小于0'));
+                    } else {
+                        callback();
+                    }
+                },
+                
+                // 提交表单
+                submitForm() {
+                    if(this.form.company_id == ''){
+                        this.$message({
+                            message: '请选择加盟商',
+                            type: 'error'
+                        });
+                        return
+                    }
+                    this.$refs.form.validate((valid) => {
+                        if (valid) {
+                            // 构造提交数据
+                            const formData = {
+                                ...this.form,
+                                start_time: this.form.start_time + ':00',
+                                end_time: this.form.end_time + ':00'
+                            };
+                            
+                            // 这里使用axios发送请求
+                            axios.post('/admin/price/add', formData)
+                                .then(response => {
+                                    if (response.data.status === 0) {
+                                        this.$message({
+                                            message: '添加成功',
+                                            type: 'success'
+                                        });
+                                        this.resetForm();
+                                        // 可以添加跳转逻辑
+                                    } else {
+                                        this.$message.error(response.data.msg);
+                                    }
+                                })
+                                .catch(error => {
+                                    this.$message.error('提交失败: ' + error.message);
+                                });
+                        } else {
+                            this.$message.error('请填写完整信息');
+                            return false;
+                        }
+                    });
+                },
+                
+                // 重置表单
+                resetForm() {
+                    this.$refs.form.resetFields();
+                    // 需要手动重置数值类型的字段
+                    this.form.start_fee = 0;
+                    this.form.start_mileage = 0;
+                    this.form.mileage_fee_per_km = 0;
+                    this.form.long_distance_trigger_mileage = 0;
+                    this.form.long_distance_fee_per_km = 0;
+                    this.form.duration_fee_per_minute = 0;
+                    this.form.enabled = true;
+                },
+                get_company_list(){
+                    var that = this
+                    fetch('/admin/company/list/json')
+                    .then(response => response.json())
+                    .then(json => {
+                        console.log(json.data)
+                        this.form.company_list = json.data;
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <button class="layui-btn btn-add">添加</button>
+                </div>
+                <div class="card-body">
+                    <table id="test" lay-filter="test"></table>
+                    <script type="text/html" id="barDemo">
+                        <a lay-event='reset_pwd' class="layui-btn layui-btn-xs layui-btn-default" href="javascript:void(0)" >密码重置</a>
+                        <a lay-event='stop' class="layui-btn layui-btn-xs layui-btn-default" href="javascript:void(0)" title="" data-toggle="tooltip">禁用</a>
+                        <a lay-event='del' class="layui-btn layui-btn-xs layui-btn-danger" href="javascript:void(0)" >删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function formatDateTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.getUTCFullYear() + '-' +
+           String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+           String(date.getUTCDate()).padStart(2, '0') + ' ' +
+           String(date.getUTCHours()).padStart(2, '0') + ':' +
+           String(date.getUTCMinutes()).padStart(2, '0') + ':' +
+           String(date.getUTCSeconds()).padStart(2, '0');
+    }
+    var table,option
+    layui.use(['table'], function () {
+         table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+         option = {
+            elem: '#test'
+            , height: 600
+            , title: '用户列表'
+            , url: '/admin/user/list/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , page: true
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                { field: 'id', title: '编号', sort: true, width: 100, hide: false }
+                , { field: 'truename', title: '用户姓名', width: 120}
+                , { field: 'username', title: '登录帐号', width: 120}
+                , { field: 'phone', title: '联系电话', width: 140}
+                , { field: 'status', title: '用户状态',  width: 120,templet:function(d){
+                    if(d.status == 0)
+                        return '<span class="layui-badge layui-bg-green">正常</span>'
+                    else if(d.status == -1)
+                        return '<span class="layui-badge layui-bg-orange">禁用</span>'
+                }}
+                , { field: 'is_admin', title: "用户类型", width: 140,templet: function(d){
+                    if(d.is_admin == 0)
+                        return '<span class="layui-badge layui-bg-orange">管理员</span>'
+                    else if(d.is_admin == 999)
+                        return '<span class="layui-badge layui-bg-red">超级管理员</span>'
+                } }
+                , { field: 'last_time', title: '最近登陆时间', width: 180 }
+                , { field: 'ip', title: '最近登录IP', width: 180 }
+                , { field: 'created_at', title: '注册时间', width: 180 }
+                , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 220 }
+
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function () {
+                //当数据渲染完后，执行的回调
+                //$('.layui-table-cell').css('height','42px');
+            }
+            , parseData: function (res) {
+                for(let i in res.data){
+                    res.data[i].created_at = formatDateTime(res.data[i].created_at)
+                }
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.data.length
+                    , "data": res.data
+                };
+            }
+
+        }
+
+        table.render(option);
+  
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event == 'reset_pwd') {
+                layer.confirm('重置后默认密码为：123456，确定重置密码？', {icon:3,
+                    btn: ['确定','取消'] //按钮
+                }, function(){
+                    $.ajax({
+                        url: '/admin/user/reset_pwd',
+                        type: 'post',
+                        data: {id: data.id},
+                        dataType: 'json',
+                        success: function (res) {
+                            layer.alert(res.msg)
+                        }
+                    })
+                }
+                )
+            }
+            else if(obj.event == 'stop'){
+                if(obj.data.is_admin == 999){
+                    layer.msg('超级管理员不可禁用')
+                    return
+                }
+                var data = obj.data
+                var btn_txt = '确定禁用'
+                var msg = '禁用后会员将不能再登录？'
+                if(data.status == -1){
+                    msg = '恢复用户后，用户可以再次登录？'
+                    btn_txt = '恢复用户'
+                }
+                var status_val = data.status == -1 ? 0 : -1
+                layer.confirm(msg, {icon:3,
+                    btn: [btn_txt, '取消'] //按钮
+                }, function(){
+                    $.ajax({
+                        url: '/admin/user/update_status',
+                        type: 'post',
+                        data: {id: data.id,'status': status_val},
+                        dataType: 'json',
+                        success: function (res) {
+                            layer.msg(res.msg)
+                        }
+                    })
+                    var update = {};
+                    update['status'] = status_val
+                    obj.update(update);
+                }, function(){
+                    
+                });
+            }
+            else if(obj.event == 'del'){
+                layer.confirm("是否删除用户", {icon:3,
+                    btn: ["确定", '取消'] //按钮
+                }, function(){
+                    $.ajax({
+                        url: '/admin/user/delete',
+                        type: 'post',
+                        data: {id: data.id},
+                        dataType: 'json',
+                        success: function (res) {
+                            layer.msg(res.msg)
+                        }
+                    })
+                    var update = {};
+                    update['status'] = status_val
+                    obj.del()
+                }, function(){
+                    
+                });
+            }
+        });
+
+        $(".btn-add").click(function(){
+            layer.open({
+                type: 2,
+                title: '添加用户',
+                shadeClose: true,
+                shade: false,
+                maxmin: true, //开启最大化最小化按钮
+                area: ['800px', '700px'],
+                content: '/admin/user/add',
+            });
+        })
+    });
+
+    function reference_tb(){
+        table.render(option);
+    }
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,636 @@
+{% extends '/admin/common/base.html' %}
+
+{% block content %}
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+
+
+                <div class="card-toolbar clearfix" id="top_search">
+
+                    <!-- <blockquote class="layui-elem-quote">总订单金额：1212121</p></blockquote> -->
+
+                    <!-- <div class="toolbar-btn-action">
+                        <a class="btn btn-primary m-r-5" target="_self"
+                            href="/admin/article/add"><i class="mdi mdi-plus"></i> 新增</a>
+                    </div>
+                     -->
+                    <div class="card-header" style="padding-left: 0px !important;">
+                        <div class="col-xs-12">
+                            <form id="myform" method="get">
+                                <div class="input-group m-b-10">
+                                    <span class="input-group-addon" id="basic-addon1">所属运营商</span>
+                                    <select class="form-control" id="sel_company">
+                                    </select>
+                                    <span class="input-group-addon" id="basic-addon1">订单编号</span>
+                                    <input class="form-control" type="text" id="sn" placeholder="" autocomplete="off"
+                                        value="">
+                                    <span class="input-group-addon" id="basic-addon1">乘客手机号</span>
+                                    <input class="form-control" type="text" id="phone" placeholder="" autocomplete="off"
+                                        value="">
+                                    <span class="input-group-addon" id="basic-addon1">司机手机号</span>
+                                    <input class="form-control" type="text" id="driver_phone" placeholder=""
+                                        autocomplete="off" value="">
+                                    <span class="input-group-addon" id="basic-addon1">车牌号</span>
+                                    <input class="form-control" type="text" id="car_no" placeholder=""
+                                        autocomplete="off" value="">
+                                    <span class="input-group-addon" id="basic-addon1">订单状态</span>
+                                    <select class="form-control" id="sel_status">
+                                        <option value="">全部</option>
+                                        <option value="0">待接单</option>
+                                        <option value="1">已接单</option>
+                                        <option value="2">乘客已上车</option>
+                                        <option value="6">接乘客途中</option>
+                                        <option value="3">行程中</option>
+                                        <option value="4">待支付</option>
+                                        <option value="5">已支付</option>
+                                        <option value="-1">乘客取消</option>
+                                        <!-- <option value="-2">无司机接单</option>
+                                        <option value="-3">司机拒绝接单</option> -->
+                                    </select>
+
+                                    <span class="input-group-addon" id="basic-addon1">订单时间</span>
+                                    <input class="form-control js-datepicker" type="text" id="btime" name="btime"
+                                        data-date-format="yyyy-mm-dd" placeholder="从" autocomplete="off" value="">
+                                    <span class="input-group-addon"><i class="mdi mdi-chevron-right"></i></span>
+                                    <input class="form-control js-datepicker" type="text" id="etime" name="etime"
+                                        data-date-format="yyyy-mm-dd" placeholder="至" autocomplete="off" value="">
+                                    <a href="#" class="search-btn a-submit btn btn-default input-group-addon"
+                                        id="basic-addon1"> <i class="mdi mdi-search-web"></i> 查询</a>
+                                    <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                            class="mdi mdi-reload"></i> 刷新</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body">
+                    <table id="test" lay-filter="test"></table>
+
+                    <script type="text/html" id="toolbarDemo">
+                        <div class="layui-btn-container">
+                            <button class="layui-btn layui-btn-sm" lay-event="getCheckData">向所选订单发送消息</button>
+                        </div>
+                    </script>
+                    <script type="text/html" id="barDemo">
+                                {% raw %}
+                                <a lay-event='edit' class="layui-btn layui-btn-xs layui-btn-default" href="javascript:void(0)" title="订单查看" data-toggle="tooltip">详情</a>
+                                {{# if(d.status != -1) { }}
+                                <a lay-event='cancel' class="layui-btn layui-btn-xs layui-btn-default" href="javascript:void(0)" title="取消订单" data-toggle="tooltip">取消订单</a>
+                                {{# } }}
+                                
+                                {{# if(d.status == 4) { }}
+                                <a lay-event='call_customer' class="layui-btn layui-btn-xs layui-btn-danger" href="javascript:void(0)" title="订单催收" data-toggle="tooltip">催收</a>
+                                {{# } }}
+                                {% endraw %}
+
+                                <!-- <a lay-event="del" class="btn btn-xs btn-default btn-delete" data-id="" href="javascript:void(0)" title="删除" data-toggle="tooltip">删除</a> -->
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="pop_verify" style="display: none; margin: 20px;">
+    <form class="layui-form layui-form-pane">
+        <div class="layui-form-item">
+            <blockquote class="layui-elem-quote" style="font-size: 14px;">
+                <p>贴士：催收短信将通过发送至乘客注册时的手机号码。</p>
+            </blockquote>
+        </div>
+        <div class="layui-form-item">
+            <blockquote class="layui-elem-quote" style="font-size: 14px;">
+                <input type="radio" name="sel_value" value="1" title="模板1" lay-filter="sel_value" checked>
+                <br>尊敬的乘客，您好！您于 {乘车日期} 乘坐的 {车牌号} 行程费用尚未支付。请您尽快完成支付，以免影响后续使用。如有疑问，可联系客服{电话}，感谢您的理解与支持。
+            </blockquote>
+        </div>
+        <div class="layui-form-item">
+            <blockquote class="layui-elem-quote" style="font-size: 14px;">
+                <input type="radio" name="sel_value" value="2" title="模板2" lay-filter="sel_value">
+                <br>尊敬的乘客，您好！您的订单 {订单号} 已逾期多日未支付，根据平台规定，可能影响您的信用评级及后续叫车服务。请尽快完成支付，如有特殊情况，请及时联系客服{电话}。
+            </blockquote>
+        </div>
+        <div class="layui-form-item">
+            <blockquote class="layui-elem-quote" style="font-size: 14px;">
+                <input type="radio" name="sel_value" value="3" title="模板3" lay-filter="sel_value">
+                <br>尊敬的乘客，您好！很遗憾通知您，您的订单 {订单号} 欠款已逾期
+                {逾期天数}天未处理。我们已多次提醒，但仍未收到支付。若继续拖欠，平台将按规定采取进一步措施（如法律途径），同时影响您在平台的所有权益。请立即处理，以免造成不必要的麻烦。
+            </blockquote>
+        </div>
+
+        <div class="layui-form-item">
+            <input type="radio" name="sel_value" value="4" title="自定义短信内容" lay-filter="sel_value">
+        </div>
+
+        <div id="custome_sms" class="layui-form-item layui-form-text" style="display: none;">
+            <label class="layui-form-label">自定义短信内容</label>
+            <div class="layui-input-block">
+                <textarea placeholder="请输入催收短信内容..." class="layui-textarea"></textarea>
+                <span>发送内容如需包括：乘客姓名，订单号，订单时间，则在短信相应位置插入占位符号，{车牌号}、{订单号}、{乘车日期}、{电话}、{逾期天数}内容不超过50字</span>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <button class="layui-btn apply_verify">确认</button>
+            <input type="hidden" id="hid">
+        </div>
+    </form>
+</div>
+
+<script>
+    function formatDateTime(dateStr) {
+        return dateStr;
+        const date = new Date(dateStr);
+        return date.getUTCFullYear() + '-' +
+            String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getUTCDate()).padStart(2, '0') + ' ' +
+            String(date.getUTCHours()).padStart(2, '0') + ':' +
+            String(date.getUTCMinutes()).padStart(2, '0') + ':' +
+            String(date.getUTCSeconds()).padStart(2, '0');
+    }
+    layui.use(['table','form'], function () {
+        var table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+            , laydate = layui.laydate;
+
+        var form = layui.form;
+
+        laydate.render({
+            elem: '#btime'
+        });
+        laydate.render({
+            elem: '#etime'
+        });
+        layui.form.render()
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+        var option = {
+            elem: '#test'
+            , toolbar: '#toolbarDemo'
+            , height: 600
+            //,height: 'full-235' // 最大高度减去其他容器已占有的高度差
+            , title: '订单列表'
+            , url: '/admin/order/list/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , totalRow: true // 开启合计行
+            , page: true
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                { type: 'checkbox', fixed: 'left' }
+                , { field: 'id', title: 'id', hide: true }
+                , { field: 'sn', title: '订单编号', sort: true, width: 200, totalRow: '合计：' }
+                , { field: 'customer_phone', title: '乘客电话', width: 120 }
+                , { field: 'order_time', title: '下单时间', width: 160 }
+                , { field: 'accept_time', title: '接单时间', sort: true, width: 160 }
+                , { field: 'waiting_time', title: '等待时长(s)', sort: true, width: 120,templet: function(d){
+                    return '<span class="layui-font-green">' + formatDuration(d.waiting_time) + "</span>"
+                } }
+                , {
+                    field: 'status', title: '订单状态', sort: true, width: 140, templet: function (d) {
+                        if (d.status == 0) {
+                            return '<span class="layui-font-green">待接单</span>'
+                        } else if (d.status == 1) {
+                            return '<span class="layui-font-blue">已接单</span>'
+                        } else if (d.status == 2) {
+                            return '<span class="layui-font-green">乘客已上车</span>'
+                        } else if (d.status == 3) {
+                            return '<span class="layui-font-green">行程中</span>'
+                        } else if (d.status == 4) {
+                            let orderTime = new Date(d.order_time);
+                            let now = new Date();
+                            let daysPassed = Math.floor((now - orderTime) / (1000 * 60 * 60 * 24));
+                            if(daysPassed > 0)
+                                return `<span class="layui-font-red">待支付</span><small>逾期${daysPassed}天<small>`
+                            else
+                                return `<span class="layui-font-red">待支付</span>`
+                        } else if (d.status == 5) {
+                            return '<span class="layui-font-blue">已完成</span>'
+                        } else if (d.status == -1) {
+                            return '<span class="layui-font-orange">乘客取消订单</span>'
+                        } else if (d.status == -2) {
+                            return '<span class="layui-font-danger">无司机接单</span>'
+                        } else if (d.status == 6) {
+                            return '<span class="layui-font-blue">接乘客途中</span>'
+                        } else if (d.status == -3) {
+                            return '<span class="layui-font-danger">司机拒绝接单</span>'
+                        } else {
+                            return '<span class="layui-font-danger">未知状态</span>'
+                        }
+                    }
+                }
+                , { field: 'down_time', title: '行程结束时间', sort: true, width: 160 }
+                , { field: 'trip_time', title: '行程用时(s)', sort: true, width: 120,templet:function (d){
+                    let duration = parseInt(d.trip_time)
+                    if (isNaN(duration) || duration < 0) {
+                        return '';
+                    }
+                    return '<span class="layui-font-green">' + formatDuration(duration) + "</span>"
+                } }
+                , {
+                    field: 'distance', title: '里程(km)', sort: true, width: 120, templet: function (d) {
+                        km = parseInt(d.distance)
+                        km = (km / 1000).toFixed(1)
+                        return '<span class="layui-font-green">' + km + "</span>"
+                    }
+                }
+                , {
+                    field: 'duration', title: '预估用时(分)', width: 120, templet: function (d) {
+                        m = parseInt(d.duration)
+                        m = parseInt(m / 60)
+                        return '<span class="layui-font-red">' + m + "</span>"
+                    }
+                }
+                , {
+                    field: 'cost', title: '预估费用', width: 120, templet: function (d) {
+                        return '<span class="layui-font-blue">' + d.cost + "</span>"
+                    }
+                },
+                {
+                    field: 'total_fee', title: '实际费用', sort: true, width: 120, totalRow: true, templet: function (d) {
+                        p = 0
+                        if (!isNaN(d.total_fee))
+                            p = parseFloat(d.total_fee).toFixed(1)
+                        return '<span class="layui-font-red">' + p + "</span>"
+                    }
+                },
+                {
+                    field: 'driver_comission', title: '司机佣金', sort: true, width: 120, totalRow: true, templet: function (d) {
+                        p = 0
+                        if (!isNaN(d.driver_comission))
+                            p = parseFloat(d.driver_comission).toFixed(1)
+                        return '<span class="layui-font-red">' + p + "</span>"
+                    }
+                }
+                , { field: 'car_no', title: '车牌号', width: 150 }
+                , { field: 'driver_name', title: '接单司机', width: 150 }
+                , { field: 'driver_phone', title: '司机电话', width: 150 }
+
+                , { field: 'start_location', title: '起点', width: 160 }
+                , { field: 'end_location', title: '目的地', width: 160 }
+                , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 200 }
+
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function (res, curr, count) {
+                //当数据渲染完后，执行的回调
+                // 根据条件关闭checkbox选择
+                for (let i in res.data) {
+                    var item = res.data[i]
+                    if (item.status != 4) {
+                        $('tr[data-index=' + i + '] input[type="checkbox"]').prop('disabled', true);
+                    }
+                }
+
+                // 手动计算 totalRow 的值
+                var total_fee = res.data.reduce((sum, item) => Math.round(parseFloat(sum) + parseFloat(item.total_fee), 2), 0);
+                // 设置 totalRow 的值
+                var h = '<div class="layui-table-cell laytable-cell-1-0-7"><span class="layui-font-red">￥：' + total_fee + '</span></div>'
+                this.elem.next('.layui-table-view').find('.layui-table-total td[data-field="total_fee"]').html(h);
+            }
+            , parseData: function (res) {
+                for (let i in res.data) {
+                    //res.data[i].created_at = formatDateTime(res.data[i].created_at)
+                    //res.data[i].content = ''
+                }
+
+
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.other.total
+                    , "data": res.data,
+                };
+            }
+
+        }
+
+        // 如果有参数，则说明是司机页或乘客页进入的，这时根据条件查询
+        // 获取当前页面的URL
+        const urlParams = new URLSearchParams(window.location.search);
+        // 获取特定参数的值，这里乘客页进入时根据乘客手机phone，司机页进入时根据车牌查询car_no
+        const param_flag = urlParams.get('flag');
+        if (param_flag != null && param_flag != '' && param_flag != undefined) {
+            $("#top_search").hide()
+            if (param_flag == 'driver' || param_flag == 'comission') {
+                const param_value = urlParams.get('car_no')
+                option.where = { 'car_no': param_value }
+            }
+            else if (param_flag == 'customer') {
+                const param_value = urlParams.get('phone')
+                option.where = { 'phone': param_value }
+            }
+        }
+
+
+        table.render(option);
+
+        // 工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var id = obj.config.id;
+            var checkStatus = table.checkStatus(id);
+            // true为全选
+            //console.log(checkStatus.isAll)
+
+            var othis = lay(this);
+            switch (obj.event) {
+                case 'getCheckData':
+                    var data = checkStatus.data;
+                    ids = []
+                    for (let i in data) {
+                        // 已经发布文章不可在发布
+                        if (data[i].status != 4)
+                            continue
+
+                        ids.push(data[i].id)
+                    }
+                    if (ids.length == 0) {
+                        layer.msg('请选择要发送消息的订单', { icon: 5 });
+                        return
+                    }
+
+                    let pids = ids.join('#')
+
+                    $("#hid").val(pids)
+                    layer.open({
+                        type: 1,
+                        title: '订单消息发送',
+                        offset: ['100px', '100px'],
+                        area: ['600px', '450px'],
+                        content: $("#pop_verify"),
+                        end: function () {
+                            //layer.msg('关闭后的回调', {icon:6});
+                        }
+                    })
+
+                    break;
+            };
+        });
+
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                $.confirm({
+                    title: '提示',
+                    content: '确定删除当前记录？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/article/delete',
+                                    data: { 'id': data.id },
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            msg(res.msg);
+                                            return;
+                                        }
+                                        msg(res.msg);
+                                        //$("#tr_" + id).remove();
+                                        obj.del()
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+            else if (obj.event == 'edit') {
+                //location.href = '/admin/article/edit?id=' + data.id
+                layer.open({
+                    type: 2,
+                    title: '订单详情',
+                    shadeClose: false,
+                    shade: 0.8,
+                    area: ['90%', '95%'],
+                    content: '/admin/order/detail?id=' + data.id
+                })
+            }
+            else if (obj.event == 'cancel') {
+                $.confirm({
+                    title: '提示',
+                    content: '确定取消当前订单？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/order/cancel',
+                                    data: { 'order_id': data.id },
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            msg(res.msg);
+                                            return;
+                                        }
+                                        msg(res.msg);
+                                        //$("#tr_" + id).remove();
+
+                                        var update = {};
+                                        update['status'] = -1; // 取消订单
+                                        obj.update(update);
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+            else if (obj.event == 'call_customer') {                
+                 $("#hid").val(data.id)
+                    layer.open({
+                        type: 1,
+                        title: '订单消息发送',
+                        offset: ['100px', '100px'],
+                        area: ['600px', '450px'],
+                        content: $("#pop_verify"),
+                        end: function () {
+                            //layer.msg('关闭后的回调', {icon:6});
+                        }
+                    })
+            }
+        });
+
+        $(".search-btn").click(function () {
+            let sn = $("#sn").val();
+            let p = $("#phone").val()
+            let b = $("#btime").val()
+            if (b != "")
+                b += ' 00:00:00'
+            let e = $("#etime").val()
+            if (e != '')
+                e += ' 23:59:59'
+            option.where = { 'sn': sn, 'phone': p, 'btime': b, 'etime': e, 'car_no': $("#car_no").val(), 'status': $("#sel_status").val(), 'company_id': $("#sel_company").val(), 'driver_phone': $("#driver_phone").val() }
+            table.render(option)
+            return false;
+        })
+
+        $(".ref-btn").click(function () {
+            $("#sn").val('')
+            $("#phone").val('')
+            $("#driver_phone").val('')
+            $("#car_no").val('')
+            $("#btime").val('')
+            $("#etime").val('')
+            $("#status").val('')
+            $("#sel_company").val('')
+            option.where = {}
+            table.render(option)
+            return false;
+        })
+
+        table.on('edit(test)', function (obj) {
+            var field = obj.field; // 得到字段
+            var value = obj.value; // 得到修改后的值
+            var data = obj.data; // 得到所在行所有键值
+            // // 值的校验
+            if (field === 'sort_id') {
+                if (!/^([0-9_\.\-])+$/.test(obj.value)) {
+                    layer.tips('只可输入数值，请重新编辑', this, { tips: 1 });
+                    return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+                }
+            }
+            // 编辑后续操作，如提交更新请求，以完成真实的数据更新
+            // …
+            $.ajax({
+                url: '/admin/article/edit_sort',
+                data: { 'value': value, 'id': obj.data.id },
+                type: 'post',
+                dataType: 'json',
+                success: function (res) {
+
+                }
+            })
+            //layer.msg('编辑成功' + field + "," + value, { icon: 1 });
+
+            // 其他更新操作
+            var update = {};
+            update[field] = value;
+            obj.update(update);
+        });
+
+        // 监听 radio 变化
+        form.on('radio(sel_value)', function (obj) {
+            if (obj.value == '4') {
+                $("#custome_sms").show();
+            } else {
+                $("#custome_sms").hide();
+            }
+        });
+    });
+
+    $(".apply_verify").click(function () {
+        let ids = $("#hid").val()
+        if (ids == '') {
+            layer.msg('未选择订单')
+            return false
+        }
+        // 获取选中的 radio 值
+        let selectedTemplate = $("input[name='sel_value']:checked").val();
+
+        // 如果选择了“自定义短信内容”，还需要获取 textarea 的内容
+        let customContent = '';
+        if (selectedTemplate == 4) {
+            customContent = $(".layui-textarea").val().trim();
+            if (!customContent) {
+                layer.msg('请输入自定义短信内容');
+                return false;
+            }
+        }
+
+        var loading = layer.load(0, { time: 10000 });
+        $.ajax({
+            url: '/admin/order/send_sms',  // 替换为你的发送短信接口
+            data: {
+                ids: ids,
+                template_id: selectedTemplate,
+                content: customContent
+            },
+            type: 'post',
+            dataType: 'json',
+            success: function (res) {
+                layer.close(loading);
+                if (res.status == 'success') {
+                    layer.alert(res.msg, { icon: 1 });
+                } else {
+                    layer.alert(res.msg, { icon: 2 });
+                }
+            }
+        });
+
+        return false;
+    })
+
+    function get_company_list() {
+        $.ajax({
+            url: '/admin/company/list/json',
+            type: 'get',
+            dataType: 'json',
+            success: function (res) {
+                if (res.status != 0) {
+                    layer.msg(res.msg, { icon: 5 });
+                    return;
+                }
+                let html = '<option value="">全部</option>'
+                for (let i in res.data) {
+                    html += '<option value="' + res.data[i].id + '">' + res.data[i].name + '</option>'
+                }
+                $("#sel_company").html(html)
+            }
+        })
+    }
+
+    function formatDuration(duration){
+        if(duration<60)
+            return `${duration}秒`
+        else if(duration<3600)
+            return `${Math.floor(duration/60)}分钟`
+        else
+            return `${Math.floor(duration/3600)}小时`
+    }
+
+    $(function () {
+        get_company_list();
+    })
+
+</script>
+
+{% endblock %}

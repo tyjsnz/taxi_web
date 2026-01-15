@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城际路线管理</title>
+
+    <link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/admin/css/style.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_6iep7d4szk.css">
+
+    <link href="//unpkg.com/layui@2.10.3/dist/css/layui.css" rel="stylesheet">
+    <script src="//unpkg.com/layui@2.10.3/dist/layui.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <el-card class="card-body" style="padding-top: 0px !important; padding-left: 0px !important">
+            <div class="card-header" style="padding-left: 0px !important;">
+                <div class="col-xs-12">
+                    <form id="myform" method="get">
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">出发城市</span>
+                            <input class="form-control" type="text" id="start_city" placeholder="请输入出发城市" autocomplete="off" value="">
+                            <span class="input-group-addon" id="basic-addon1">到达城市</span>
+                            <input class="form-control" type="text" id="end_city" placeholder="请输入到达城市" autocomplete="off" value="">
+                            <span class="input-group-addon" id="basic-addon1">状态</span>
+                            <select class="form-control" type="text" id="status">
+                                <option value="">全部</option>
+                                <option value="0">正常</option>
+                                <option value="-1">禁用</option>
+                            </select>
+                            <a href="#" class="search-btn a-submit btn btn-default input-group-addon" id="basic-addon1">
+                                <i class="mdi mdi-search-web"></i> 查询</a>
+                            <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                    class="mdi mdi-reload"></i> 刷新</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <el-row>
+                <table id="routeTable" lay-filter="routeTable"></table>
+                <script type="text/html" id="toolbarDemo">
+                    <div class="layui-btn-container">
+                        <button class="layui-btn layui-btn-sm" lay-event="addRoute">新增城际路线</button>
+                    </div>
+                </script>
+                <script type="text/html" id="barDemo">
+                    <a lay-event='edit' class="layui-btn layui-btn-xs" href="javascript:void(0)" title="编辑" data-toggle="tooltip">编辑</a>
+                    <a lay-event='del' class="layui-btn layui-btn-xs layui-btn-danger" href="javascript:void(0)" title="删除" data-toggle="tooltip">删除</a>
+                    </script>
+            </el-row>
+        </el-card>
+    </div>
+
+
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+
+                }
+            },
+            created() {
+            },
+            methods: {
+            }
+        });
+
+        layui.use(['table'], function () {
+            var table = layui.table
+                , $ = layui.$
+                , laytpl = layui.laytpl
+                , laydate = layui.laydate;
+            var form = layui.form;
+
+            //全局设定某参数
+            table.set({
+                where: {
+                    token: ''
+                }
+                , defaultToolbar: ["filter", "exports", "print"]
+                , toolbar: true
+                , loading: true
+            });
+
+            var option = {
+                elem: '#routeTable'
+                , toolbar: '#toolbarDemo'
+                , height: 600
+                , title: '城际路线列表'
+                , url: '/admin/route/list/json'
+                , request: {
+                    pageName: 'page' //页码的参数名称，默认：page
+                    , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+                }
+                , page: true
+                , limit: 50
+                , loading: true
+                , limits: [50, 100, 200]
+                , cols: [[
+                    { field: 'id', title: '路线ID', sort: true, width: 120 }
+                    , { field: 'start_city', title: '出发城市' }
+                    , { field: 'end_city', title: '到达城市' }
+                    , { field: 'start_station', title: '出发站点' }
+                    , { field: 'end_station', title: '到达站点' }
+                    , { field: 'car_type', title: '车型' }
+                    , { field: 'price', title: '价格(元)', sort: true }
+                    , { field: 'estimated_time', title: '预计时间(分钟)', sort: true }
+                    , {
+                        field: 'status', title: '状态', templet: function (d) {
+                            if (d.status == 0)
+                                return `<input type="checkbox" name="status" value="${d.status}" data-id="${d.id}" lay-skin="switch" lay-text="正常|禁用" lay-filter="demo-templet-status" checked>`
+                            else
+                                return `<input type="checkbox" name="status" value="${d.status}" data-id="${d.id}" lay-skin="switch" lay-text="正常|禁用" lay-filter="demo-templet-status">`
+                        }
+                    }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 150 }
+                ]]
+                , error: function (res, msg) {
+                }
+                , response: {
+                    statusName: 'status'
+                    , statusCode: 0
+                }
+                , done: function (res, curr, count) {
+                    //当数据渲染完后，执行的回调
+                }
+                , parseData: function (res) {
+
+                    return {
+                        "status": res.status
+                        , "msg": res.msg
+                        , "count": res.other
+                        , "data": res.data
+                    };
+                }
+            }
+
+            table.render(option)
+
+            $(".search-btn").click(function () {
+                let start_city = $("#start_city").val();
+                let end_city = $("#end_city").val();
+                let status = $("#status").val();
+
+                option.where = { 'start_city': start_city, 'end_city': end_city, 'status': status }
+                table.render(option)
+                return false;
+            })
+
+            $(".ref-btn").click(function () {
+                $("#start_city").val('');
+                $("#end_city").val('');
+                $("#status").val('');
+                option.where = {}
+                table.render(option)
+                return false;
+            })
+
+            table.on('toolbar(routeTable)', function (obj) {
+                var othis = lay(this);
+                switch (obj.event) {
+                    case 'addRoute':
+                        layer.open({
+                            type: 2,
+                            title: '新增城际路线',
+                            shadeClose: false,
+                            shade: 0.8,
+                            area: ['55%', '85%'],
+                            content: '/admin/route/add'
+                        })
+                        break;
+                };
+            });
+
+            table.on('tool(routeTable)', function (obj) {
+                var data = obj.data; // 获得当前行数据
+                if (obj.event == 'del') {
+                    layer.confirm('是否删除该城际路线记录', {
+                        icon: 3,
+                        btn: ['确定', '取消'],
+                    }, function (index) {
+                        layer.close(index)
+                        $.ajax({
+                            url: '/admin/route/delete',
+                            data: { 'id': data.id },
+                            dataType: 'json',
+                            type: 'post',
+                            success: function (res) {
+                                if (res.status != 0) {
+                                    layer.alert(res.msg);
+                                    return;
+                                }
+                                layer.alert(res.msg);
+                                obj.del()
+                            }
+                        })
+                    }, function (index) {
+
+                    });
+                } else if (obj.event == 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '编辑城际路线',
+                        shadeClose: false,
+                        shade: 0.8,
+                        area: ['55%', '85%'],
+                        content: '/admin/route/update?id=' + data.id
+                    })
+                }
+            })
+
+            // 状态 - 开关操作
+            form.on('switch(demo-templet-status)', function (obj) {
+                console.log(obj)
+                var id = obj.elem.attributes["data-id"].value
+                var val = parseInt(this.value);
+                let msg = ""
+                let status = 0
+                if (val == 0) {
+                    msg = "禁用后该路线将不再显示给用户，是否禁用？"
+                    status = -1
+                }
+                else {
+                    msg = "确定启用该路线？"
+                    status = 0
+                }
+
+                layer.confirm(msg, {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                }, function (index) {
+                    layer.close(index)
+                    axios.post('/admin/route/update/status', {
+                        'status': status,
+                        'id': id
+                    }).then(res => {
+                        console.log(res)
+                        if (res.data.status == 0) {
+                            if (val == 0) {
+                                obj.elem.value = -1
+                                obj.checked = false
+                            }
+                            else {
+                                obj.elem.value = 0
+                                obj.elem.checked = true
+                            }
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                    });
+                }, function (index) {
+                    layer.close(index)
+                    console.log(val)
+                    if (val == 0)
+                        obj.elem.checked = true
+                    else
+                        obj.elem.checked = false
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

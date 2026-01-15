@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>派单调度</title>
+    <!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
+
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+
+    <link href="/static/libs/layui/css/layui.css" rel="stylesheet">
+    <script type="text/javascript" src="/static/libs/layui/layui.js"></script>
+
+    <script src="https://webapi.amap.com/maps?v=2.0&key=03efa032b6a9f665e0ae6c1e5923f2ba"></script>
+
+</head>
+
+<body>
+    <div id="app" style="padding: 0px">
+        <el-row type="flex" justify="space-between" align="middle" class="mb-4">
+            <h2></h2>
+            <div>
+                <el-button type="primary" icon="el-icon-refresh" @click="loadDrivers">刷新位置</el-button>
+                <el-button type="success" icon="el-icon-position" @click="assignOrder"
+                    :disabled="!selectedDriver">派单</el-button>
+                <!-- <el-button type="info" icon="el-icon-document" @click="showLogs = true">查看调度记录</el-button> -->
+                <el-button type="info" icon="el-icon-document" id="viewlog">查看调度记录</el-button>
+            </div>
+        </el-row>
+
+        <div id="map"></div>
+
+
+        <div class="card-body" id="pop_table" style="display: none;">
+            <el-row :gutter="20" class="" style="padding: 20px;">
+                <el-col :span="8">
+                    <el-input placeholder="搜索司机姓名" />
+                </el-col>
+                <el-col :span="8">
+                    <el-date-picker type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+                        align="right" />
+                </el-col>
+                <el-col :span="8" class="text-right">
+                    <el-button-group>
+                        <el-button icon="el-icon-download">查询记录</el-button>
+                    </el-button-group>
+                </el-col>
+            </el-row>
+
+            <table id="test" lay-filter="test"></table>
+            
+            <script type="text/html" id="barDemo">
+                <a lay-event='edit' class="btn btn-xs btn-default" href="javascript:void(0)" title="编辑" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a>
+                <a lay-event="del" class="btn btn-xs btn-default btn-delete" data-id="" href="javascript:void(0)" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i></a>
+            </script>
+        </div>
+
+
+
+    </div>
+
+    <script>
+        let map;
+
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    drivers: [],
+                    markers: [],
+                    selectedDriver: null
+                };
+            },
+            computed: {
+               
+            },
+            mounted() {
+                this.initMap();
+                this.loadDrivers();
+            },
+            methods: {
+                initMap() {
+                    map = new AMap.Map('map', {
+                        center: [102.749646, 25.035358],
+                        zoom: 13
+                    });
+
+                    AMap.plugin('AMap.Geolocation', () => {
+                        const geolocation = new AMap.Geolocation({
+                            enableHighAccuracy: true, // 是否使用高精度定位，默认:true
+                            timeout: 10000, // 超过10秒后停止定位，默认：无穷大
+                            buttonPosition: 'RB', // 定位按钮的停靠位置
+                            buttonOffset: new AMap.Pixel(10, 20), // 定位按钮与设置的停靠位置的偏移量
+                            zoomToAccuracy: true, // 定位成功后是否自动调整地图视野到定位点
+                            showCircle: false, // 定位精度圆的半径，默认：500
+                        });
+
+                        map.addControl(geolocation);
+
+                        geolocation.getCurrentPosition((status, result) => {
+                            if (status === 'complete') {
+                                // 定位成功，将地图中心设置为当前位置
+                                const position = [result.position.lng, result.position.lat];
+                                map.setCenter(position);
+
+                            } else {
+                                // 定位失败，使用默认中心
+                                map.setCenter([102.749646, 25.035358]);
+                                console.log('定位失败，原因：', result.message);
+                            }
+                            this.loadDrivers();
+                        });
+
+                    });
+
+                    //this.loadDrivers();
+                },
+                loadDrivers() {
+                    axios.get('/admin/monitor/car/list')
+                        .then(data => {
+                            this.drivers = data.data.data;
+                            this.updateMarkers();
+                        })
+                        .catch((err) => {
+                            console.log('error', err);
+                            // this.drivers = [
+                            //     { id: 1, name: '张三', position: [113.934528, 22.540503] },
+                            //     { id: 2, name: '李四', position: [113.945831, 22.531221] }
+                            // ];
+                            // this.updateMarkers();
+                        });
+                },
+                updateMarkers() {
+                    this.markers.forEach(m => map.remove(m));
+                    this.markers = [];
+
+                    this.drivers.forEach(driver => {
+                        console.log(driver);
+                        const marker = new AMap.Marker({
+                            position: new AMap.LngLat(driver.longitude, driver.latitude),
+                            title: driver.car_no,
+                            label: {
+                                content: driver.car_no,                                
+                                offset: new AMap.Pixel(-5, -30),  //设置文本标注偏移量
+                            },
+                            icon:"/static/images/web/car-1.png"
+                        });
+
+                        marker.on('click', () => {
+                            this.selectedDriver = driver;
+                            this.$message.success(`已选择：${driver.car_no}`);
+                        });
+
+                        marker.setMap(map);
+                        this.markers.push(marker);
+                    });
+                },
+                assignOrder() {
+                    if (!this.selectedDriver) return;
+
+                    this.$prompt('请输入订单ID', '派单给 ' + this.selectedDriver.car_no, {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        //inputPattern: /^\d+$/,
+                        //inputErrorMessage: '订单ID必须是数字',
+                        closeOnClickModal: false,
+                    }).then(({ value }) => {
+                        if(value == '' || value == null){
+                            this.$message.error('请输入订单ID');
+                            return;
+                        }
+                        fetch('/api/assign-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ driverId: this.selectedDriver.id, orderId: value })
+                        })
+                            .then(() => {
+                                this.$message.success(`订单 ${value} 已派给 ${this.selectedDriver.car_no}`);
+                               
+                                this.selectedDriver = null;
+                            })
+                            .catch(() => {
+                                this.$message.error('派单失败');
+                            });
+                    }).catch(() => { });
+                },
+            }
+        });
+
+
+
+        layui.use(['table'], function () {
+            var table = layui.table
+                , $ = layui.$
+                , laytpl = layui.laytpl
+                , laydate = layui.laydate;
+
+            //全局设定某参数
+            table.set({
+                where: {
+                    token: ''
+                }
+                , defaultToolbar: ["filter", "exports", "print"]
+                , toolbar: true
+                , loading: true
+            });
+
+            var option = {
+                elem: '#test'
+                , toolbar: '#toolbarDemo'
+                , height: 500
+                , title: '车辆列表'
+                , url: '/admin/driver/list/json'
+                , request: {
+                    pageName: 'page' //页码的参数名称，默认：page
+                    , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+                }
+                , page: true
+                , limit: 50
+                , loading: true
+                , limits: [50, 100, 200]
+                , cols: [[
+                    { field: 'id', title: '车辆编号', sort: true, width: 150 }
+                    , { field: 'truename', title: '司机姓名', width: 120 }
+                    , { field: 'phone', title: '司机电话', width: 160 }
+                    , { field: 'car_no', title: '车牌号', width: 160 }
+                    , { field: 'car_age', title: '车龄', width: 120 }
+                    , { field: 'car_brand', title: '品牌', width: 120 }
+                    , { field: 'car_color', title: '颜色', width: 120 }
+                    , { field: 'car_type', title: '车辆类型', width: 120 }
+                    , { field: 'insurance', title: '保单', width: 120 }
+                    , { field: 'driving_license', title: '行驶证', width: 120 }
+                    , { field: 'registration_time', title: '注册时间', width: 180 }
+                    , { field: 'mileage', title: '行驶里程', width: 120 }
+                    // , {fixed: 'right', title: '操作', toolbar: '#barDemo', width: 180}
+                ]]
+                , error: function (res, msg) {
+                }
+                , response: {
+                    statusName: 'status'
+                    , statusCode: 0
+                }
+                , done: function (res, curr, count) {
+                    //当数据渲染完后，执行的回调
+                }
+                , parseData: function (res) {
+
+                    return {
+                        "status": res.status
+                        , "msg": res.msg
+                        , "count": res.data.length
+                        , "data": res.data
+                    };
+                }
+            }
+
+            table.render(option);
+
+            $("#viewlog").click(function () {
+                layer.open({
+                    type: 1,
+                    title: '调度记录',
+                    shadeClose: false,
+                    shade: 0.8,
+                    area: ['800px', '70%'],
+                    content: $("#pop_table"),
+                    success: function (layero, index) {
+                        // 当弹窗成功打开后，给弹窗内容添加禁止横向滚动的样式
+                        layero.find('#pop_table').css('overflow-x', 'hidden');
+                    },
+                    cancel: function (index, layero) {
+                        setTimeout(function () {
+                            // 当弹窗关闭后，移除禁止横向滚动的样式
+                            //layero.find('#pop_table').css('overflow-x', ''); 
+                            $("#pop_table").hide()
+                        },100)
+                    }
+                })
+            })
+
+        });
+    </script>
+
+    <style>
+        #map {
+            width: 100%;
+            height: 80vh;
+        }
+
+        .mb-4 {
+            margin-bottom: 20px;
+        }
+
+        .mt-4 {
+            margin-top: 20px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .mb-2 {
+            margin-bottom: 12px;
+        }
+
+        /* 美化弹窗和表格样式 */
+        .el-dialog {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table {
+            background-color: #fafafa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table th {
+            background-color: #f0f0f0;
+        }
+    </style>
+</body>
+
+</html>

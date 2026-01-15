@@ -1,0 +1,284 @@
+{% extends '/admin/common/base.html' %}
+
+
+{% block content %}
+
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+
+                <div class="card-toolbar clearfix">
+
+                    <div class="card-header" style="padding-left: 0px !important;">
+                        <div class="col-xs-12">
+                            <form id="myform" method="get">
+                                <div class="input-group m-b-10">
+                                    <span class="input-group-addon" id="basic-addon1">优惠券类型</span>
+                                    <select class="form-control" id="couponType" name="coupon_type" style="width: 100px;">
+                                        <option value="-1">所有</option>
+                                        <option value="1">代金券</option>
+                                        <option value="2">满减券</option>
+                                        <option value="3">拉新券</option>
+                                    </select>
+                                    <span class="input-group-addon" id="basic-addon1">用户手机</span>
+                                    <input class="form-control" type="text" id="name" placeholder=""
+                                        autocomplete="off" value="">
+                                    <span class="input-group-addon" id="basic-addon1">面额</span>
+                                    <input class="form-control" type="text" id="amount" placeholder=""
+                                        autocomplete="off" value="">
+                                    <span class="input-group-addon">至</span>
+                                    <input class="form-control" type="text" id="amount_end" placeholder=""
+                                        autocomplete="off" value="">
+                                    <span class="input-group-addon" id="basic-addon1">时间</span>
+                                    <input class="form-control js-datepicker" type="text" id="btime" name="btime"
+                                        data-date-format="yyyy-mm-dd" placeholder="从" autocomplete="off" value="">
+                                    <span class="input-group-addon"><i class="mdi mdi-chevron-right"></i></span>
+                                    <input class="form-control js-datepicker" type="text" id="etime" name="etime"
+                                        data-date-format="yyyy-mm-dd" placeholder="至" autocomplete="off" value="">
+                                    <a href="#" class="search-btn a-submit btn btn-default input-group-addon"
+                                        id="basic-addon1"> <i class="mdi mdi-search-web"></i> 查询</a>
+                                    <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                            class="mdi mdi-reload"></i> 刷新</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body">
+                    <table id="test" lay-filter="test"></table>
+                    <script type="text/html" id="toolbarDemo">
+                        <div class="layui-btn-container">
+                            <button class="layui-btn layui-btn-sm" lay-event="getCheckData">新增优惠券</button>                            
+                        </div>
+                    </script>
+                    <script type="text/html" id="barDemo">
+                        <a lay-event='view' class="btn btn-xs btn-default" href="javascript:void(0)" title="领用记录" data-toggle="tooltip">领用记录</a>
+                        <a lay-event="del" class="layui-btn layui-btn-xs layui-btn-danger btn-delete" data-id="" href="javascript:void(0)" title="删除" data-toggle="tooltip">删除</a>
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatDateTime(dateStr) {
+        const date = new Date(dateStr);
+        return date.getUTCFullYear() + '-' +
+            String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getUTCDate()).padStart(2, '0') + ' ' +
+            String(date.getUTCHours()).padStart(2, '0') + ':' +
+            String(date.getUTCMinutes()).padStart(2, '0') + ':' +
+            String(date.getUTCSeconds()).padStart(2, '0');
+    }
+    layui.use(['table'], function () {
+        var table = layui.table
+            , $ = layui.$
+            , laytpl = layui.laytpl
+            , laydate = layui.laydate;
+        laydate.render({
+            elem: '#btime'
+        });
+        laydate.render({
+            elem: '#etime'
+        });
+        //全局设定某参数
+        table.set({
+            where: {
+                token: ''
+            }
+            , defaultToolbar: ["filter", "exports", "print"]
+            , toolbar: true
+            , loading: true
+        });
+
+        var option = {
+            elem: '#test'
+            , toolbar: '#toolbarDemo'
+            , height: 500
+            , title: '车辆列表'
+            , url: '/admin/coupons/list/json'
+            , request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+            }
+            , page: true
+            , limit: 50
+            , loading: true
+            , limits: [50, 100, 200]
+            , cols: [[
+                { field: 'id', title: '优惠券编号', width: 120 }
+                ,{ field: 'code', title: '优惠券代码', width: 200 }
+                ,{ field: 'type', title: '优惠券类型', sort: true, width: 140,templet:function(d){
+                    if(d.type == 1){
+                        return '代金券';
+                    }else if(d.type == 2){
+                        return '满减券';
+                    }else if(d.type == 3){
+                        return '拉新券';
+                    }
+                } }
+                , { field: 'name', title: '优惠券名称', width: 250 }
+                , { field: 'amount', title: '面额(元)', sort: true, width: 120 ,templet:function(d){
+                    return "<span style='color:red'>" + d.amount + "</span>"
+                }}
+                , { field: 'condition_amount', title: '使用条件', width: 120,templet:function(d){
+                    if(d.condition_amount == 0){
+                        return '无门槛';
+                    }else {
+                        return '<span class="layui-badge layui-bg-green">满' + d.condition_amount + '元可用</span>'
+                        //return `<span class="el-tag el-tag--small el-tag--primary permission-tag">${d.condition_amount}</span>`;
+                    }
+                } }
+                , { field: 'total_num', title: '发放数量', sort: true, width: 120, templet:function(d){
+                    return '<span class="layui-badge layui-bg-blue">' + d.total_num + '</span>'
+                } }
+                , { field: 'surplus', title: '剩余数量', width: 120,templet:function(d){
+                    return '<span class="layui-badge layui-bg-danger">' + d.total_num + '</span>'
+                } }
+                , { field: 'limit_num', title: '每人限领数量', width: 160 }
+                , { field: 'valid_date', title: '有效期', width: 300,templet:function(d){
+                    
+                    if(d.valid_type == 0)
+                    return '<span class="layui-badge">' + d.start_date + "-" + d.end_date + '</span>'
+                    else
+                        return '<span class="layui-badge">领取后' + d.valid_days + '天</span>';
+                } }
+                , { field: 'use_range', title: '适用于', width: 120,templet:function(d){
+                    if(d.use_range == 0)
+                        return '快车';
+                    else if(d.use_range == 1)
+                        return '城际快车';
+                    else if(d.use_range == 11)
+                        return '快车/城际快车';
+                } }
+                , { field: 'created_at', title: '创建时间', width: 180 }
+                , { field: 'description', title: '描述', width: 220 }
+                , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 180 }
+            ]]
+            , error: function (res, msg) {
+            }
+            , response: {
+                statusName: 'status'
+                , statusCode: 0
+            }
+            , done: function (res, curr, count) {
+                //当数据渲染完后，执行的回调
+            }
+            , parseData: function (res) {
+
+                return {
+                    "status": res.status
+                    , "msg": res.msg
+                    , "count": res.other.total
+                    , "data": res.data
+                };
+            }
+        }
+
+        table.render(option);
+
+        table.on('toolbar(test)', function (obj) {
+        
+            var othis = lay(this);
+            switch (obj.event) {
+                case 'getCheckData':
+                    layer.open({
+                        type: 2,
+                        title: '新增优惠券',
+                        shadeClose: false,
+                        shade: 0.8,
+                        area: ['95%', '95%'],
+                        content: '/admin/coupons/add'
+                    })
+
+                    break;
+            };
+        });
+
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                $.confirm({
+                    title: '提示',
+                    content: '确定删除当前优惠券记录？',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '是的',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                $.ajax({
+                                    url: '/admin/coupons/delete',
+                                    data: { 'id': data.id },
+                                    dataType: 'json',
+                                    type: 'post',
+                                    success: function (res) {
+                                        if (res.status != 0) {
+                                            msg(res.msg);
+                                            return;
+                                        }
+                                        msg(res.msg);
+                                        obj.del()
+                                    }
+                                })
+                            }
+                        },
+                        close: {
+                            text: '取消'
+                        }
+                    }
+                });
+            }
+            else if (obj.event == 'view') {
+                layer.open({
+                    type: 2,
+                    title: '领用记录查看',
+                    shadeClose: false,
+                    shade: 0.8,
+                    area: ['80%', '75%'],
+                    content: '/admin/coupons/take/list?flag=-1&id=' + data.id
+                })
+            }
+        });
+
+        $(".search-btn").click(function () {
+            let k = $("#couponType").val();
+            let n = $("#name").val()
+            let b = $("#btime").val()
+            if (b != "")
+                b += ' 00:00:00'
+            let e = $("#etime").val()
+            if (e != '')
+                e += ' 23:59:59'
+            let p1 = $("#amount").val()
+            let pe = $("#amount_end").val()
+
+            option.where = { 'couponType': k, 'name': n, 'btime': b, 'etime': e,'amount': p1, 'amount_end': pe }
+            console.log(option.where)
+            table.render(option)
+            return false;
+        })
+
+        $(".ref-btn").click(function () {
+            $("#couponType").val('')
+            $("#name").val('')
+            $("#btime").val('')
+            $("#etime").val('')
+            $("#amount").val("")
+            $("#amount_end").val('')
+            option.where = {}
+            table.render(option)
+            return false;
+        })
+
+        
+    });
+</script>
+
+{% endblock %}

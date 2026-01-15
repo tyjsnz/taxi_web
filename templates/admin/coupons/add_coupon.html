@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优惠券编辑 - 打车平台系统</title>
+    <!-- Element UI CSS -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-section {
+            margin-bottom: 30px;
+        }
+        .form-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .coupon-type-content {
+            padding: 15px;
+            border: 1px dashed #dcdfe6;
+            border-radius: 4px;
+            margin-top: 15px;
+            background-color: #fafafa;
+        }
+        .action-buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .condition-table {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="header">
+            <h1>优惠券编辑</h1>
+        </div>
+        
+        <el-form ref="form" :model="couponForm" label-width="120px" :rules="rules">
+            <!-- 基本信息 -->
+            <div class="form-section">
+                <div class="form-title">基本信息</div>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="优惠券名称" prop="name">
+                            <el-input v-model="couponForm.name" placeholder="请输入优惠券名称"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="优惠券类型" prop="type">
+                            <el-select v-model="couponForm.type" placeholder="请选择优惠券类型" @change="handleTypeChange">
+                                <el-option label="代金券" value="voucher"></el-option>
+                                <el-option label="拉新券" value="referral"></el-option>
+                                <el-option label="满减券" value="discount"></el-option>
+                                <el-option label="新用户立减" value="new_customer"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="发放总量" prop="total">
+                            <el-input-number v-model="couponForm.total" :min="1" :max="999999"></el-input-number>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="每人限领" prop="limit">
+                            <el-input-number v-model="couponForm.limit" :min="1" :max="10"></el-input-number>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="有效期类型" prop="validType">
+                            <el-radio-group v-model="couponForm.validType">
+                                <el-radio label="fixed">固定日期</el-radio>
+                                <el-radio label="dynamic">领取后生效</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12" v-if="couponForm.validType === 'fixed'">
+                        <el-form-item label="有效期" prop="dateRange">
+                            <el-date-picker
+                                v-model="couponForm.dateRange"
+                                type="daterange"
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期">
+                            </el-date-picker>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12" v-if="couponForm.validType === 'dynamic'">
+                        <el-form-item label="有效天数" prop="validDays">
+                            <el-input-number v-model="couponForm.validDays" :min="1" :max="365"></el-input-number>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                
+            </div>
+            
+            <!-- 优惠券类型特定内容 -->
+            <div class="form-section">
+                <div class="form-title">优惠内容</div>
+                
+                <!-- 代金券 -->
+                <div v-if="couponForm.type === 'voucher'" class="coupon-type-content">
+                    <el-form-item label="代金券面额" prop="voucherAmount">
+                        <el-input-number v-model="couponForm.voucherAmount" :min="1" :max="1000" :precision="2"></el-input-number> 元
+                    </el-form-item>
+                    
+                    <el-form-item label="使用条件" prop="voucherCondition">
+                        <el-input-number v-model="couponForm.voucherCondition" :min="0" :precision="2"></el-input-number> 元
+                        <p style="color: #999; margin-top: 5px;">订单满指定金额可使用,0表示无限制</p>
+                    </el-form-item>
+                </div>
+                
+                <!-- 满减券 -->
+                <div v-if="couponForm.type === 'discount'" class="coupon-type-content">                                        
+                    <el-form-item label="满减券面额" prop="discountAmount">
+                        <el-input-number v-model="couponForm.discountAmount" :min="0" :precision="2"></el-input-number> 元
+                        <p style="color: #999; margin-top: 5px;"></p>
+                    </el-form-item>
+
+                    <el-form-item label="使用条件" prop="discountCondition">
+                        <el-input-number v-model="couponForm.discountCondition" :min="0" :precision="2"></el-input-number> 元
+                        <p style="color: #999; margin-top: 5px;">订单满指定金额可使用</p>
+                    </el-form-item>
+                </div>
+                
+                <!-- 拉新券 -->
+                <div v-if="couponForm.type === 'referral'" class="coupon-type-content">
+                    <el-form-item label="拉新券面额" prop="referralAmount">
+                        <el-input-number v-model="couponForm.referralAmount" :min="1" :max="1000" :precision="2"></el-input-number> 元
+                    </el-form-item>
+                    
+                    <el-form-item label="发放对象" prop="referralTarget">
+                        <el-radio-group v-model="couponForm.referralTarget">
+                            <el-radio label="inviter">邀请人</el-radio>
+                            <el-radio label="invitee">被邀请人</el-radio>
+                            <el-radio label="both">双方</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+
+                    <el-form-item label="使用条件" prop="referralCondition">
+                        <el-input-number v-model="couponForm.referralCondition" :min="0" :precision="2"></el-input-number> 元
+                        <p style="color: #999; margin-top: 5px;">订单满指定金额可使用,0表示无限制</p>
+                    </el-form-item>
+                </div>
+            </div>
+            
+            <!-- 使用范围 -->
+            <div class="form-section" v-if="couponForm.type !== 'referral'">
+                <div class="form-title">使用范围</div>
+                
+                <el-form-item label="适用服务" prop="serviceType">
+                    <el-checkbox-group v-model="couponForm.serviceType">
+                        <el-checkbox label="fast">快车</el-checkbox>
+                        <el-checkbox label="premium">城际快车</el-checkbox>
+                        <!-- <el-checkbox label="luxury">豪华车</el-checkbox>
+                        <el-checkbox label="pool">拼车</el-checkbox>
+                        <el-checkbox label="business">商务车</el-checkbox> -->
+                    </el-checkbox-group>
+                </el-form-item>
+                
+                <el-form-item label="适用城市" style="display: none;">
+                    <el-transfer
+                        v-model="couponForm.selectedCities"
+                        :data="cities"
+                        :titles="['可选城市', '已选城市']"
+                        filterable
+                        filter-placeholder="请输入城市名称">
+                    </el-transfer>
+                </el-form-item>
+            </div>
+
+            <div class="form-section">
+                <div class="form-title">优惠券说明</div>
+                <el-form-item label=""  class="coupon-type-content" label-width="40px">
+                    <el-input type="textarea" :row="3" v-model="couponForm.description" style="width: 400px;"></el-input>
+                </el-form-item>
+            </div>
+            
+        
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <el-button type="primary" @click="submitForm">保存</el-button>
+                <el-button @click="resetForm">重置</el-button>
+                <el-button @click="cancel">取消</el-button>
+            </div>
+        </el-form>
+    </div>
+
+    <!-- Vue.js -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <!-- Element UI JS -->
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    
+    
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    couponForm: {
+                        name: '',
+                        type: 'voucher',
+                        total: 100,
+                        limit: 1,
+                        validType: 'fixed',
+                        dateRange: [],
+                        validDays: 7,
+                        description: '',
+                        
+                        // 代金券相关
+                        voucherAmount: 10,
+                        voucherCondition: 0,
+                        
+                        // 满减券相关
+                        discountCondition: 20,
+                        discountAmount: 0,
+                        
+                        // 拉新券相关
+                        referralAmount: 15,
+                        referralTarget: 'both',
+                        referralCondition: '新用户完成首单后发放',
+                        
+                        // 使用范围
+                        serviceType: ['fast', 'premium'],
+                        selectedCities: []
+                    },
+                    
+                    cities: [],
+                    rules: {
+                        name: [
+                            { required: true, message: '请输入优惠券名称', trigger: 'blur' },
+                            { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+                        ],
+                        type: [
+                            { required: true, message: '请选择优惠券类型', trigger: 'change' }
+                        ],
+                        total: [
+                            { required: true, message: '请输入发放总量', trigger: 'blur' }
+                        ],
+                        limit: [
+                            { required: true, message: '请输入每人限领数量', trigger: 'blur' }
+                        ],
+                        validType: [
+                            { required: true, message: '请选择有效期类型', trigger: 'change' }
+                        ],
+                        dateRange: [
+                            { required: true, message: '请选择有效期', trigger: 'change' }
+                        ],
+                        validDays: [
+                            { required: true, message: '请输入有效天数', trigger: 'blur' }
+                        ],
+                        voucherAmount: [
+                            { required: true, message: '请输入代金券面额', trigger: 'blur' }
+                        ],
+                        discountAmount: [
+                            { required: true, message: '请输入满减券面额', trigger: 'blur' }
+                        ],
+                        referralAmount: [
+                            { required: true, message: '请输入优惠金额', trigger: 'blur' }
+                        ],
+                        discountCondition: [
+                            { required: true, message: '请输入使用条件', trigger: 'blur' }
+                        ],
+                        voucherCondition:[
+                            { required: true, message: '请输入使用条件', trigger: 'blur' }
+                        ]
+                    },
+                    conditionTable: null,
+                    loading: false
+                }
+            },
+            mounted() {
+                // 模拟城市数据
+                this.generateCities();
+                
+            },
+            methods: {
+                handleTypeChange(val) {
+                    console.log('优惠券类型变更为:', val);
+                },
+                
+                generateCities() {
+                    const cityNames = ['楚雄', '广州', '深圳', '杭州', '成都', '重庆', '武汉', '西安', '南京'];
+                    this.cities = cityNames.map(city => {
+                        return {
+                            key: city,
+                            label: city
+                        };
+                    });
+                },
+
+                submitForm() {
+                    this.$refs.form.validate(valid => {
+                        if (valid) {
+                            this.loading="loading"
+                            axios.post('/admin/coupons/add', this.couponForm)
+                            .then(response => {
+                                this.loading=false
+                                this.$message({
+                                    message: '提交成功',
+                                    type: 'success'
+                                });
+                            })
+                            .catch(error => {
+                                this.$message.error('保存失败：' + error.message);
+                                this.loading = false;
+                            });
+
+                            
+                            console.log('提交的数据:', this.form);
+                        } else {
+                            this.$message.error('请检查表单填写是否正确');
+                            return false;
+                        }
+                    });
+                },
+                
+                resetForm() {
+                    this.$refs.form.resetFields();
+                },
+                
+                cancel() {
+                    this.$confirm('确定要取消编辑吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消'
+                        });
+                        // 这里可以添加页面跳转逻辑
+                    });
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

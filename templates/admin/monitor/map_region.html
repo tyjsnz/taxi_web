@@ -1,0 +1,332 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+  <style>
+    html,
+    body,
+    #container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 右键菜单样式 */
+    .context-menu {
+      background: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+      padding: 5px 0;
+      min-width: 120px;
+    }
+
+    .context-menu-item {
+      padding: 5px 15px;
+      cursor: pointer;
+    }
+
+    .context-menu-item:hover {
+      background: #f0f0f0;
+    }
+  </style>
+  <title>电子围栏</title>
+  <!-- <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" /> -->
+  <script
+    src="https://webapi.amap.com/maps?v=2.0&key=03efa032b6a9f665e0ae6c1e5923f2ba&plugin=AMap.PolygonEditor,AMap.ContextMenu"></script>
+  <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+
+
+  <link href="/static/libs/layui/css/layui.css" rel="stylesheet">
+  <script src="/static/common/jquery.3.7.1.js"></script>
+  <script src="/static/libs/layui/layui.js"></script>
+</head>
+
+<body>
+
+  <form class="layui-form layui-form-pane" action="">
+    <div class="layui-row"
+      style="position: fixed; z-index: 1111; width: 100vw; background-color: #fff; text-align: right; padding-right: 20px;">
+
+      <div style="display: block; float: right; width: auto;" >
+        <span style="line-height:35px; margin: 0 30px; font-size: 14px; color: #ff6b99;">双击可编辑现在围栏，双击可结束绘制，右键操作围栏</span>
+      </div>
+      <!-- 【添加围栏】按钮放前面 -->
+      <div class="layui-col-xs6" style="display: block; float: right; width: auto; margin-left: 10px;">
+        <button type="button" class="layui-btn" onclick="createPolygon()">添加围栏</button>
+      </div>
+
+      <!-- 【加载围栏】按钮放后面 -->
+      <div class="layui-col-xs6" style="display: inline-block; float: right; width: auto;">
+        <label class="layui-form-label" style="width: 140px">加盟商运营范围</label>
+        <div class="layui-input-group">
+          <select id="sel_company">
+            <option value=""></option>
+          </select>
+          <button type="button" class="layui-btn" onclick="loadRegion()">加载围栏</button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+  <div id="container"></div>
+
+
+  <div class="input-card" style="width: 120px">
+    <button class="btn" onclick="createPolygon()" style="margin-bottom: 5px">新建</button>
+    <button class="btn" onclick="polyEditor.open()" style="margin-bottom: 5px">开始编辑</button>
+    <button class="btn" onclick="polyEditor.close()">结束编辑</button>
+  </div>
+  <script type="text/javascript">
+    var map = new AMap.Map("container", {
+      center: [102.749646, 25.035358],
+      zoom: 16.8
+    });
+
+    var path1 = [[116.475334, 39.997534], [116.476627, 39.998315], [116.478603, 39.99879], [116.478529, 40.000296], [116.475082, 40.000151], [116.473421, 39.998717]]
+    var path2 = [[116.474595, 40.001321], [116.473526, 39.999865], [116.476284, 40.000917]]
+    var polygon1 = new AMap.Polygon({
+      path: path1,
+      'name': 'polygon1',
+      'id': 1,
+      'cid': 2,
+    })
+    var polygon2 = new AMap.Polygon({
+      path: path2,
+      'name': 'polygon2',
+      'id': 2,
+      'cid': 2,
+    })
+
+    //map.add([polygon1, polygon2]);
+    //map.setFitView();
+
+    // 创建右键菜单
+    var contextMenu = new AMap.ContextMenu();
+
+    contextMenu.addItem("取消编辑", function () {
+      polyEditor.close();
+    });
+    // 添加菜单项
+    contextMenu.addItem("保存编辑", function () {
+      var polygon = contextMenu.targetPolygon;
+      if (polygon) {
+        var path = polygon.getPath();
+        console.log("保存围栏路径:", path);
+        // 这里可以调用保存到后台的函数
+        // saveToBackend(path);
+        //alert("围栏已保存！路径点数量: " + path.length);
+        polyEditor.close()
+
+        var pos = []
+        for (let i in path) {
+          pos.push([path[i].lng, path[i].lat])
+        }
+
+        let cid = polygon._opts.extData.cid
+        let id = polygon._opts.extData.id
+        if (id == undefined || id == '')
+          id = 0
+        if (cid == undefined || cid == '')
+          cid = $("#sel_company").val()
+
+        saveToDb(pos, id, cid)
+      }
+    });
+
+    contextMenu.addItem("删除围栏", function () {
+      var polygon = contextMenu.targetPolygon;
+      if (polygon) {
+        console.log('remove polygon:', polygon)
+        map.remove(polygon);
+        // 如果正在编辑这个多边形，先关闭编辑
+        if (polyEditor.getTarget() === polygon) {
+          polyEditor.close();
+        }
+        console.log("围栏已删除");
+
+        let cid = polygon._opts.extData.cid
+        let id = polygon._opts.extData.id
+        if (id == undefined || id == '')
+          id = 0
+        if (cid == undefined || cid == '')
+          cid = $("#sel_company").val()
+
+          if(id > 0 && cid > 0){
+            $.ajax({
+              url: "/admin/monitor/map/region/delete",
+              type: "POST",
+              dataType: "json",
+              data: {
+                id: id,
+                cid: cid
+              },
+              success: function (data) {
+                if (data.status == 0) {
+                  console.log("围栏已删除");
+                  layer.alert("围栏已删除")
+                } else {
+                  layer.alert(data.msg);
+                }
+              }
+            })
+          }
+      }
+    });
+
+    // 绑定右键菜单到地图
+    map.on('rightclick', function (e) {
+      console.log("rightclick:", e.lnglat)
+      // 检查是否点击了多边形
+      var clickedPolygon = null;
+      map.getAllOverlays('polygon').forEach(function (polygon) {
+        if (AMap.GeometryUtil.isPointInRing(e.lnglat, polygon.getPath())) {
+          clickedPolygon = polygon;
+        }
+      });
+
+      if (clickedPolygon) {
+        contextMenu.targetPolygon = clickedPolygon;
+        contextMenu.open(map, e.lnglat);
+      } else {
+        contextMenu.close();
+      }
+    });
+
+    var polyEditor = new AMap.PolygonEditor(map);
+
+    polyEditor.on('add', function (data) {
+      var polygon = data.target;
+      polyEditor.addAdsorbPolygons(polygon);
+      polygon.on('dblclick', () => {
+        polyEditor.setTarget(polygon);
+        polyEditor.open();
+      });
+    });
+    function createPolygon() {
+      polyEditor.close();
+      polyEditor.setTarget();
+      polyEditor.open();
+    }
+
+    // 监听编辑结束事件
+    polyEditor.on('end', function (event) {
+      var polygon = event.target;
+      var path = polygon.getPath();
+      // console.log('编辑后的路径:', path);
+      // console.log(polygon)
+      // console.log(polygon._opts.name)
+    });
+
+    function saveToDb(pos, id, cid) {
+      fetch('/admin/monitor/map/region', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_id: cid,
+          id: id,
+          path: pos
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status == 0) {
+            layer.alert('保存成功');
+          } else {
+            layer.alert('保存失败: ' + data.message);
+          }
+        });
+    }
+
+    function loadRegion() {
+      let id = $('#sel_company').val();
+      fetch('/admin/monitor/map/region/json?company_id=' + id, {
+        method: 'get',
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status == 0 && data.data.length > 0) {
+
+            // 清除已有图形
+            if (window.loadedPolygons) {
+              map.remove(window.loadedPolygons);
+            }
+
+            const polygons = []
+            // 创建多边形集合
+            data.data.map(item => {
+              const polygon = new AMap.Polygon({
+                path: item.path_data,
+                strokeColor: "#FF33FF",
+                strokeWeight: 2,
+                fillColor: "#1791fc",
+                fillOpacity: 0.4,
+                extData: {
+                  cid: item.company_id,
+                  id: item.id
+                }
+              });
+
+              // ✅ 为每个 polygon 添加双击事件
+              polygon.on('dblclick', () => {
+                polyEditor.setTarget(polygon);
+                polyEditor.open();
+              });
+
+              polygons.push(polygon);
+
+            });
+
+            // 存储已加载的图形，便于后续清除或操作
+            window.loadedPolygons = polygons;
+
+            // 添加到地图
+            map.add(polygons);
+
+            // 设置视口自适应
+            map.setFitView();
+
+            // 注册编辑器吸附
+            polyEditor.addAdsorbPolygons(polygons);
+
+            layer.msg(`成功加载 ${data.data.length} 个围栏数据`);
+          } else {
+            if (window.loadedPolygons) {
+              map.remove(window.loadedPolygons);
+            }
+            layer.msg('没有可加载的围栏数据');
+          }
+        });
+    }
+
+    function get_region() {
+      $.ajax({
+        url: '/admin/company/list/json',
+        type: 'get',
+        dataType: 'json',
+        success: function (data) {
+          console.log(data);
+          if (data.status != 0)
+            return
+          var html = ''
+          for (let i in data.data) {
+            html += '<option value="' + data.data[i].id + '">' + data.data[i].name + '</option>'
+          }
+          $("#sel_company").html(html)
+          layui.form.render('select');
+        }
+      })
+    }
+
+    $(function () {
+      get_region();
+    })
+
+  </script>
+</body>
+
+</html>

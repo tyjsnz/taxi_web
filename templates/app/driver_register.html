@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LS出行 - 司机注册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 15px;
+        }
+
+        .header {
+            background-color: #FF6B00;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-title:before {
+            content: "";
+            display: inline-block;
+            width: 3px;
+            height: 16px;
+            background-color: #FF6B00;
+            margin-right: 8px;
+        }
+
+        .input-item {
+            margin-bottom: 15px;
+        }
+
+        .input-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .input-item input,
+        .input-item select {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 0 12px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-item input:focus,
+        .input-item select:focus {
+            border-color: #FF6B00;
+        }
+
+        .upload-item {
+            margin-bottom: 15px;
+        }
+
+        .upload-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-desc {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .upload-box {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .upload-btn {
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 12px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-btn i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .upload-btn input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+        }
+
+        .preview-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 4px;
+            object-fit: cover;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            height: 48px;
+            background-color: #FF6B00;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            outline: none;
+        }
+
+        .submit-btn:disabled {
+            background-color: #FFB78E;
+        }
+
+        .agreement {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .agreement input {
+            margin-right: 5px;
+        }
+
+        .agreement a {
+            color: #FF6B00;
+            text-decoration: none;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        .preview-img {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></div>
+        司机注册
+    </div>
+
+    <div class="container">
+        <div class="form-group">
+            <div class="form-title">基本信息</div>
+
+            <div class="input-item">
+                <label for="name">真实姓名</label>
+                <input type="text" id="name" placeholder="请输入与身份证一致的姓名">
+            </div>
+
+            <div class="input-item">
+                <label for="phone">手机号码</label>
+                <input type="tel" id="phone" placeholder="请输入手机号码">
+            </div>
+
+            <div class="input-item">
+                <label for="idCard">身份证号</label>
+                <input type="text" id="idCard" placeholder="请输入身份证号码">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-title">身份证上传</div>
+
+            <div class="upload-item">
+                <div class="upload-title">身份证正面(人像面)</div>
+                <div class="upload-desc">请确保身份证信息清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="idCardFrontBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="idCardFront"
+                            onchange="previewImage(this, 'idCardFrontPreview')">
+                    </div>
+                    <input type="hidden" id="idCardFrontUrl" value="">
+                    <img src="" alt="" class="preview-img" id="idCardFrontPreview">
+                </div>
+            </div>
+
+            <div class="upload-item">
+                <div class="upload-title">身份证反面(国徽面)</div>
+                <div class="upload-desc">请确保身份证信息清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="idCardBackBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="idCardBack"
+                            onchange="previewImage(this, 'idCardBackPreview')">
+                    </div>
+                    <input type="hidden" id="idCardBackUrl" value="">
+                    <img src="" alt="" class="preview-img" id="idCardBackPreview">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-title">驾驶证上传</div>
+
+            <div class="upload-item">
+                <div class="upload-title">驾驶证主页</div>
+                <div class="upload-desc">请确保驾驶证信息清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="driverLicenseFrontBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="driverLicenseFront"
+                            onchange="previewImage(this, 'driverLicenseFrontPreview')">
+                    </div>
+                    <input type="hidden" id="driverLicenseFrontUrl" value="">
+                    <img src="" alt="" class="preview-img" id="driverLicenseFrontPreview">
+                </div>
+            </div>
+
+            <div class="upload-item">
+                <div class="upload-title">驾驶证副页</div>
+                <div class="upload-desc">请确保驾驶证信息清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="driverLicenseBackBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="driverLicenseBack"
+                            onchange="previewImage(this, 'driverLicenseBackPreview')">
+                    </div>
+                    <input type="hidden" id="driverLicenseBackUrl" value="">
+                    <img src="" alt="" class="preview-img" id="driverLicenseBackPreview">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-title">行驶证上传</div>
+
+            <div class="upload-item">
+                <div class="upload-title">行驶证主页</div>
+                <div class="upload-desc">请确保行驶证信息清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="vehicleLicenseFrontBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="vehicleLicenseFront"
+                            onchange="previewImage(this, 'vehicleLicenseFrontPreview')">
+                    </div>
+                    <input type="hidden" id="vehicleLicenseFrontUrl" value="">
+                    <img src="" alt="" class="preview-img" id="vehicleLicenseFrontPreview">
+                </div>
+            </div>
+
+            <div class="upload-item">
+                <div class="upload-title">行驶证副页</div>
+                <div class="upload-desc">请确保行驶证信息清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="vehicleLicenseBackBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="vehicleLicenseBack"
+                            onchange="previewImage(this, 'vehicleLicenseBackPreview')">
+                    </div>
+                    <input type="hidden" id="vehicleLicenseBackUrl" value="">
+                    <img src="" alt="" class="preview-img" id="vehicleLicenseBackPreview">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-title">车辆照上传</div>
+
+            <div class="upload-item">
+                <div class="upload-title">侧前方</div>
+                <div class="upload-desc">请确保车辆侧方及车牌清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="carFrontBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="carFrontBtn"
+                            onchange="previewImage(this, 'carFrontPreview')">
+                    </div>
+                    <input type="hidden" id="carFrontUrl" value="">
+                    <img src="" alt="" class="preview-img" id="carFrontPreview">
+                </div>
+            </div>
+
+            <div class="upload-item">
+                <div class="upload-title">侧后方</div>
+                <div class="upload-desc">请确保辆后侧方及车牌清晰可见，无遮挡无反光</div>
+                <div class="upload-box">
+                    <div class="upload-btn" id="carBackBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>点击上传</span>
+                        <input type="file" accept="image/*" id="carBack"
+                            onchange="previewImage(this, 'carBackPreview')">
+                    </div>
+                    <input type="hidden" id="carBackUrl" value="">
+                    <img src="" alt="" class="preview-img" id="carBackPreview">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-title">车辆信息</div>
+
+            <div class="input-item">
+                <label for="plateNumber">车牌号码</label>
+                <input type="text" id="plateNumber" placeholder="请输入车牌号码">
+            </div>
+
+            <div class="input-item">
+                <label for="vehicleType">车辆类型</label>
+                <select id="vehicleType">
+                    <option value="">请选择车辆类型</option>
+                    <option value="1">小型轿车</option>
+                    <option value="2">SUV</option>
+                    <option value="3">MPV</option>
+                    <option value="4">新能源车</option>
+                </select>
+            </div>
+
+            <div class="input-item">
+                <label for="vehicleColor">车辆颜色</label>
+                <select id="vehicleColor">
+                    <option value="">请选择车辆颜色</option>
+                    <option value="1">白色</option>
+                    <option value="2">黑色</option>
+                    <option value="3">银色</option>
+                    <option value="4">红色</option>
+                    <option value="5">蓝色</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-title">推荐人</div>
+
+            <div class="input-item">
+                <label for="recommend_phone">推荐人手机号码</label>
+                <input type="text" id="recommend_phone" placeholder="如有则填写">
+                <div class="upload-desc">如有则填写，可以获得推荐奖励</div>
+            </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" disabled>提交审核</button>
+
+        <div class="agreement">
+            <input type="checkbox" id="agreeCheck" onchange="checkAgreement()">
+            <span>我已阅读并同意<a href="javascript:showAgreement()">《LS出行司机协议》</a></span>
+        </div>
+    </div>
+
+    <script src="/static/common/jquery.3.7.1.js"></script>
+    <script src="/static/libs/layui/layui.js"></script>
+    <script>
+        // 返回按钮
+        function goBack() {
+            // 与Android交互
+            if (typeof Android !== 'undefined' && Android.goBack) {
+                Android.goBack();
+            } else {
+                history.back();
+            }
+        }
+
+        // 图片预览
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById(previewId).src = e.target.result;
+                    document.getElementById(previewId).style.display = 'block';
+
+                    // 上传图片到服务器(实际项目中需要实现)
+                    uploadFile(input.id, file, previewId);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 模拟文件上传
+        function uploadFile(fieldName, file, previewId) {
+            console.log('开始上传:', fieldName, file.name);
+
+            // 实际项目中这里应该使用AJAX上传文件
+            // 示例代码:
+
+            layer.load(0, { time: 10000 })
+            const formData = new FormData();
+            formData.append(fieldName, file);
+
+            fetch('/app/driver/register/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    let hidUrl = previewId.replace('Preview', "Url")
+                    layer.closeAll()
+                    console.log('上传成功:', data);
+                    $("#" + hidUrl).val(data.data[0])
+                    $(previewId).show()
+                    layer.msg('上传成功')
+                })
+                .catch(error => {
+                    layer.closeAll()
+                    console.error('上传失败:', error);
+                    layer.msg('上传失败')
+                });
+
+            checkForm()
+        }
+
+        // 检查表单是否完整
+        function checkForm() {
+            const requiredFields = [
+                'name', 'phone', 'idCard',
+                'plateNumber', 'vehicleType', 'vehicleColor'
+            ];
+
+            const requiredImages = [
+                'idCardFrontUrl', 'idCardBackUrl',
+                'driverLicenseFrontUrl', 'driverLicenseBackUrl',
+                'vehicleLicenseFrontUrl', 'vehicleLicenseBackUrl',
+                'carFrontUrl', 'carBackUrl'
+            ];
+
+            // 检查文本字段
+            let isFormValid = requiredFields.every(id => {
+                const value = document.getElementById(id).value.trim();
+                return value !== '';
+            });
+
+            // 检查图片是否上传
+            isFormValid = isFormValid && requiredImages.every(id => {
+                const value = document.getElementById(id).value.trim();
+                console.log(id, value)
+                return value !== '';
+            });
+
+            // 检查是否同意协议
+            isFormValid = isFormValid && document.getElementById('agreeCheck').checked;
+
+            document.getElementById('submitBtn').disabled = !isFormValid;
+        }
+
+        // 协议勾选状态变化
+        function checkAgreement() {
+            checkForm();
+        }
+
+        // 显示用户协议
+        function showAgreement() {
+            // 与Android交互
+            if (typeof Android !== 'undefined' && Android.showAgreement) {
+                Android.showAgreement();
+            } else {
+                layui.use(function () {
+                    layer.alert('《LS出行司机协议》内容...');
+                });
+            }
+        }
+
+        // 提交表单
+        document.getElementById('submitBtn').addEventListener('click', function () {
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                id_card: document.getElementById('idCard').value.trim(),
+                car_no: document.getElementById('plateNumber').value.trim(),
+                car_type: document.getElementById('vehicleType').value,
+                car_color: document.getElementById('vehicleColor').value,
+                id_car_img: $("#idCardFrontUrl").val(),
+                id_car_img1: $("#idCardBackUrl").val(),
+                driver_license_img: $("#driverLicenseFrontUrl").val(),
+                driver_license_img1: $("#driverLicenseBackUrl").val(),
+                car_license_img: $("#vehicleLicenseFrontUrl").val(),
+                car_license_img1: $("#vehicleLicenseBackUrl").val(),
+                car_img: $("#carFrontUrl").val(),
+                car_img1: $("#carBackUrl").val(),
+                recommend_phone: $("#recommend_phone").val()
+            };
+
+            console.log('提交数据:', formData);
+
+
+            fetch('/app/driver/register/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.status == 0) {
+                        // 注册成功
+                        layui.use(function () {
+                            layer.alert('注册成功，请注意审核结果', function (index) {
+                                layer.close(index)
+                                //window.location.href = '/app/driver'
+                                // 与Android交互
+                                if (window.AndroidBridge)
+                                    AndroidBridge.registerSuccess('注册成功，请注意审核结果')
+                            });
+                        });
+
+                    } else {
+                        layui.use(function () {
+                            layer.alert(data.msg || '注册失败');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    layui.use(function () {
+                        layer.alert('网络错误，请重试');
+                    });
+                });
+        });
+
+        // 监听输入变化
+        const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], select');
+        inputs.forEach(input => {
+            input.addEventListener('input', checkForm);
+            input.addEventListener('change', checkForm);
+        });
+    </script>
+</body>
+
+</html>

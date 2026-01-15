@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>抢单大厅</title>
+    <!-- 引入Element UI样式 -->
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <link rel="stylesheet" href="/static/libs/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        .fix-header {
+            z-index: 11;
+            height: 45px;
+            background-color: #ff6b00;
+            line-height: 30px;
+            position: fixed;
+            width: 100%;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            display: flex;
+            font-size: 16px;
+        }
+
+        .header i {
+            font-size: 25px;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+            text-align: center;
+        }
+
+        .refresh-text {
+            font-size: 14px;
+            color: #999;
+            position: absolute;
+            right: 10px;
+        }
+
+        .refresh-text span {
+            color: #ff6b00;
+            font-size: 16px;
+        }
+
+        .filter-section {
+            display: flex;
+            padding: 10px 15px;
+            background-color: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .filter-item {
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-arrow {
+            margin-left: 5px;
+            color: #999;
+        }
+
+        .banner {
+            padding: 20px;
+        }
+
+        .banner img {
+            width: 100%;
+            height: auto;
+        }
+
+        .empty-section {
+            text-align: center;
+            padding: 40px 15px;
+            background-color: #fff;
+            margin: 15px;
+            border-radius: 8px;
+        }
+
+        .empty-icon {
+            font-size: 50px;
+            color: #67C23A;
+            margin-bottom: 15px;
+        }
+
+        .empty-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .empty-subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn {
+            background-color: #fff;
+            color: #ff6b00;
+            border: 1px solid #ff6b00;
+            width: 120px;
+            height: 40px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .fixed-bottom {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 抢单部分 */
+        .card-box {
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .order-card {
+            padding: 1px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .order-price {
+            color: #ff6b00;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .order-locations .location-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .location-icon {
+            color: #1890ff;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .location-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .order-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-item i {
+            margin-right: 5px;
+        }
+
+        .action-button {
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .accept-btn {
+            background-color: #ff6b00;
+            color: #fff;
+            border: none;
+            width: 100%;
+            height: 40px;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .accept-btn:hover {
+            background-color: #e05a00;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="container">
+            <div class="fix-header"></div>
+            <!-- 头部标题 -->
+            <div class="header">
+                <div>
+                    <i class="el-icon-arrow-left back-icon" @click="goBack"></i>
+                </div>
+                <div class="header-title">抢单大厅</div>
+            </div>
+            <!-- 筛选条件 -->
+            <div class="filter-section">
+                <div class="filter-item" @click="showActionsheet">
+                    <span class="el-dropdown-link">
+                        <span v-text="order_desc"></span>
+                        <i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                </div>
+
+                <div class="refresh-text" v-if="accept_order_model == 1"><span>${refTime}s</span>自动刷新</div>
+            </div>
+
+            <!-- 广告横幅 -->
+            <div class="banner" @click="viewBanner">
+                <img src="/static/images/app/grab_mini_ad.png">
+            </div>
+
+            <div class="empty-section" v-if="accept_order_model == 0">
+                <i class="el-icon-success empty-icon"></i>
+                <div class="empty-title">当前接单模式为“系统派单”</div>
+                <div class="empty-subtitle">接单模式设置为系统派单时才可进行抢单操作。</div>
+            </div>
+
+            <!-- 空状态提示 -->
+            <div class="empty-section" v-if="!order_list">
+                <i class="el-icon-success empty-icon"></i>
+                <div class="empty-title">附近暂无可抢的订单</div>
+                <div class="empty-subtitle">也可以先出车看看呢?一会再来看看吧</div>
+                <div class="fixed-bottom">
+                    <button class="refresh-btn" @click="refresh">重新刷新</button>
+                </div>
+            </div>
+
+            <el-card class="card-box" v-else v-for="(order, index) in order_list" :key="index">
+                <div class="order-card">
+                    <!-- 订单头部 -->
+                    <div class="order-header">
+                        <span class="order-id">单号：${order.sn}</span>
+                        <span class="order-price">${order.ev_price}元</span>
+                        <!-- <span class="order-price">order.total_fee元</span> -->
+                    </div>
+
+                    <!-- 起点和终点 -->
+                    <div class="order-locations">
+                        <div class="location-row">
+                            <i class="fas fa-map-marker-alt location-icon"></i>
+                            <span class="location-text">${order.start_location}</span>
+                        </div>
+                        <div class="location-row">
+                            <i class="fas fa-flag location-icon"></i>
+                            <span class="location-text">${order.end_location}</span>
+                        </div>
+                    </div>
+
+                    <!-- 订单详情 -->
+                    <div class="order-details">
+                        <div class="detail-item">
+                            <i class="iconfont icon-juli trip-location-icon"></i>
+                            ${formatOrderDistance(order.distance)}
+                        </div>
+                        <div class="detail-item">
+                            ${order.order_type}
+                        </div>
+                        <div class="detail-item">
+                            <i class="el-icon-time"></i>
+                            <span v-text="formatOrderTime(order.order_time)"></span>
+                        </div>
+                    </div>
+
+                    <!-- 接单按钮 -->
+                    <div class="action-button">
+                        <button class="accept-btn" @click="acceptOrder(order)">立即接单</button>
+                    </div>
+                </div>
+            </el-card>
+
+
+            <div>
+                <mt-actionsheet :actions="actions" v-model="sheetVisible" cancel-text="取消">
+                </mt-actionsheet>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 引入Vue和Element UI -->
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/libs/mint-ui/css/style.css">
+    <!-- 引入组件库 -->
+    <script src="/static/libs/mint-ui/js/index.js"></script>
+
+    <script>
+        const app = new Vue({
+            el: '#app',
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    token: "{{ session.token}}",
+                    driver_id: "{{ session.driver_id}}",
+                    order_desc: '价格最高',
+                    timer: null,
+                    refTime: 10,
+                    hasOrder: false,
+                    isLoading: true,
+                    sheetVisible: false,
+                    order_list: [],
+                    actions: [{
+                        name: '价格最高',
+                        method: this.selectOption1
+                    }, {
+                        name: '距离最近',
+                        method: this.selectOption2
+                    }],
+                    accept_order_model: 0, // 系统派单,1=抢单
+                }
+            },
+            mounted() {
+                this.refTime = 10;
+                this.get_profile()
+                //this.pullOrder()
+            },
+            methods: {
+                get_profile() {
+                    var that = this
+                    fetch(`/app/driver/profile/json?driver_id=${this.driver_id}`)
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.status == 0) {
+                                that.accept_order_model = res.data.accept_order_model == 0 ? 0 : 1
+
+                                // 0=系统派单时没有抢单功能
+                                if (that.accept_order_model == 0) {
+                                    that.order_list = []
+                                    return
+                                }
+
+                                // 订单倒计时
+                                if (that.timer) clearInterval(that.timer);
+                                that.timer = setInterval(() => {
+                                    that.refTime--;
+                                    if (that.refTime <= 0) {
+                                        //clearInterval(this.timer);
+                                        that.refTime = 10
+                                        that.hasOrder = false;
+                                        //this.$toast('Hello world!')
+
+                                        that.pullOrder()
+                                    }
+                                }, 1000);
+
+                                that.pullOrder()
+                            }
+                        })
+                },
+
+                pullOrder() {
+                    /*this.$indicator.open({
+                        text: '刷新成功',
+                        //duration: 1000,
+                        icon: 'success'
+                    });*/
+
+                    var that = this
+
+                    getRequest('/app/driver/order/accept/list', { 'driver_id': this.driver_id, 'token': this.token }, (res, status) => {
+                        this.$indicator.close();
+                        if (res.status != 0) {
+                            console.log("error", res)
+                        }
+                        else {
+                            that.order_list = res.data
+                            for (let i in that.order_list) {
+                                let order_type = that.order_list[i].order_type
+                                if (order_type == 1) {
+                                    that.order_list[i].order_type = '先付后乘'
+                                }
+                                else {
+                                    that.order_list[i].order_type = '先乘后付'
+                                }
+                            }
+                            // 默认加载时按价格排序
+                            this.selectOption1()
+                        }
+                    });
+                },
+                acceptOrder(item) {
+                    console.log("接单", item);
+                    // if (this.currentStatus != 'working') {
+                    //     AndroidBridge.showMsg('当前状态不允许接单')
+                    //     return
+                    // }
+
+                    // 保存当前订单信息
+                    this.currentOrder = item
+
+                    item.distance = this.formatOrderDistance(item.distance)
+                    item.duration = this.formatOrderDuration(item.duration)
+                    //AndroidBridge.showMsg(item.distance + ' ' + item.duration)
+
+                    if (window.AndroidBridge) {                        
+                        const latlng = AndroidBridge.acceptOrder(JSON.stringify(item), true)                        
+                    }
+                },
+                formatOrderTime(orderTime) {
+                    return formatTime(orderTime)
+                },
+                formatOrderDistance(orderDistance) {
+                    return formatDistance(orderDistance)
+                },
+                formatOrderDuration(orderDuration) {
+                    return formatDuration(orderDuration)
+                },
+                goBack() {
+                    console.log('返回上一页');
+                    window.history.back()
+                },
+                viewBanner() {
+                    console.log('查看广告横幅');
+                    // 这里可以跳转到相关页面
+                },
+                refresh() {
+                    console.log('重新刷新');
+                    // 这里可以添加刷新逻辑
+                    this.$indicator.open({
+                        text: '刷新成功',
+                        //duration: 1000,
+                        icon: 'success'
+                    });
+
+                    setTimeout(() => {
+                        this.$indicator.close();
+                    }, 1000);
+                },
+                showActionsheet() {
+                    this.sheetVisible = true;
+                },
+                // 按价格从高到低排序
+                selectOption1() {
+                    this.order_desc = '价格最高'
+                    if (this.order_list)
+                        this.order_list = [...this.order_list].sort((a, b) => b.total_fee - a.total_fee)
+                },
+
+                // 按距离从近到远排序
+                selectOption2() {
+                    this.order_desc = '距离最近'
+                    if (this.order_list)
+                        this.order_list = [...this.order_list].sort((a, b) => a.distance - b.distance)
+                },
+            }
+        });
+        window.app = app
+        // 要调用vue中的方法时可使用：window.app.billOrder(order_id)
+        window.billOrder = function (order_id) {            
+            //显示帐单
+            location.href = '/app/driver/trip_over.html?order_id=' + order_id
+        }
+    </script>
+</body>
+
+</html>

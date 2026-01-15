@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>彝州出行用户协议</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+   .container {
+      width: 80%;
+      max-width: 800px;
+      background-color: white;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      border-radius: 5px;
+    }
+
+    h2 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 10px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+   .agree-container {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+   .agree-container input {
+      margin-right: 10px;
+    }
+
+   .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: #007BFF;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+   .btn:hover {
+      background-color: #0056b3;
+    }
+
+   .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>一、协议声明</h2>
+    <p>服务定义</p>
+    <ul>
+      <li>本协议是乘客与平台之间关于网约车服务的法律契约，注册或使用服务即视为同意全部条款。</li>
+    </ul>
+    <p>用户资格</p>
+    <ul>
+      <li>需年满18周岁或在法定监护人陪同下使用服务；</li>
+      <li>禁止使用他人账号或利用平台进行非法活动。</li>
+    </ul>
+
+    <h2>二、服务规则</h2>
+    <p>下单与乘车</p>
+    <ul>
+      <li>乘客需通过平台下单，不得要求司机线下交易或更改行程；</li>
+      <li>预约订单需在约定时间等候，无故取消将影响信用分。</li>
+    </ul>
+    <p>费用与支付</p>
+    <ul>
+      <li>订单费用包含里程费、时长费等（具体计价规则见《费用说明》）；</li>
+      <li>需在行程结束后及时完成支付，逾期未付将限制使用服务。</li>
+    </ul>
+
+    <h2>三、数据与隐私</h2>
+    <p>信息收集</p>
+    <ul>
+      <li>乘客需授权平台使用位置、行程、评价等数据用于服务优化；</li>
+      <li>平台承诺保护乘客隐私，未经许可不向第三方泄露。</li>
+    </ul>
+    <p>安全保障</p>
+    <ul>
+      <li>乘客可使用一键报警、行程分享等安全功能，平台协助处理紧急事件。</li>
+    </ul>
+
+    <h2>四、责任与违约</h2>
+    <p>乘客责任</p>
+    <ul>
+      <li>乘车期间需遵守交通法规，不得干扰司机驾驶或损坏车内设施；</li>
+      <li>禁止恶意差评、刷单等行为，违者限制使用服务并追究责任。</li>
+    </ul>
+    <p>平台责任</p>
+    <ul>
+      <li>因系统故障导致订单异常，平台负责协调处理并补偿；</li>
+      <li>不承担乘客与司机间私下交易产生的风险。</li>
+    </ul>
+
+    <h2>五、协议变更与终止</h2>
+    <ul>
+      <li>平台有权修订协议，修订后需乘客重新确认生效；</li>
+      <li>乘客可申请注销账号，但需结清所有费用及纠纷。</li>
+    </ul>
+
+    <!-- <div class="agree-container">
+      <input type="checkbox" id="agreeCheckbox">
+      <label for="agreeCheckbox">我已阅读并同意上述用户协议</label>
+    </div>
+    <button class="btn" id="submitBtn" disabled>同意并继续</button> -->
+
+  </div>
+  <script>
+    const agreeCheckbox = document.getElementById('agreeCheckbox');
+    const submitBtn = document.getElementById('submitBtn');
+
+    agreeCheckbox.addEventListener('change', function () {
+      if (this.checked) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
+    });
+  </script>
+</body>
+
+</html>

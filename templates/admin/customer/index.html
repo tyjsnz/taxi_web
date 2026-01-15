@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乘客管理</title>
+
+    <link href="/static/admin/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/admin/css/style.min.css" rel="stylesheet">
+    <!-- 图标 -->
+    <!-- <link href="/static/admin/css/materialdesignicons.min.css" rel="stylesheet"> -->
+
+    <link rel="stylesheet" href="/static/libs/element-ui/css/index.css">
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/element-ui/js/index.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script type="text/javascript" src="/static/libs/layui/layui.js"></script>
+    <link href="/static/libs/layui/css/layui.css" rel="stylesheet">
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_6iep7d4szk.css">
+
+    <!-- <link href="//unpkg.com/layui@2.10.3/dist/css/layui.css" rel="stylesheet">    
+    <script src="//unpkg.com/layui@2.10.3/dist/layui.js"></script> -->
+</head>
+
+<body>
+    <div id="app" style="padding: 0px">
+        <el-card class="card-body" style="padding-top: 0px !important; padding-left: 0px !important">
+            <div class="card-header" style="padding-left: 0px !important;">
+                <div class="col-xs-12">
+                    <form id="myform" method="get">
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">乘客电话</span>
+                            <input class="form-control" type="text" name="phone" id="phone" placeholder=""
+                                autocomplete="off" value="">
+                            <a href="#" class="search-btn a-submit btn btn-default input-group-addon" id="basic-addon1">
+                                <i class="mdi mdi-search-web"></i> 查询</a>
+                            <a href="#" class="ref-btn btn btn-default input-group-addon" id="basic-addon1"> <i
+                                    class="mdi mdi-reload"></i> 刷新</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <el-row>
+                <table id="test" lay-filter="test"></table>
+                <script type="text/html" id="barDemo">
+                        <a lay-event='edit' class="layui-btn layui-btn-xs" href="javascript:void(0)" title="" data-toggle="tooltip">订单查看</a>
+                        <a lay-event='view' class="layui-btn layui-btn-xs" href="javascript:void(0)" title="" data-toggle="tooltip">优惠券查看</a>                        
+                    </script>
+            </el-row>
+        </el-card>
+
+
+
+    </div>
+
+    <script>
+        let map;
+
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                };
+            },
+            computed: {
+
+            },
+            mounted() {
+                this.loadDrivers();
+            },
+            methods: {
+                loadDrivers() {
+
+                },
+
+            }
+        });
+
+
+
+        layui.use(['table'], function () {
+            var table = layui.table
+                , $ = layui.$
+                , laytpl = layui.laytpl
+                , laydate = layui.laydate;
+            var form = layui.form;
+
+            //全局设定某参数
+            table.set({
+                where: {
+                    token: ''
+                }
+                , defaultToolbar: ["filter", "exports", "print"]
+                , toolbar: true
+                , loading: true
+            });
+
+            var option = {
+                elem: '#test'
+                , toolbar: '#toolbarDemo'
+                , height: 600
+                , title: '乘客列表'
+                , url: '/admin/customer/list/json'
+                , request: {
+                    pageName: 'page' //页码的参数名称，默认：page
+                    , limitName: 'pagesize' //每页数据量的参数名，默认：limit
+                }
+                , page: true
+                , limit: 50
+                , loading: true
+                , limits: [50, 100, 200]
+                , cols: [[
+                    { field: 'id', title: '乘客编号', sort: true, width: 120 }
+                    , { field: 'phone', title: '乘客电话' }
+                    , { field: 'order_num', title: '订单数量' }
+                    , { field: 'order_total_amount', title: '订单总金额' }
+                    , { field: 'coupons_num', title: '优惠券数量' }
+                    , {
+                        field: 'status', title: '用户状态', templet: function (d) {
+                            if (d.status == 0)
+                                return `<input type="checkbox" name="status" value="${d.status}" data-id="${d.id}" lay-skin="switch" lay-text="正常|禁用" lay-filter="demo-templet-status" checked>`
+                            else
+                                return `<input type="checkbox" name="status" value="${d.status}" data-id="${d.id}" lay-skin="switch" lay-text="正常|禁用" lay-filter="demo-templet-status">`
+
+                            // 使用以下方法时 form.on('switch(demo-templet-status)'
+                            //return `<input type="checkbox" name="status" value="${d.id}" title="热|" lay-filter="demo-templet-status" checked>`
+                        }
+                    }
+                    , { field: 'last_time', title: '最近登录时间' }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 200 }
+                ]]
+                , error: function (res, msg) {
+                }
+                , response: {
+                    statusName: 'status'
+                    , statusCode: 0
+                }
+                , done: function (res, curr, count) {
+                    //当数据渲染完后，执行的回调
+                }
+                , parseData: function (res) {
+
+                    return {
+                        "status": res.status
+                        , "msg": res.msg
+                        , "count": res.other
+                        , "data": res.data
+                    };
+                }
+            }
+
+            table.render(option)
+
+            $(".search-btn").click(function () {
+                let p = $("#phone").val();
+                option.where = { 'phone': p}
+                table.render(option)
+                return false;
+            })
+
+            $(".ref-btn").click(function () {
+                $("#phone").val('');
+                option.where = {}
+                table.render(option)
+                return false;
+            })
+
+
+
+            table.on('tool(test)', function(obj){
+                var data = obj.data; // 获得当前行数据
+                console.log(data)
+                if(obj.event == 'edit'){
+                    layer.open({
+                        type: 2,
+                        title: '订单查看',
+                        area:['80%','85%'],
+                        content: "/admin/order/list?flag=customer&phone=" + data.phone
+                    })
+                }
+                else if (obj.event == 'view') {
+                    layer.open({
+                        type: 2,
+                        title: '领用记录查看',
+                        shadeClose: false,
+                        shade: 0.8,
+                        area: ['80%', '75%'],
+                        content: '/admin/coupons/take/list?flag=0&utype=0&uid=' + data.id
+                    })
+                }
+            })
+
+            // 状态 - 开关操作
+            form.on('switch(demo-templet-status)', function (obj) {
+                console.log(obj)
+                var id = obj.elem.attributes["data-id"].value
+                var val = parseInt(this.value);
+                let msg = ""
+                let status = 0
+                if(val == 0){
+                    msg = "禁用帐户后乘客将无法使用小程序，是否禁用？"
+                    status = -1
+                }
+                else{
+                    msg = "确定启用用户？"
+                    status = 0
+                }
+                
+                layer.confirm(msg, {
+                    icon: 3,
+                    btn: ['确定', '取消'],
+                }, function (index) {
+                    layer.close(index)
+                    axios.post('/admin/customer/update/status',{
+                        'status': status,
+                        'id': id
+                    }).then(res =>{
+                        console.log(res)
+                        if(res.data.status == 0){
+                            if(val == 0){
+                                obj.elem.value = -1
+                                obj.checked = false
+                            }
+                            else{
+                                obj.elem.value = 0
+                                obj.elem.checked = true
+                            }
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                    });
+                }, function (index) {                    
+                    layer.close(index)
+                    console.log(val)
+                    if(val == 0)
+                        obj.elem.checked = true
+                    else
+                        obj.elem.checked = false
+                });
+            });
+        });
+    </script>
+
+    <style>
+        #map {
+            width: 100%;
+            height: 80vh;
+        }
+
+        .mb-4 {
+            margin-bottom: 20px;
+        }
+
+        .mt-4 {
+            margin-top: 20px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .mb-2 {
+            margin-bottom: 12px;
+        }
+
+        /* 美化弹窗和表格样式 */
+        .el-dialog {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table {
+            background-color: #fafafa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table th {
+            background-color: #f0f0f0;
+        }
+    </style>
+</body>
+
+</html>

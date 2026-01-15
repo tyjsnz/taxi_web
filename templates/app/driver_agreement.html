@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>用户协议</title>
+    <link rel="stylesheet" href="/static/libs/element-ui/css/element-ui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding-top: 55px;
+            font-size: 16px;
+        }
+
+        .header i{
+            font-size: 25px;
+        }
+        .back-arrow {
+            position: absolute;
+            left: 15px;
+            font-size: 20px;
+        }
+        .title {
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 15px;
+            background-color: white;
+            margin: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .content h2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF6B00;
+        }
+
+        .content p {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .content ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .content ul li {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+            color: #999;
+        }
+        .fix-header{
+            z-index: 11; height: 45px; background-color: #ff6b00; line-height: 30px; position: fixed; width: 100%;
+        }
+    </style>
+
+<link rel="stylesheet" href="/static/css/all.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4886796_ck65k0e88f.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="fix-header"></div>
+        <!-- 头部 -->
+        <div class="header">
+            <el-row>
+                <el-col :span="3">
+                    <div @click="goBack">
+                        <i class="el-icon-arrow-left back-icon"></i>
+                    </div>
+                </el-col>
+                <el-col :span="18" style="text-align: center;">
+                    <div class="header-title">帐号与安全</div>
+                </el-col>
+                <el-col :span="3">                        
+                </el-col>
+            </el-row>
+
+        </div>
+
+        <!-- 内容 -->
+        <div class="content">
+            <h2>一、协议声明</h2>
+            <p>服务定义</p>
+            <ul>
+                <li>本协议是司机与平台之间关于网约车服务的法律契约，注册即视为同意全部条款。</li>
+            </ul>
+            <p>司机资格</p>
+            <ul>
+                <li>需持有有效驾驶证、行驶证及网约车驾驶员资格证；</li>
+                <li>车辆需符合当地网约车运营标准（如车龄≤5年、投保营运险等）。</li>
+            </ul>
+
+            <h2>二、服务规则</h2>
+            <p>接单与履约</p>
+            <ul>
+                <li>司机需通过平台接单，不得私自揽客或线下交易；</li>
+                <li>接单后需按时到达指定地点，无故取消将影响信用分。</li>
+            </ul>
+            <p>费用与结算</p>
+            <ul>
+            
+                <li>平台按订单金额收取信息服务费（具体比例见《费用说明》）；</li>
+                <li>提现需绑定本人银行卡，手续费由司机承担（如有）。</li>
+            </ul>
+
+            <h2>三、数据与隐私</h2>
+            <p>信息收集</p>
+            <ul>
+                <li>司机需授权平台使用位置、行程、评价等数据用于服务优化；</li>
+                <li>平台承诺保护司机隐私，未经许可不向第三方泄露。</li>
+            </ul>
+            <p>安全监控</p>
+            <ul>
+                <li>行程中需开启APP并保持GPS定位，平台有权调取录音/录像用于纠纷处理。</li>
+            </ul>
+
+            <h2>四、责任与违约</h2>
+            <p>司机责任</p>
+            <ul>
+                <li>需遵守交通法规，承担违章、事故等法律责任；</li>
+                <li>禁止刷单、作弊等行为，违者永久封号并追偿损失。</li>
+            </ul>
+            <p>平台责任</p>
+            <ul>
+                <li>因系统故障导致订单异常，平台负责协调补发收入；</li>
+                <li>不承担司机与乘客间的私下交易风险。</li>
+            </ul>
+
+            <h2>五、协议变更与终止</h2>
+            <ul>
+                <li>平台有权修订协议，修订后需司机重新确认生效；</li>
+                <li>司机可申请注销账号，但需结清所有费用及纠纷。</li>
+            </ul>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            © 2025 彝州出行. All Rights Reserved.
+        </div>
+    </div>
+
+    <script src="/static/libs/element-ui/js/vue.js"></script>
+    <script src="/static/libs/element-ui/js/element-ui.js"></script>
+    <script src="/static/libs/axios.min.js"></script>
+    <script src="/static/utils/helper.js?v=-211"></script>
+    <script>
+        const vueApp = new Vue({
+            el: '#app',
+            methods: {
+                goBack() {
+                    window.history.go(-1);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
