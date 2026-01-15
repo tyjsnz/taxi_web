@@ -4,6 +4,8 @@
 - 乘客端：乘客可以在小程序中预约出租车，查看订单状态，取消订单等
 - 司机端：司机可以在小程序中登录，查看订单状态，接受订单，完成订单等
 - 管理员端：管理员可以在网页中登录，管理乘客、司机、订单等
+- 管理后台系统：https://github.com/tyjsnz/taxi_web.git
+- 微信小程序乘客端：https://github.com/tyjsnz/taxi_wxmini.git
 
 ## 项目数据库
 - 目录下：database/ls_taxt.sql
